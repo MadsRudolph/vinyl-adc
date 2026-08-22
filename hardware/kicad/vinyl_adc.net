@@ -2,7 +2,7 @@
 	(version "E")
 	(design
 		(source "C:\\Users\\Mads2\\Documents\\Projects\\Projects\\Vinyl ADC\\hardware\\kicad\\vinyl_adc.kicad_sch")
-		(date "2026-08-22T23:27:00")
+		(date "2026-08-22T23:31:09")
 		(tool "Eeschema 10.0.4")
 		(sheet
 			(number "1")
