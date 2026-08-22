@@ -1,0 +1,45 @@
+{
+  "last_sch_text_sim_command": ".tran 2u 3m",
+  "tabs": [
+    {
+      "analysis": "TRAN",
+      "commands": [
+        ".tran 2u 3m",
+        ".kicad adjustpaths",
+        ".save all",
+        ".probe alli",
+        ".probe allp"
+      ],
+      "dottedSecondary": true,
+      "margins": {
+        "bottom": 45,
+        "left": 70,
+        "right": 70,
+        "top": 30
+      },
+      "measurements": [],
+      "showGrid": true,
+      "traces": [
+        {
+          "color": "rgb(228, 26, 28)",
+          "signal": "V(/VREF_P)",
+          "trace_type": 257
+        },
+        {
+          "color": "rgb(55, 126, 184)",
+          "signal": "V(/VREF_N)",
+          "trace_type": 257
+        },
+        {
+          "color": "rgb(77, 175, 74)",
+          "signal": "V(/+5V)/2",
+          "trace_type": 257
+        }
+      ]
+    }
+  ],
+  "user_defined_signals": [
+    "V(/+5V)/2"
+  ],
+  "version": 7
+}

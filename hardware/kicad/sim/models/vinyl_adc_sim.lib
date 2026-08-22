@@ -1,0 +1,389 @@
+* ===========================================================================
+* Behavioural models for the discrete delta-sigma vinyl ADC testbenches
+*
+* Nothing on this board has a vendor SPICE model that is both free and
+* redistributable, so every active part here is a behavioural stand-in built
+* from primitives EVERY ngspice understands -- B, E, G, R, C, switches and
+* terminated lossless T-lines for delay.  XSPICE digital primitives
+* (d_dff, d_inverter) are deliberately avoided: they are not compiled into
+* every ngspice build, so a sheet that depends on them runs for some people
+* and not others.
+*
+* Each model covers only the behaviour the design depends on -- gain,
+* bandwidth, slew, rail limits, propagation delay, output resistance.  What
+* is NOT modelled is stated in each header, because the checks in
+* tools/run_sims.py assert the DESIGN's numbers and a model that quietly
+* invented behaviour would make them agree with nothing.
+*
+* Datasheet figures: TL074 (TI SLOS080), LM311 (TI SLCS007), 74HC04/74HC74/
+* 74HC157/74HC244/74HC4040 (Nexperia/TI HC family, 5 V, 25 C), 74HC4049
+* (3.3 V), 1N5817 (Vishay).
+* ===========================================================================
+
+
+*
+* A note on the output stages below.  Every one of them squares its delay
+* line's output through a tanh before turning it into volts.  That is not
+* cosmetic: a lossless T-line integrated at a timestep coarse relative to
+* its own delay overshoots by 10-15 % at each edge, and without the clamp
+* that arrives at the pin as a 3.7 V high on a 3.3 V supply.  A real CMOS
+* output cannot leave its own rails, so neither should the model -- and
+* fixing it by forcing a 0.2 ns timestep instead would make every sheet ten
+* times slower to run.
+*
+* --------------------------------------------------------------------------
+* TL074 section -- single-pole op-amp with slew limit and rail clamp
+*
+*   Avol 100k, GBW 3 MHz typ, slew 13 V/us typ.
+*   gm/(2*pi*cp) = 3.0 MHz ; ilim/cp = 13 V/us ; gm*rp = 1e5.
+*
+*   hr is the output headroom from each rail.  TI specifies VOM only at
+*   VCC+- = +-15 V (+-13.5 V typ into 10 k, i.e. 1.5 V of headroom) and gives
+*   no table entry at +-5 V, so 1.5 V is an EXTRAPOLATION and the saturation
+*   level it produces is a measurement, not an assumption -- sim_d_integrator
+*   reads it back and sim_h_loop asks whether the loop still recovers there.
+*   Pass hr= to try another figure.
+*
+*   NOT modelled: the input common-mode floor (V- + 4 V, so -1 V on these
+*   rails) and the phase inversion the real part shows below it.  Every
+*   summing node in this design sits at 0 V or +2.5 V, so the checks measure
+*   those nodes against the floor instead of trusting the model.
+* --------------------------------------------------------------------------
+.subckt OPAMP_TL074 inp inn out vp vn params: hr=1.5
+.param gm=1m rp=1e8 cp=53.05p ilim=689.6u icl=1m
+Rin  inp inn 1e12
+* transconductance stage; tanh() saturation sets the slew rate (ilim/cp)
+Bg   0 nint I = {ilim}*tanh({gm}*(V(inp)-V(inn))/{ilim})
+Rp   nint 0 {rp}
+Cp   nint 0 {cp}
+* Clamp on the gain node, and it is NOT optional on this board.  Without it,
+* driving the amp past its output range winds nint up to Avol times the input
+* error -- tens of kV -- and unwinding that at the slew rate takes
+* MILLISECONDS.  The integrators here saturate on every vinyl click, so the
+* model would invent a latch-up that the real part does not have and the
+* click test would fail for a reason that exists only in SPICE.
+* Clamping at 1.65x the output half-span leaves the linear region untouched
+* (the clamp draws under 1 % of ilim anywhere the output is still in range)
+* and makes recovery from saturation about 150 ns, which is the order a
+* 13 V/us part actually manages.
+Bcl  nint 0 I = {icl}*( tanh((V(nint)-0.5*(V(vp)+V(vn))
++                            -1.65*(V(vp)-V(vn)-2*{hr}))/(0.15*(V(vp)-V(vn)-2*{hr})))
++                     + tanh((V(nint)-0.5*(V(vp)+V(vn))
++                            +1.65*(V(vp)-V(vn)-2*{hr}))/(0.15*(V(vp)-V(vn)-2*{hr}))) )
+* Output buffer clamped inside the rails by a SMOOTH limiter.  min()/max()
+* would clamp just as well but their derivative is discontinuous, which
+* stalls Newton -- a plain follower then fails to find an operating point at
+* all.  tanh() has neither problem.
+Bo   nbuf 0 V = 0.5*(V(vp)+V(vn))
++ + 0.5*(V(vp)-V(vn)-2*{hr})*tanh( 2*(V(nint)-0.5*(V(vp)+V(vn)))
++ / (V(vp)-V(vn)-2*{hr}) )
+Ro   nbuf out 100
+.ends OPAMP_TL074
+
+
+* --------------------------------------------------------------------------
+* LM311 comparator -- open-collector output, referenced to its own emitter
+*
+*   Response time 200 ns typ, which is the figure the loop was designed
+*   around: docs/design-notes.md section 2 shows it costs 7 dB and most of
+*   the overload margin, and is why Rk0 exists.
+*   VOL 0.23 V typ at 8 mA -> a 25 ohm switch to the emitter pin.
+*
+*   Sign matters: the LM311's output transistor turns OFF when + is above -,
+*   so with a pull-up the output goes HIGH.  The comparator is NON-inverting.
+*   Getting this backwards inverts the whole feedback loop, which on a
+*   delta-sigma modulator means positive feedback and a latch.
+*
+*   NOT modelled: the input common-mode range (0.5 V to V+ - 1.5 V on a
+*   single supply, so 0.5..3.5 V here).  The design biases both inputs to
+*   +2.5 V; the checks measure that rather than assume it.
+*   Pins: inp inn out oe vp vn      (oe = pin 1, the output emitter)
+* --------------------------------------------------------------------------
+.subckt CMP_LM311 inp inn out oe vp vn params: tpd=200n
+Rin  inp inn 1e12
+Bc   nc 0 V = 2.5*tanh(1e4*(V(inn)-V(inp)))
+* pure propagation delay, terminated so nothing reflects
+Td   nc 0 nd 0 Z0=1k TD={tpd}
+Rt   nd 0 1k
+* open collector: conducts to the emitter pin when the comparator is LOW
+Sq   out oe nd 0 SW_OC
+.model SW_OC SW(Ron=25 Roff=1e9 Vt=0 Vh=0.5)
+.ends CMP_LM311
+
+
+* --------------------------------------------------------------------------
+* 74HC inverting gate -- one section, rail to rail, supply referenced
+*
+*   Used for both the 74HC04 DAC drive gates (tpd 9 ns, Ron 50 ohm at 5 V)
+*   and the 74HC4049 level shifters (tpd 25 ns, Ron 100 ohm at 3.3 V), which
+*   differ only in those two numbers -- pass them per instance.
+*
+*   The output resistance is not cosmetic here.  The 74HC04 IS the 1-bit DAC:
+*   it drives 14k7 or 8k25, so Ron/(Ron+Rd) is a real gain error on the
+*   feedback, and sim_f_dac measures it.
+*
+*   The 4049 tolerates an input above its own VCC because it has no input
+*   clamp diode to VCC -- which is exactly what makes the 5 V -> 3.3 V level
+*   shift legal.  The threshold below is referenced to the gate's OWN supply,
+*   so that case comes out right without any special handling.
+*
+*   NOT modelled: input hysteresis, the 4049's supply-dependent threshold
+*   shift, or the edge asymmetry that would cause DAC inter-symbol
+*   interference (docs/design-notes.md section 9 flags that as the likely
+*   reason the built board measures nearer 65 dB than 70).
+* --------------------------------------------------------------------------
+.subckt INV_74HC in out vcc vss params: tpd=9n ron=50
+Bi   ni 0 V = 0.5*(1 - tanh(40*(V(in)-V(vss)-0.5*(V(vcc)-V(vss)))))
+Td   ni 0 nd 0 Z0=1k TD={tpd}
+Rt   nd 0 1k
+Bsq  nsq 0 V = 0.5*(1+tanh(8*(2*V(nd)-1)))
+Bo   nb 0 V = V(vss) + (V(vcc)-V(vss))*V(nsq)
+Ro   nb out {ron}
+.ends INV_74HC
+
+
+* --------------------------------------------------------------------------
+* 74HCT132 Schmitt NAND -- one section, used on this board as a clock buffer
+* with both inputs tied together
+*
+*   The HCT part is chosen for its input threshold, not its function: HCT
+*   switches near 1.3 V (VIL max 0.8 V, VIH min 2.0 V) rather than at half
+*   supply, which is what lets a 3.3 V oscillator or the Pi's 3.3 V GPCLK0
+*   drive a 5 V logic chain (docs/design-notes.md section 5).  So vth is the
+*   parameter that matters here and it is referenced to VSS, not to VCC/2.
+*   tpd 13 ns typ at 5 V.
+*
+*   NOT modelled: the Schmitt hysteresis itself (VT+ ~1.9 V, VT- ~1.0 V).
+*   The board feeds this gate a clean square wave from an oscillator can, so
+*   the hysteresis buys noise immunity rather than changing any timing here.
+* --------------------------------------------------------------------------
+.subckt NAND2_74HCT132 a b y vcc vss params: tpd=13n ron=50 vth=1.3
+Ba   na 0 V = 0.5*(1+tanh(40*(V(a)-V(vss)-{vth})))
+Bb   nb 0 V = 0.5*(1+tanh(40*(V(b)-V(vss)-{vth})))
+Bn   nn 0 V = 1 - V(na)*V(nb)
+Td   nn 0 nd 0 Z0=1k TD={tpd}
+Rt   nd 0 1k
+Bsq  nsq 0 V = 0.5*(1+tanh(8*(2*V(nd)-1)))
+Bo   nq 0 V = V(vss)+(V(vcc)-V(vss))*V(nsq)
+Ro   nq y {ron}
+.ends NAND2_74HCT132
+
+
+* --------------------------------------------------------------------------
+* 74HC244 octal buffer -- all eight sections, because the charge pump
+* parallels all eight and the whole question is what that is worth
+*
+*   Ron 30 ohm typ per output at 5 V (IOL 6 mA at 0.33 V max -> 55 ohm worst
+*   case; pass ron= to see the worst case).  Eight in parallel is ~3.75 ohm,
+*   and that resistance appears twice per pump cycle, so it is a third of the
+*   pump's total droop -- see sim_a_pump.
+*   Non-inverting, tpd 12 ns at 5 V.  /OE is active low and tri-states.
+*
+*   Node order follows the DIP pinout so Sim.Pins reads like the datasheet.
+* --------------------------------------------------------------------------
+* one section, shared by all eight; `en` is a 0/1 logic node, high = enabled
+.subckt HC244SEC in out en vcc vss params: ron=30 tpd=12n
+.model SW_EN SW(Ron=1m Roff=1e9 Vt=0.5 Vh=0.1)
+Bi   ni 0 V = 0.5*(1 + tanh(40*(V(in)-V(vss)-0.5*(V(vcc)-V(vss)))))
+Td   ni 0 nd 0 Z0=1k TD={tpd}
+Rt   nd 0 1k
+Bsq  nsq 0 V = 0.5*(1+tanh(8*(2*V(nd)-1)))
+Bo   nb 0 V = V(vss) + (V(vcc)-V(vss))*V(nsq)
+Rd   nb nc {ron}
+Sen  nc out en 0 SW_EN
+* every node needs a DC path to ground: a tri-stated output with none would
+* hang ngspice looking for an operating point that does not exist
+Rlk  out vss 1e9
+.ends HC244SEC
+
+.subckt BUF8_74HC244 oe1 a1 a2 a3 a4 y1 y2 y3 y4
++ oe2 b1 b2 b3 b4 z1 z2 z3 z4 vcc vss params: ron=30 tpd=12n
+* enable comparators: ne is 1 when that half is ENABLED (/OE low)
+Be1  ne1 0 V = 0.5*(1 - tanh(40*(V(oe1)-V(vss)-0.5*(V(vcc)-V(vss)))))
+Be2  ne2 0 V = 0.5*(1 - tanh(40*(V(oe2)-V(vss)-0.5*(V(vcc)-V(vss)))))
+XA1 a1 y1 ne1 vcc vss HC244SEC ron={ron} tpd={tpd}
+XA2 a2 y2 ne1 vcc vss HC244SEC ron={ron} tpd={tpd}
+XA3 a3 y3 ne1 vcc vss HC244SEC ron={ron} tpd={tpd}
+XA4 a4 y4 ne1 vcc vss HC244SEC ron={ron} tpd={tpd}
+XB1 b1 z1 ne2 vcc vss HC244SEC ron={ron} tpd={tpd}
+XB2 b2 z2 ne2 vcc vss HC244SEC ron={ron} tpd={tpd}
+XB3 b3 z3 ne2 vcc vss HC244SEC ron={ron} tpd={tpd}
+XB4 b4 z4 ne2 vcc vss HC244SEC ron={ron} tpd={tpd}
+.ends BUF8_74HC244
+
+
+* --------------------------------------------------------------------------
+* One master-slave stage, in 0..1 logic, toggling on the FALLING edge of in.
+* The building block of the 4040 ripple counter below.  mr is an active-high
+* asynchronous clear.
+*
+* Two transparent latches in series, the master open while the (inverted)
+* clock is low and the slave while it is high, so there is no race: when the
+* slave opens the master is already shut.  Each latch is a 1 pF node with a
+* regenerating keeper through 10 k -- 100 times weaker than the 100 ohm write
+* switch, so writing always wins, while 10 ns of keeper time constant against
+* an 81 ns half period means holding always works.
+*
+* Two details stop the chain sitting metastable, which it otherwise DOES:
+* half-supply is an exact self-consistent solution of a symmetric latch, and
+* SPICE will happily find it and stay there for the whole run -- every output
+* frozen at 2.5 V, counting nothing.  So the keeper is centred a hair off
+* half (0.4995, the numerical stand-in for the asymmetry any real gate has),
+* and the master clear pulls the LATCH nodes rather than only the output
+* logic, so MR actually defines a starting state.
+* --------------------------------------------------------------------------
+.subckt TSTAGE in out mr params: tpd=5n
+* Vt/Vh place the two transparent windows at in > 0.8 and in < 0.2, so there
+* is a wide band where BOTH latches hold.  Switching both at 0.5 leaves them
+* overlapping for a timestep on every edge, which closes an inverting
+* combinational loop and the stage free-runs at several times the clock --
+* it looks like a counter that counts far too fast.
+.model SWL SW(Ron=100 Roff=1e9 Vt=0.7 Vh=0.1)
+Bci  nci 0 V = 1-V(in)
+Bml  nml 0 V = 1-V(nci)
+Sm   nd nm nml 0 SWL
+Cm   nm 0 1p
+Bkm  nkm 0 V = (1-V(mr))*0.5*(1+tanh(40*(V(nm)-0.4995)))
+Rkm  nkm nm 10k
+* The slave must be DRIVEN by the master, not shorted to it.  Wiring the
+* switch straight from nm to ns connects two 1 pF nodes through 100 ohm and
+* they simply share charge -- a 1 and a 0 average to a half, and the keeper
+* then regenerates that to whichever rail its own bias favours.  The stage
+* looks like it is working and its output is noise.  Bmb is the buffer that
+* makes the master a stiff source, which is what the real gate between the
+* two latches does.
+Bmb  nmb 0 V = V(nm)
+Ss   nmb ns nci 0 SWL
+Cs   ns 0 1p
+Bks  nks 0 V = (1-V(mr))*0.5*(1+tanh(40*(V(ns)-0.4995)))
+Rks  nks ns 10k
+Bq   nq 0 V = (1-V(mr))*V(ns)
+Bd   nd 0 V = (1-V(mr))*(1-V(nq))
+Td   nq 0 ntd 0 Z0=1k TD={tpd}
+Rtd  ntd 0 1k
+* square the edge back up: the latch node regenerates over tens of ns and a
+* real gate's output buffer does not pass that ramp on.  Leave it out and
+* every stage's duty cycle reads a few percent off 50.
+Bout out 0 V = 0.5*(1+tanh(8*(2*V(ntd)-1)))
+.ends TSTAGE
+
+
+* --------------------------------------------------------------------------
+* 74HC4040 ripple counter -- the seven stages this design uses
+*
+*   Counts on the HIGH-to-LOW transition of CLK, MR is active high.
+*   tin is the input-buffer delay (CLK to Q0, ~19 ns at 5 V) and tpd the
+*   extra delay each further stage adds, so Q6 lags CLK by tin + 6*tpd.
+*   That skew is not academic: docs/design-notes.md section 4b claims 163 ns
+*   of I2S setup margin from DIN changing on a BCLK falling edge, and every
+*   nanosecond of ripple eats into it.  sim_c_clock measures it.
+*
+*   Q7..Q11 are NOT modelled -- the board no-connects them.  The pins exist
+*   on the symbol and are left unmapped, which is why the bench sheet marks
+*   them no-connect rather than wiring them anywhere.
+* --------------------------------------------------------------------------
+.subckt DIV_74HC4040 clk mr q0 q1 q2 q3 q4 q5 q6 vdd vss
++ params: tin=19n tpd=5n rout=60
+Bclk nc 0 V = 0.5*(1+tanh(40*(V(clk)-V(vss)-0.5*(V(vdd)-V(vss)))))
+Bmr  nr 0 V = 0.5*(1+tanh(40*(V(mr)-V(vss)-0.5*(V(vdd)-V(vss)))))
+Tin  nc 0 nci 0 Z0=1k TD={tin}
+Rtin nci 0 1k
+X0 nci n0 nr TSTAGE tpd={tpd}
+X1 n0  n1 nr TSTAGE tpd={tpd}
+X2 n1  n2 nr TSTAGE tpd={tpd}
+X3 n2  n3 nr TSTAGE tpd={tpd}
+X4 n3  n4 nr TSTAGE tpd={tpd}
+X5 n4  n5 nr TSTAGE tpd={tpd}
+X6 n5  n6 nr TSTAGE tpd={tpd}
+Bv0 nv0 0 V = V(vss)+(V(vdd)-V(vss))*V(n0)
+Rv0 nv0 q0 {rout}
+Bv1 nv1 0 V = V(vss)+(V(vdd)-V(vss))*V(n1)
+Rv1 nv1 q1 {rout}
+Bv2 nv2 0 V = V(vss)+(V(vdd)-V(vss))*V(n2)
+Rv2 nv2 q2 {rout}
+Bv3 nv3 0 V = V(vss)+(V(vdd)-V(vss))*V(n3)
+Rv3 nv3 q3 {rout}
+Bv4 nv4 0 V = V(vss)+(V(vdd)-V(vss))*V(n4)
+Rv4 nv4 q4 {rout}
+Bv5 nv5 0 V = V(vss)+(V(vdd)-V(vss))*V(n5)
+Rv5 nv5 q5 {rout}
+Bv6 nv6 0 V = V(vss)+(V(vdd)-V(vss))*V(n6)
+Rv6 nv6 q6 {rout}
+.ends DIV_74HC4040
+
+
+* --------------------------------------------------------------------------
+* 74HC74 D flip-flop -- one section, positive-edge triggered
+*
+*   tpd 14 ns typ at 5 V, Ron 50 ohm.  Asynchronous set and reset, both
+*   active low; the board ties them to VCC.
+*   This is the retiming stage that makes the modulator's DAC edges land on
+*   the clock rather than on the comparator's own delay, so its setup time
+*   against MCLK is what the loop's excess delay budget is spent on.
+*
+*   NOT modelled: setup/hold violation behaviour (it samples whatever D is at
+*   the edge, with no metastability), and the real part's Q = ~Q = HIGH state
+*   when set and reset are asserted together.
+* --------------------------------------------------------------------------
+.subckt DFF_74HC74 d clk sn rn q qn vcc vss params: tpd=14n ron=50
+.model SWD SW(Ron=100 Roff=1e9 Vt=0.7 Vh=0.1)
+Bd   nd 0 V = 0.5*(1+tanh(40*(V(d)-V(vss)-0.5*(V(vcc)-V(vss)))))
+Bc   nc 0 V = 0.5*(1+tanh(40*(V(clk)-V(vss)-0.5*(V(vcc)-V(vss)))))
+Bsn  nsn 0 V = 0.5*(1+tanh(40*(V(sn)-V(vss)-0.5*(V(vcc)-V(vss)))))
+Brn  nrn 0 V = 0.5*(1+tanh(40*(V(rn)-V(vss)-0.5*(V(vcc)-V(vss)))))
+* master transparent while the clock is low, slave while it is high
+Bml  nml 0 V = 1-V(nc)
+Sm   nd nm nml 0 SWD
+Cm   nm 0 1p
+Bkm  nkm 0 V = (1-V(nsn)) + V(nsn)*V(nrn)*0.5*(1+tanh(40*(V(nm)-0.4995)))
+Rkm  nkm nm 10k
+Bmb  nmb 0 V = V(nm)
+Ss   nmb ns nc 0 SWD
+Cs   ns 0 1p
+Bks  nks 0 V = (1-V(nsn)) + V(nsn)*V(nrn)*0.5*(1+tanh(40*(V(ns)-0.4995)))
+Rks  nks ns 10k
+* asynchronous set wins over reset, both active low
+Bqf  nqf 0 V = (1-V(nsn)) + V(nsn)*V(nrn)*V(ns)
+Tq   nqf 0 nqd 0 Z0=1k TD={tpd}
+Rtq  nqd 0 1k
+Bsq  nsq 0 V = 0.5*(1+tanh(20*(V(nqd)-0.5)))
+Bo   nqo 0 V = V(vss)+(V(vcc)-V(vss))*V(nsq)
+Roq  nqo q {ron}
+Bon  nqno 0 V = V(vss)+(V(vcc)-V(vss))*(1-V(nsq))
+Roqn nqno qn {ron}
+.ends DFF_74HC74
+
+
+* --------------------------------------------------------------------------
+* 74HC157 -- one 2-to-1 multiplexer section
+*
+*   S low selects I0, S high selects I1; E is an active-low enable that
+*   forces the output low.  tpd 12 ns typ at 5 V.
+*   On this board S is MCLK, I0 is the right channel and I1 the left, which
+*   is what interleaves the two modulators onto one DIN at 3.072 Mbps.
+*
+*   NOT modelled: the other three sections (the board grounds their inputs
+*   and no-connects their outputs) or the select-to-output skew difference
+*   between the two paths.
+* --------------------------------------------------------------------------
+.subckt MUX2_74HC157 s i0 i1 z e vcc vss params: tpd=12n ron=50
+Bs   nsel 0 V = 0.5*(1+tanh(40*(V(s)-V(vss)-0.5*(V(vcc)-V(vss)))))
+B0   n0 0 V = 0.5*(1+tanh(40*(V(i0)-V(vss)-0.5*(V(vcc)-V(vss)))))
+B1   n1 0 V = 0.5*(1+tanh(40*(V(i1)-V(vss)-0.5*(V(vcc)-V(vss)))))
+Be   nen 0 V = 0.5*(1-tanh(40*(V(e)-V(vss)-0.5*(V(vcc)-V(vss)))))
+Bm   nm 0 V = V(nen)*( (1-V(nsel))*V(n0) + V(nsel)*V(n1) )
+Td   nm 0 ndz 0 Z0=1k TD={tpd}
+Rt   ndz 0 1k
+Bsq  nsq 0 V = 0.5*(1+tanh(8*(2*V(ndz)-1)))
+Bo   nb 0 V = V(vss)+(V(vcc)-V(vss))*V(nsq)
+Ro   nb z {ron}
+.ends MUX2_74HC157
+
+
+* --------------------------------------------------------------------------
+* 1N5817 Schottky, fitted as D1/D2 in the charge pump.
+* 20 V / 1 A: Is and Rs fitted to the datasheet Vf curve -- 0.25 V at 32 mA
+* (which is the pump's working current, and two of these drops are the
+* largest single term in its output droop) and 0.40 V at 1 A.
+* --------------------------------------------------------------------------
+.model D1N5817 D(Is=2e-6 Rs=0.06 N=1.0 Cjo=110p Vj=0.4 M=0.5 Bv=20 Ibv=1m)
