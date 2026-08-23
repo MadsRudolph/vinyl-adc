@@ -6,6 +6,10 @@ because the whole design was constrained to shop parts and a silent gap there
 is exactly the surprise that stops a build on the bench.
 
     py -3.13 make_bom.py > ../../docs/bom.md
+
+Reads the two half-boards, not the one-page reference sheet: the halves are
+what actually gets built, and they carry the link header the reference sheet
+has no reason to show.  Each line says which board its parts sit on.
 """
 
 import collections
@@ -83,17 +87,27 @@ def ic_in_shop(shop, value):
     return None
 
 
+# tag, sheet, how many of that board a stereo ADC needs
+BOARDS = (("C", "vinyl_adc_common", 1),
+          ("M", "vinyl_adc_channel_l", 2),
+          ("D", "vinyl_adc_digital", 1))
+
+
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
-    sch = schlib.Schematic(os.path.join(here, "..", "vinyl_adc.kicad_sch"))
     shop = load_shop()
 
     groups = collections.defaultdict(list)
-    for s in sch.symbols:
-        ref = s.ref
-        if ref.startswith("#PWR") or not ref:
-            continue
-        groups[(s.value, s.lib_id)].append(ref)
+    where, mult = {}, {}
+    for tag, name, n in BOARDS:
+        sch = schlib.Schematic(os.path.join(here, "..", name + ".kicad_sch"))
+        for s in sch.symbols:
+            ref = s.ref
+            if ref.startswith("#PWR") or not ref:
+                continue
+            groups[(s.value, s.lib_id)].append(ref)
+            where[ref] = tag
+            mult[ref] = n
 
     def sort_key(item):
         (value, lib), refs = item
@@ -105,7 +119,7 @@ def main():
     total = 0
     for (value, lib), refs in sorted(groups.items(), key=sort_key):
         refs = sorted(set(refs), key=lambda r: (r[0], int(re.sub(r"\D", "", r) or 0)))
-        n = len(refs)
+        n = sum(mult[r] for r in refs)
         total += n
         pfx = re.match(r"[A-Z]+", refs[0]).group()
         avail = None
@@ -129,7 +143,10 @@ def main():
         status = avail or "** ORDER **"
         if not avail:
             orders.append((value, ", ".join(refs)))
-        lines.append((n, value, ", ".join(refs), status))
+        boards = "".join(sorted({where[r] for r in refs}))
+        if "M" in boards:
+            boards += " x2"
+        lines.append((n, value, ", ".join(refs), boards, status))
 
     print("# Bill of materials - discrete delta-sigma vinyl ADC")
     print()
@@ -137,12 +154,20 @@ def main():
     print("schematic, with every line checked against the DTU shop stock list")
     print("(`dtu_component_shop.csv`). **ORDER** means the shop does not carry it.")
     print()
-    print(f"{total} components in {len(lines)} distinct lines.")
+    print(f"{total} components in {len(lines)} distinct lines, for the four "
+          "boards a stereo ADC needs.")
     print()
-    print("| Qty | Value | Refs | DTU shop |")
-    print("|----:|-------|------|----------|")
-    for n, value, refs, status in lines:
-        print(f"| {n} | {value} | {refs} | {status} |")
+    print("**Board** is **C** common (power, reference, quantiser), **M** "
+          "modulator channel, **D** digital (clock, interleave, Pi). The "
+          "channel board is ONE artwork built TWICE, so its lines are marked "
+          "`M x2` and the quantity already counts both; the refdes shown are "
+          "the ones printed on the board, and the second copy carries the "
+          "same ones.")
+    print()
+    print("| Qty | Value | Refs | Board | DTU shop |")
+    print("|----:|-------|------|-------|----------|")
+    for n, value, refs, boards, status in lines:
+        print(f"| {n} | {value} | {refs} | {boards} | {status} |")
     print()
     if orders:
         print("## Must be ordered")
@@ -157,6 +182,24 @@ def main():
     print("Use DIP sockets for every IC (all stocked): 8-pin for the LM311s and")
     print("the oscillator can, 14-pin for the TL074s / 74HC04 / 74HC74 / 74HCT132,")
     print("16-pin for the 74HC157 / 74HC4040 / 74HC4049, 20-pin for the 74HC244.")
+    print()
+    print("## The board-to-board links")
+    print()
+    print("Three ribbons, all shrouded IDC box headers on 2.54 mm pitch:")
+    print()
+    print("| Cable | Header | Ways | Carries |")
+    print("|---|---|---|---|")
+    print("| common - digital | J3 / J4 | 2x6 | +5V, GND, MCLK, QL, QR, PUMP |")
+    print("| common - channel L | J5 / J7 | 2x7 | both supplies, both "
+          "references, CMP_L, DACP_L, DACN_L |")
+    print("| common - channel R | J6 / J7 | 2x7 | the same, R |")
+    print()
+    print("You need 2 x 2x6 headers, 4 x 2x7 headers, and matching IDC")
+    print("sockets and ribbon. The shop carries none of them, so they go on")
+    print("the same order as the oscillator can. A bare pin header would fit")
+    print("the same pads and would also plug in backwards -- which puts +5V")
+    print("straight across the ground column. The shroud's key is what makes")
+    print("that impossible, and it is the reason this is not a stocked part.")
 
 
 if __name__ == "__main__":

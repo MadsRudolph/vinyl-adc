@@ -37,11 +37,11 @@ COL = G(8)           # 10.16  pitch of summing-input rows
 FB = G(9)            # 11.43  op-amp centreline -> feedback row
 STUB = G(4)          # 5.08
 
-def new_sheet():
-    return Sheet(paper="A2",
-                 title="Discrete 3rd-order delta-sigma vinyl ADC  -  stereo, "
-                       "48 kHz",
-                 project="vinyl_adc")
+TITLE = "Discrete 3rd-order delta-sigma vinyl ADC  -  stereo, 48 kHz"
+
+
+def new_sheet(title=TITLE, project="vinyl_adc", paper="A2"):
+    return Sheet(paper=paper, title=title, project=project)
 
 
 # ---------------------------------------------------------------- helpers ---
@@ -168,6 +168,19 @@ def elbow(sh, a, b, xmid):
     sh.seg((ax, ay), (xmid, ay))
     sh.seg((xmid, ay), (xmid, by))
     sh.seg((xmid, by), (bx, by))
+
+
+def dogleg(sh, a, b, ymid):
+    """Route a -> b as vertical, horizontal, vertical through ymid.
+
+    The other way round from elbow(), for a run that has to leave the block
+    the short way and travel the long way in a clear channel.
+    """
+    ax, ay = a
+    bx, by = b
+    sh.seg((ax, ay), (ax, ymid))
+    sh.seg((ax, ymid), (bx, ymid))
+    sh.seg((bx, ymid), (bx, by))
 
 
 # The SPICE testbenches in sim/, as a clickable index.
@@ -383,7 +396,23 @@ def reference(sh, rx, y, opamp=TL072, refs=("U2", "U2"), supply=True):
 
 
 
-def band_power(sh, y):
+def power_flags(sh, x, y, nets=("+5V", "-5V", "+3V3", "GND")):
+    """One PWR_FLAG per supply, in a row.
+
+    Only the nets the board actually carries: a flag on a rail nothing else
+    uses is a single-pin net, which is a real ERC violation rather than a
+    harmless decoration.  The analog half has no +3V3 and the digital half no
+    -5V, so neither gets the full set.
+    """
+    for i, net in enumerate(nets):
+        fx = x + i * G(12)
+        sh.power("power:" + net, (fx, y), rot=0)
+        sh.seg((fx, y), (fx, y + G(3)))
+        sh.power("power:PWR_FLAG", (fx, y + G(3)), rot=180)
+
+
+def band_power(sh, y, flags=("+5V", "-5V", "+3V3", "GND"),
+               pump_x=G(75), ref_x=G(250), flag_x=G(20)):
     note_block(sh, (G(16), y - G(16)), "POWER  (Pi +5V -> charge-pump -5V -> "
             "+/-2.5V DAC reference)", size=2.0)
 
@@ -405,20 +434,14 @@ def band_power(sh, y):
             "is proportional to the signal, so this rail must be LOW\n"
             "IMPEDANCE, not filtered by a series R.", size=1.27)
 
-    # PWR_FLAGs, in their own row
-    for i, (net, lib) in enumerate((("+5V", "power:+5V"), ("-5V", "power:-5V"),
-                                    ("+3V3", "power:+3V3"), ("GND", "power:GND"))):
-        fx = G(20) + i * G(12)
-        fy = y - G(10)
-        sh.power(lib, (fx, fy), rot=0 if net != "GND" else 0)
-        sh.seg((fx, fy), (fx, fy + G(3)))
-        sh.power("power:PWR_FLAG", (fx, fy + G(3)), rot=180)
+    power_flags(sh, flag_x, y - G(10), flags)
 
     # -- charge pump: 74HC244, all eight buffers in parallel -------------
-    charge_pump(sh, G(75), y)
+    pump = charge_pump(sh, pump_x, y)
 
     # -- +/-2.5 V reference, ratiometric off the same +5 V rail --------
-    reference(sh, G(250), y)
+    ref = reference(sh, ref_x, y) if ref_x is not None else None
+    return {"pump": pump, "ref": ref}
 
 # ============================================================ BAND B: DIGITAL
 
@@ -446,13 +469,14 @@ def clock_divider(sh, dx, y, clk_label="CLK6M", out_labels=True,
         sh.seg(u4.pin(10), (u4.pin(10).x - G(6), u4.pin(10).y))
         sh.label((u4.pin(10).x - G(6), u4.pin(10).y), clk_label, kind="global")
     tie_low(sh, u4.pin(11))                                    # Reset held low
-    outs = {}
+    outs, tips = {}, {}
     for pin, lbl in ((9, "BCLK"), (7, "MCLK"), (3, "PUMP"), (4, "LRCLK")):
         p = u4.pin(pin)
         outs[lbl] = p
         if out_labels:
             sh.seg(p, (p.x + G(8), p.y))
             sh.label((p.x + G(8), p.y), lbl, kind="global")
+            tips[lbl] = (p.x + G(8), p.y)
     spares = [u4.pin(pin) for pin in (6, 5, 2, 13, 12, 14, 15, 1)]
     if nc_spares:
         for p in spares:
@@ -464,17 +488,25 @@ def clock_divider(sh, dx, y, clk_label="CLK6M", out_labels=True,
     note_block(sh, (dx - G(14), y - G(6)),
             "Q0=BCLK 3.072M  Q1=MCLK 1.536M\nQ4=PUMP 192k  Q6=LRCLK 48k",
             size=1.27)
-    return {"u": u4, "clk": u4.pin(10), "outs": outs, "spares": spares}
+    return {"u": u4, "clk": u4.pin(10), "outs": outs, "spares": spares,
+            "tips": tips}
 
 
 
-def band_digital(sh, y):
-    note_block(sh, (G(16), y - G(16)),
-            "CLOCK AND DIGITAL  (6.144 MHz -> /2 BCLK 3.072M, /4 MCLK 1.536M, "
-            "/128 LRCLK 48k;  L and R interleaved onto one DIN)", size=2.0)
+# The blocks below are separate functions because this circuit is drawn three
+# times: once as the reference sheet that shows the whole converter, and once
+# each for the two halves that are actually milled.  The retiming flip-flops
+# and the DAC drive gates sit INSIDE the modulator's feedback path, so they go
+# on the analog board with the loop they belong to; everything else that is
+# clocked goes on the digital one.  Calling one function from all three sheets
+# is the only thing that keeps the halves equal to the whole.
 
-    # -- oscillator and source-select jumper --------------------------------
-    ox = G(18)
+def blk_oscillator(sh, ox, y):
+    """The 6.144 MHz can, and the jumper selecting it or the Pi's GPCLK0.
+
+    Returns the point at which the selected clock leaves the jumper, so the
+    buffer downstream can wire to it rather than name it.
+    """
     x1 = sh.place("Oscillator:CXO_DIP8", "X1", at=(ox, y + G(8)),
                   value="6.144MHz")
     sh.seg(x1.pin(1), (x1.pin(1).x - STUB, x1.pin(1).y))
@@ -498,8 +530,10 @@ def band_digital(sh, y):
     sh.seg(x1.pin(5), (far, x1.pin(5).y))
     sh.seg((far, x1.pin(5).y), (far, j1.pin(1).y))
     sh.seg((far, j1.pin(1).y), j1.pin(1))
-    sh.seg(j1.pin(3), (j1.pin(3).x + G(2), j1.pin(3).y))
-    sh.label((j1.pin(3).x + G(2), j1.pin(3).y), "GPCLK0", kind="global")
+    # G(8), not G(2): the jumper's "CLK SEL" value text is drawn just right
+    # of its pins and a nearer label sits underneath it
+    sh.seg(j1.pin(3), (j1.pin(3).x + G(8), j1.pin(3).y))
+    sh.label((j1.pin(3).x + G(8), j1.pin(3).y), "GPCLK0", kind="global")
     sh.seg(j1.pin(2), (j1.pin(2).x + G(5), j1.pin(2).y))
     sh.seg((j1.pin(2).x + G(5), j1.pin(2).y), (j1.pin(2).x + G(5), y + G(24)))
     note_block(sh, (ox - G(2), y + G(30)),
@@ -507,13 +541,18 @@ def band_digital(sh, y):
             "Jumper 2-3 = Pi GPCLK0 fallback: ~1 ns jitter -> 68 dB floor,\n"
             "which would become the dominant noise source.  Bring-up only.",
             size=1.27)
+    return (j1.pin(2).x + G(5), y + G(24))
 
-    # -- 74HCT132 clock buffer (HCT so a 3.3 V source still meets VIH) -------
-    bx = ox + G(56)   # far enough right that the buffer's input riser
-                      # clears every stub on the clock-select jumper
+
+def blk_clock_buffer(sh, bx, y, sel):
+    """74HCT132 Schmitt buffer.  `sel` is where blk_oscillator left the clock.
+
+    HCT, not HC, so that a 3.3 V source still meets VIH: the Pi's GPCLK0 is a
+    legal input here only because of that.
+    """
     u3 = sh.place("74xx:74LS132", "U3", at=(bx, y + G(8)), unit=1,
                   value="74HCT132")
-    sh.seg((j1.pin(2).x + G(5), y + G(24)), (u3.pin(1).x - G(4), y + G(24)))
+    sh.seg(sel, (u3.pin(1).x - G(4), y + G(24)))
     sh.seg((u3.pin(1).x - G(4), y + G(24)), (u3.pin(1).x - G(4), u3.pin(1).y))
     sh.seg((u3.pin(1).x - G(4), u3.pin(1).y), u3.pin(1))
     sh.seg((u3.pin(1).x - G(4), u3.pin(1).y), (u3.pin(1).x - G(4), u3.pin(2).y))
@@ -532,25 +571,37 @@ def band_digital(sh, y):
     u3p = sh.place("74xx:74LS132", "U3", at=(bx + G(20), y + G(8)), unit=5,
                    value="74HCT132")
     ic_supply(sh, u3p, 14, 7, "C10", u3p.pin(14).x + G(10))
+    return (u3.pin(3).x + G(6), u3.pin(3).y)
 
-    # -- 74HC4040 divider ----------------------------------------------------
-    clock_divider(sh, G(126), y)
 
-    # -- 74HC74 quantiser flip-flops (one section per channel) --------------
-    fx = G(184)
+
+def blk_retime(sh, fx, y, power_at=None):
+    """74HC74: both comparators re-clocked onto the master clock.  ANALOG.
+
+    This is the quantiser proper, and it lives on the analog board because it
+    closes the modulator loop: comparator -> flip-flop -> DAC gates -> summing
+    junction.  Excess loop delay through that path is compensated by k0, and a
+    ribbon cable in the middle of it would add delay the coefficient does not
+    know about.
+    """
+    tips = {}
     for i, ch in enumerate(("L", "R")):
         ff = sh.place("74xx:74HC74", "U5", at=(fx, y + G(6) + i * G(30)),
                       unit=i + 1, value="74HC74")
         d, ck = ff.pin("D"), ff.pin("C")
         sh.seg(d, (d.x - G(6), d.y))
         sh.label((d.x - G(6), d.y), f"CMP_{ch}", kind="global")
+        tips[f"CMP_{ch}"] = (d.x - G(6), d.y)
         sh.seg(ck, (ck.x - G(6), ck.y))
         sh.label((ck.x - G(6), ck.y), "MCLK", kind="global")
+        tips[f"MCLK_{ch}"] = (ck.x - G(6), ck.y)
         q, qn = ff.pin("Q"), ff.pin("~{Q}")
         sh.seg(q, (q.x + G(6), q.y))
         sh.label((q.x + G(6), q.y), f"Q{ch}", kind="global")
+        tips[f"Q{ch}"] = (q.x + G(6), q.y)
         sh.seg(qn, (qn.x + G(6), qn.y))
         sh.label((qn.x + G(6), qn.y), f"QN{ch}", kind="global")
+        tips[f"QN{ch}"] = (qn.x + G(6), qn.y)
         for pn in ("~{R}", "~{S}"):
             p = ff.pin(pn)
             dy = STUB if p.y > ff.pin("D").y else -STUB
@@ -558,19 +609,29 @@ def band_digital(sh, y):
             sh.seg((p.x, p.y + dy), (p.x + G(5), p.y + dy))
             sh.rail((p.x + G(5), p.y + dy), net="+5V",
                     rise=STUB if dy < 0 else -STUB)
-    u5p = sh.place("74xx:74HC74", "U5", at=(fx + G(22), y + G(6)), unit=3,
-                   value="74HC74")
+    # `power_at` moves the package's supply unit and its 100n. Beside the
+    # flip-flops the cap's run from pin 14 down to pin 7 is a wall the full
+    # height of the package, and on the common board every Q has to cross that
+    # line to reach the DAC gates. Underneath, it is out of the way.
+    u5p = sh.place("74xx:74HC74", "U5", unit=3, value="74HC74",
+                   at=power_at or (fx + G(22), y + G(6)))
     ic_supply(sh, u5p, 14, 7, "C12", u5p.pin(14).x + G(10))
+    return tips
 
-    # -- 74HC157 interleave mux ---------------------------------------------
-    mx = G(238)
+
+
+def blk_mux(sh, mx, y):
+    """74HC157: L and R interleaved onto one serial data line.  DIGITAL."""
     u6 = sh.place("74xx:74LS157", "U6", at=(mx, y + G(14)), value="74HC157")
+    tips = {}
     for pin, lbl in ((1, "MCLK"), (2, "QR"), (3, "QL")):
         p = u6.pin(pin)
         sh.seg(p, (p.x - G(7), p.y))
         sh.label((p.x - G(7), p.y), lbl, kind="global")
+        tips[lbl] = (p.x - G(7), p.y)
     sh.seg(u6.pin(4), (u6.pin(4).x + G(7), u6.pin(4).y))
     sh.label((u6.pin(4).x + G(7), u6.pin(4).y), "DIN", kind="global")
+    tips["DIN"] = (u6.pin(4).x + G(7), u6.pin(4).y)
     tie_low(sh, u6.pin(15))
     tie_low(sh, *[u6.pin(n) for n in (5, 6, 10, 11, 13, 14)])
     for n in (7, 9, 12):
@@ -580,13 +641,23 @@ def band_digital(sh, y):
             "MCLK selects: DIN carries R,L,R,L... at 3.072 Mbps.\n"
             "64 BCLK per LRCLK frame = 32 L bits + 32 R bits\n"
             "= exactly one OSR-32 sample per channel.", size=1.27)
+    return tips
 
-    # -- 74HC04 DAC drive gates ---------------------------------------------
-    gx = G(300)
+
+
+def blk_dac_gates(sh, gx, y):
+    """74HC04: the 1-bit DAC drive, taken from Q and /Q.  ANALOG.
+
+    Inside the loop for the same reason as blk_retime, and additionally
+    because these gates ARE the DAC: their output levels are the reference the
+    converter measures against, so they share the analog board's +5 V rail and
+    its reservoir rather than a rail at the far end of a cable.
+    """
     note_block(sh, (gx - G(10), y - G(6)),
             "1-BIT DAC DRIVE\nDACN = /Q, DACP = Q (taken from Q and /Q so the\n"
             "two edges are as close to simultaneous as the parts allow)",
             size=1.27)
+    tips = {}
     for i, (src, dst) in enumerate((("QL", "DACN_L"), ("QNL", "DACP_L"),
                                     ("QR", "DACN_R"), ("QNR", "DACP_R"))):
         g = sh.place("74xx:74HC04", "U7", at=(gx, y + G(6) + i * G(10)),
@@ -595,8 +666,10 @@ def band_digital(sh, y):
         ip, op = li[0], ri[0]
         sh.seg(ip, (ip.x - G(6), ip.y))
         sh.label((ip.x - G(6), ip.y), src, kind="global")
+        tips[src] = (ip.x - G(6), ip.y)
         sh.seg(op, (op.x + G(6), op.y))
         sh.label((op.x + G(6), op.y), dst, kind="global")
+        tips[dst] = (op.x + G(6), op.y)
     for i, un in enumerate((5, 6)):
         g = sh.place("74xx:74HC04", "U7", at=(gx + i * G(24), y + G(46)),
                      unit=un, value="74HC04")
@@ -606,14 +679,18 @@ def band_digital(sh, y):
     u7p = sh.place("74xx:74HC04", "U7", at=(gx + G(22), y + G(6)), unit=7,
                    value="74HC04")
     ic_supply(sh, u7p, 14, 7, "C14", u7p.pin(14).x + G(10))
+    return tips
 
-    # -- 74HC4049 level shift 5 V -> 3.3 V, two stages per signal -----------
-    lx = G(352)
+
+
+def blk_levelshift(sh, lx, y):
+    """74HC4049: 5 V logic down to the Pi's 3.3 V.  DIGITAL."""
     note_block(sh, (lx - G(8), y - G(6)),
             "LEVEL SHIFT to 3.3 V.  74HC4049 tolerates inputs above its own\n"
             "VCC, which is exactly what makes it legal here.  Two inverters\n"
             "per signal so BCLK polarity is preserved -- inverting BCLK would\n"
             "make the Pi sample on the data transition.", size=1.27)
+    tips = {}
     for i, sig in enumerate(("BCLK", "LRCLK", "DIN")):
         a = sh.place("4xxx:4049", "U8", at=(lx, y + G(6) + i * G(14)),
                      unit=2 * i + 1, value="74HC4049")
@@ -625,17 +702,29 @@ def band_digital(sh, y):
         bi, bo = lb[0], rb_[0]
         sh.seg(ai, (ai.x - G(6), ai.y))
         sh.label((ai.x - G(6), ai.y), sig, kind="global")
+        tips[sig] = (ai.x - G(6), ai.y)
         sh.seg(ao, bi)
         sh.seg(bo, (bo.x + G(6), bo.y))
         sh.label((bo.x + G(6), bo.y), f"PI_{sig}", kind="global")
-    u8p = sh.place("4xxx:4049", "U8", at=(lx + G(34), y + G(6)), unit=7,
+        tips["PI_" + sig] = (bo.x + G(6), bo.y)
+    # BELOW the three signal rows, not beside them.  At (lx + G(34), y + G(6))
+    # -- where this used to be -- the package body lands exactly where the
+    # first PI_ label goes and the label is drawn inside it.
+    u8p = sh.place("4xxx:4049", "U8", at=(lx + G(30), y + G(48)), unit=7,
                    value="74HC4049")
     ic_supply(sh, u8p, 1, 8, "C15", u8p.pin(1).x + G(10), rail="+3V3")
+    return tips
 
-    # -- Pi header -----------------------------------------------------------
-    hx = G(424)
+
+
+def blk_pi_header(sh, hx, y):
+    """The GPIO header.  DIGITAL -- and the board's only power inlet."""
+    # NOT mirrored.  A plain Conn_01x** has its connection points 5.08 mm to
+    # the LEFT of the body, so wires leaving leftwards run away from it;
+    # mirror="y" moves the pins to the right and every one of these stubs then
+    # crosses the connector's own rectangle, taking the pin labels with it.
     j2 = sh.place("Connector_Generic:Conn_01x08", "J2", at=(hx, y + G(14)),
-                  mirror="y", value="TO PI GPIO")
+                  value="TO PI GPIO")
     rows = [(1, "+5V", "rail"), (2, "GND", "gnd"), (3, "+3V3", "rail"),
             (4, "PI_BCLK", "lbl"), (5, "PI_LRCLK", "lbl"),
             (6, "PI_DIN", "lbl"), (7, "GPCLK0", "lbl"), (8, "GND", "gnd")]
@@ -643,6 +732,7 @@ def band_digital(sh, y):
     # pin pitch any riser lands on a neighbour's stub.  The two grounds are the
     # one exception and get a shared bus, run further out than every other stub
     # so it crosses nothing.
+    tips = {}
     gnd_x = j2.pin(1).x - G(15)
     gnds = [j2.pin(pin) for pin, n, k in rows if k == "gnd"]
     for p in gnds:
@@ -653,8 +743,11 @@ def band_digital(sh, y):
         if kind == "gnd":
             continue
         p = j2.pin(pin)
-        tx = p.x - G(8)
+        # rails reach further out than labels: a rail symbol draws its text
+        # above the stub end, back towards the pin numbers
+        tx = p.x - (G(12) if kind == "rail" else G(8))
         sh.seg(p, (tx, p.y))
+        tips[name] = (tx, p.y)
         if kind == "lbl":
             sh.label((tx, p.y), name, kind="global")
         else:
@@ -664,6 +757,104 @@ def band_digital(sh, y):
             "4=BCLK GPIO18(12)  5=LRCLK GPIO19(35)\n"
             "6=DIN GPIO20(38)   7=GPCLK0 GPIO4(7)  8=GND(39)\n"
             "Pi is I2S SLAVE: this board is the clock master.", size=1.27)
+    return tips
+
+
+# What crosses between boards, and nothing else.
+#
+# On a 2xN Odd_Even header the odd pins are the left column and the even pins
+# the right, so putting every ground on an odd pin gives a solid ground column
+# down one side of the connector and the signals down the other.  That is not
+# only a tidier drawing: an IDC ribbon takes conductor n to pin n, so the same
+# choice puts a grounded conductor either side of every signal in the cable.
+# MCLK is why it matters -- its jitter is what sets this converter's noise
+# floor, 20 ps buying a 102 dB floor where 1 ns leaves 68.
+#
+# Every link is a SHROUDED IDC box header, not a bare pin strip, because these
+# rows carry supplies against grounds: plugged in reversed, a bare strip puts
+# +5V straight across the ground column.  The shroud's key makes that
+# impossible and costs nothing.  Both supplies sit at the ENDS of the signal
+# column so their power symbols escape vertically instead of through the
+# labels.
+
+def link(*signals):
+    """Odd pins all GND, even pins the signals in order.  -> the pin table."""
+    out = []
+    for k, net in enumerate(signals):
+        out.append((2 * k + 1, "GND", "gnd"))
+        out.append((2 * k + 2, net, "rail" if net in ("+5V", "-5V") else "lbl"))
+    return tuple(out)
+
+
+# common <-> digital: the master clock out, the two quantiser outputs back,
+# and the charge pump's 192 kHz drive.
+LINK_DIGITAL = link("+5V", "MCLK", "QL", "QR", "PUMP", "+5V")
+
+# common <-> one channel board: both supplies, both references, and the three
+# nets that carry the modulator loop across -- the comparator out, and the
+# 1-bit DAC's two drives back into the summing junctions.
+def link_channel(ch):
+    return link("+5V", "VREF_P", "VREF_N",
+                f"CMP_{ch}", f"DACP_{ch}", f"DACN_{ch}", "-5V")
+
+
+def interconnect(sh, x, y, ref, pins, note):
+    """One IDC box header wired to `pins`, drawn the same way every time."""
+    n = len(pins) // 2
+    lib = f"Connector_Generic:Conn_02x{n:02d}_Odd_Even"
+    j = sh.place(lib, ref, at=(x, y + G(14)), value=f"2x{n} IDC")
+    tips = {}
+
+    # the grounds share one bus, set well clear of the pin column: a vertical
+    # run down a header's own pins shorts every pin it passes
+    gnds = [j.pin(p) for p, net, kind in pins if kind == "gnd"]
+    gx = gnds[0].x - G(8)
+    for pin in gnds:
+        sh.seg(pin, (gx, pin.y))
+    sh.seg((gx, gnds[0].y), (gx, gnds[-1].y))
+    sh.gnd((gx, gnds[-1].y), drop=STUB)
+
+    # the supplies leave UPWARDS and DOWNWARDS rather than out through the
+    # label column: they are the top and bottom of the even row, so each
+    # escapes into clear sheet.  A rail symbol on a plain stub would draw its
+    # text across the signal label two rows away.
+    rails = [(j.pin(p), net) for p, net, kind in pins if kind == "rail"]
+    rx = rails[0][0].x + G(4)
+    for k, (pin, net) in enumerate(rails):
+        dy = -G(6) if k == 0 else G(6)
+        sh.seg(pin, (rx, pin.y))
+        sh.seg((rx, pin.y), (rx, pin.y + dy))
+        sh.rail((rx, pin.y + dy), net=net, rise=STUB if dy < 0 else -STUB)
+        tips[net] = (rx, pin.y + dy)
+
+    for p, net, kind in pins:
+        if kind != "lbl":
+            continue
+        pin = j.pin(p)
+        tx = pin.x + G(8)
+        sh.seg(pin, (tx, pin.y))
+        tips[net] = (tx, pin.y)
+        sh.label((tx, pin.y), net, kind="global")
+
+    note_block(sh, (x - G(10), y + G(14) + G(2) * n + G(10)), note, size=1.27)
+    return tips
+
+
+def band_digital(sh, y):
+    """Every clocked block on one band: the reference sheet's arrangement."""
+    note_block(sh, (G(16), y - G(16)),
+            "CLOCK AND DIGITAL  (6.144 MHz -> /2 BCLK 3.072M, /4 MCLK 1.536M, "
+            "/128 LRCLK 48k;  L and R interleaved onto one DIN)", size=2.0)
+    sel = blk_oscillator(sh, G(18), y)
+    # G(74) is far enough right that the buffer's input riser clears every
+    # stub on the clock-select jumper
+    blk_clock_buffer(sh, G(74), y, sel)
+    clock_divider(sh, G(126), y)
+    blk_retime(sh, G(184), y)
+    blk_mux(sh, G(238), y)
+    blk_dac_gates(sh, G(300), y)
+    blk_levelshift(sh, G(352), y)
+    blk_pi_header(sh, G(424), y)
 
 
 # ====================================================== BANDS C/D: MODULATORS
@@ -916,6 +1107,91 @@ def refs_for(ch, n):
             "Ca": f"C{n+5}", "Cb": f"C{n+6}", "Cc": f"C{n+7}"}
 
 
+# ============================================================== FOOTPRINTS
+#
+# Every part is through-hole, and the copper is isolation-milled with an 0.8 mm
+# flat end mill, so 0.8 mm is a hard floor on every pad-to-pad gap: the tool
+# cannot enter anything narrower, and a gap it cannot enter ships as a short.
+# Each pick below was measured against that floor with the audit in
+# ../sim/../tools -- the numbers are in vinyl_adc.kicad_dru. Only the 2.54 mm
+# pin headers land under the 0.85 mm netclass clearance, at 0.84 mm, and they
+# get a documented DRC exception rather than a lower global clearance.
+#
+# Assigned here rather than in the GUI because this script owns the schematic:
+# regenerating it would otherwise wipe every footprint field.
+
+FP_DIP = "Package_DIP:DIP-{}_W7.62mm_LongPads"      # LongPads: the mill wants
+                                                    # the bigger annular ring
+FOOTPRINTS = {
+    "Device:R": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "Device:D_Schottky": "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",
+    "Device:R_Potentiometer_Trim":
+        "Potentiometer_THT:Potentiometer_Bourns_3296W_Vertical",
+    "Comparator:LM311": FP_DIP.format(8),
+    "Amplifier_Operational:TL072": FP_DIP.format(8),
+    "Amplifier_Operational:TL074": FP_DIP.format(14),
+    # a DIP-8 SOCKET footprint, not Oscillator:Oscillator_DIP-8: the can is
+    # socketed like every other IC here, and a socket wants all eight pads
+    # even though the oscillator only uses 1/4/5/8
+    "Oscillator:CXO_DIP8": FP_DIP.format(8),
+    "74xx:74HC04": FP_DIP.format(14),
+    "74xx:74HC74": FP_DIP.format(14),
+    "74xx:74LS132": FP_DIP.format(14),      # fitted as 74HCT132
+    "74xx:74LS157": FP_DIP.format(16),      # fitted as 74HC157
+    "4xxx:4040": FP_DIP.format(16),         # fitted as 74HC4040
+    "4xxx:4049": FP_DIP.format(16),         # fitted as 74HC4049
+    "74xx:74HC244": FP_DIP.format(20),
+    "Connector_Generic:Conn_01x03":
+        "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical",
+    "Connector_Generic:Conn_01x08":
+        "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical",
+    # shrouded and keyed, so the board-to-board ribbon cannot go in backwards
+    # and put +5V across the ground column
+    "Connector_Generic:Conn_02x06_Odd_Even":
+        "Connector_IDC:IDC-Header_2x06_P2.54mm_Vertical",
+    "Connector_Generic:Conn_02x07_Odd_Even":
+        "Connector_IDC:IDC-Header_2x07_P2.54mm_Vertical",
+    # KiCad 10 deleted the bornier terminals; vendored into lib/ and registered
+    # in the project fp-lib-table, which KiCad reads at PROJECT load
+    "Connector:Screw_Terminal_01x02":
+        "TerminalBlock:TerminalBlock_bornier-2_P5.08mm",
+}
+
+# Capacitors need the value as well as the symbol: a 2u2 film cap and a 220 pF
+# disc share Device:C and are nothing like the same part.
+FOOTPRINTS_C = {
+    "2u2": "Capacitor_THT:C_Rect_L11.0mm_W6.3mm_P10.00mm_MKT",
+    "470u": "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm",
+    "220u": "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm",
+    "10u": "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm",
+}
+FP_DISC = "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"   # 100n, 1n5, 220p
+
+
+def footprint_for(part):
+    """The footprint for one placed symbol, or "" for power symbols."""
+    if part.lib_id.startswith("power:"):
+        return ""
+    if part.lib_id in ("Device:C", "Device:C_Polarized"):
+        return FOOTPRINTS_C.get(part.value, FP_DISC)
+    return FOOTPRINTS.get(part.lib_id, "")
+
+
+def assign_footprints(sh):
+    """Stamp the footprint field on every placed symbol before emit.
+
+    Returns the refs left without one, which must be empty for anything that
+    is going on copper.
+    """
+    missing = []
+    for part in sh.parts:
+        fp = footprint_for(part)
+        part.footprint = fp
+        if not fp and not part.lib_id.startswith("power:"):
+            missing.append(f"{part.ref} ({part.lib_id})")
+    return sorted(set(missing))
+
+
 # ===================================================================== build
 #
 # Every block function above takes the sheet as its first argument so the SPICE
@@ -936,11 +1212,19 @@ def write_project(sch_path, sheet_uuid):
       a different one, KiCad resolves symbols against the project's path, finds
       no instance data and drops them out of connectivity -- ERC then reports
       dozens of unconnected pins on a file kicad-cli reads as flawless.
+
+    An EXISTING .kicad_pro is merged into, never replaced.  Once the PCB phase
+    starts, that file is shared: KiCad-Autoplace stamps the fabrication
+    profile's clearance and track width into it on every run, and KiCad itself
+    fills in board design settings, plot options and stackup.  Rewriting it
+    from this dictionary would throw all of that away every time the schematic
+    was regenerated -- and the loss is silent, because the schematic side would
+    still be perfectly correct.
     """
     import json
     pro = os.path.splitext(sch_path)[0] + ".kicad_pro"
     doc = {
-        "board": {"design_settings": {}},
+        "board": {"design_settings": {"rules": {"min_clearance": 0.85}}},
         "boards": [],
         "libraries": {"pinned_footprint_libs": [], "pinned_symbol_libs": []},
         "meta": {"filename": os.path.basename(pro), "version": 3},
@@ -950,8 +1234,13 @@ def write_project(sch_path, sheet_uuid):
                 "bus_width": 12.0,
                 "wire_width": 6.0,
                 "line_style": 0,
-                "clearance": 0.2,
-                "track_width": 0.25,
+                # the `cnc` fabrication profile's numbers -- 0.8 mm end
+                # mill plus ~0.025 mm of margin either side of the cut.
+                # KiCad-Autoplace stamps these into the .kicad_pro on every
+                # run anyway; setting them here means the GUI agrees before
+                # the first run rather than after it.
+                "clearance": 0.85,
+                "track_width": 1.0,
                 "via_diameter": 0.8,
                 "via_drill": 0.4,
                 "schematic_color": "rgba(0, 0, 0, 0.000)",
@@ -974,43 +1263,234 @@ def write_project(sch_path, sheet_uuid):
         "sheets": [[sheet_uuid, "Root"]],
         "text_variables": {},
     }
+    if os.path.exists(pro):
+        with open(pro, encoding="utf-8") as f:
+            have = json.load(f)
+        doc = _merge_project(have, doc)
+        what = "updated"
+    else:
+        what = "wrote"
     with open(pro, "w", encoding="utf-8") as f:
         json.dump(doc, f, indent=2)
-    print("wrote", os.path.normpath(pro))
+    print(what, os.path.normpath(pro))
 
 
-def main(bands="ABCD"):
-    sh = new_sheet()
-    # Band anchors are spaced from measured band extents (about 93 mm each),
-    # not guessed: on A2 the four bands plus their captions only just fit.
-    if "A" in bands:
-        band_power(sh, G(27))
-    if "B" in bands:
-        band_digital(sh, G(109))
-    if "C" in bands:
-        modulator(sh, "L", G(191), refs_for("L", 20))
-    if "D" in bands:
-        modulator(sh, "R", G(269), refs_for("R", 60))
-    links = sim_index(sh, G(150), G(56)) if bands == "ABCD" else {}
+def _merge_project(have, want):
+    """Fold the schematic's required keys into an existing project file.
 
+    Only the keys this script owns are forced: the root-sheet uuid and the
+    netclass drawing widths.  Everything else the board phase put there --
+    design settings, stackup, plot options, and the fabrication profile's
+    clearance and track width -- is left exactly as found.
+    """
+    out = dict(have)
+    out["sheets"] = want["sheets"]
+    out.setdefault("schematic", {}).update(want["schematic"])
+    classes = out.setdefault("net_settings", {}).setdefault("classes", [])
+    if not classes:
+        classes.append({"name": "Default"})
+    for cls in classes:
+        for key in ("wire_width", "bus_width", "line_style"):
+            cls.setdefault(key, want["net_settings"]["classes"][0][key])
+    return out
+
+
+# ============================================= THE THREE SHEETS THIS EMITS
+#
+# The reference sheet is the whole converter on one page: it is what the
+# testbenches link back to, and what the split is checked against.  It is NOT
+# what gets milled.  Routed as one single-sided board it came out needing 45
+# hand-soldered wire bridges, because one copper layer with a ground plane on
+# it has no room left for a second net that has to reach everywhere.
+#
+# So it is cut in the one place the circuit is genuinely narrow: four signals
+# and a supply.  What decides where the cut goes is the modulator's feedback
+# path -- comparator -> flip-flop -> DAC gates -> summing junction -- whose
+# delay is compensated by the coefficient k0.  Put a ribbon cable in the middle
+# of that and k0 is wrong by an amount nothing on the board knows about, so the
+# flip-flops and the DAC gates stay with the analog half despite being 74HC
+# logic.  The clock generator, the interleave mux and the level shift have no
+# such constraint and travel with the Pi header.
+
+def board_full(sh):
+    """The reference: the entire converter on one A2 sheet."""
+    band_power(sh, G(27))
+    band_digital(sh, G(109))
+    modulator(sh, "L", G(191), refs_for("L", 20))
+    modulator(sh, "R", G(269), refs_for("R", 60))
+    return sim_index(sh, G(150), G(56))
+
+
+NOTE_DIGITAL_LINK = (
+    "TO THE DIGITAL BOARD, 12-way IDC ribbon.  Odd pins are all GND, so\n"
+    "every signal conductor has a grounded neighbour either side of it.\n"
+    "Shrouded and keyed: reversed, pin 2 (+5V) would meet pin 11 (GND).")
+
+NOTE_CHANNEL_LINK = (
+    "TO CHANNEL {0}, 14-way IDC ribbon.  Both supplies, both references,\n"
+    "and the three nets that carry the modulator loop across: the\n"
+    "comparator out, and the DAC's two drives back to the summing\n"
+    "junctions.  Odd pins are all GND.  Shrouded and keyed.")
+
+
+def board_common(sh):
+    """Power, the reference, the quantiser, and the three ribbons out.
+
+    Everything both channels share, and nothing that belongs to one.
+
+    The four nets between the flip-flops and the DAC gates are drawn as wires:
+    on this sheet they are one block feeding the next, and Q -> gate -> DAC is
+    the whole point of the board. Everything else here genuinely goes to
+    another board and is correctly a label.
+    """
+    ya, yb, yc = G(26), G(96), G(160)
+    band_power(sh, ya, flags=("+5V", "-5V", "GND"),
+               pump_x=G(62), ref_x=G(150), flag_x=G(20))
+
+    note_block(sh, (G(16), yb - G(16)),
+            "QUANTISER AND 1-BIT DAC  (comparator in from each channel, "
+            "re-clocked on MCLK, DAC drive back out)", size=2.0)
+    ff = blk_retime(sh, G(24), yb, power_at=(G(20), yb + G(56)))
+    dac = blk_dac_gates(sh, G(140), yb)
+    interconnect(sh, G(196), yb, "J3", LINK_DIGITAL, NOTE_DIGITAL_LINK)
+
+    note_block(sh, (G(16), yc - G(16)),
+            "RIBBONS TO THE CHANNEL BOARDS  (same 14-way pinout on both, so "
+            "one artwork serves L and R)", size=2.0)
+    interconnect(sh, G(30), yc, "J5", link_channel("L"),
+                 NOTE_CHANNEL_LINK.format("L"))
+    interconnect(sh, G(120), yc, "J6", link_channel("R"),
+                 NOTE_CHANNEL_LINK.format("R"))
+
+    for k, net in enumerate(("QL", "QNL", "QR", "QNR")):
+        elbow(sh, ff[net], dac[net], G(74) + k * G(8))
+
+
+def board_channel(sh, ch):
+    """One modulator channel, with its ribbon back to the common board.
+
+    Both channel boards are THE SAME ARTWORK, built twice; this is drawn once
+    per channel only so that the two netlists can be checked against the
+    reference sheet and against each other.  The R board's refdes are the L
+    board's plus forty, and `tools/check_split.py` proves the two drawings are
+    otherwise identical.
+    """
+    modulator(sh, ch, G(31), refs_for(ch, 20 if ch == "L" else 60))
+    # BELOW the chain, not beside it. The modulator is one 550 mm row -- that
+    # is the right drawing for a signal chain and the wrong shape to hang a
+    # connector off the end of: at G(392) the header's stubs land on the
+    # quantiser's own wiring and short VREF_N and -5V to the DAC drive, with
+    # every geometry check still reporting the sheet as clean.
+    interconnect(sh, G(416), G(70), "J7", link_channel(ch),
+                 NOTE_CHANNEL_LINK.format(ch))
+    power_flags(sh, G(20), G(96), ("+5V", "-5V", "GND"))
+
+
+def board_digital(sh):
+    """Everything clocked that is not inside the modulator loop.
+
+    Two rows: the clock is made along the top, and the data path -- link in,
+    interleave, level shift, out to the Pi -- runs along the bottom.
+
+    Four of the nets here are drawn as WIRES rather than left to their labels,
+    because on this sheet they are hops between neighbouring blocks and the
+    thing a reader wants is to follow the signal with a finger.  On the
+    reference sheet the very same nets cross the whole page and are correctly
+    labels -- which is why each block hands back the end of its stub instead
+    of deciding for itself.
+    """
+    y1, y2 = G(27), G(105)
+
+    note_block(sh, (G(16), y1 - G(16)),
+            "CLOCK  (6.144 MHz -> /2 BCLK 3.072M, /4 MCLK 1.536M, "
+            "/32 PUMP 192k, /128 LRCLK 48k)", size=2.0)
+    sel = blk_oscillator(sh, G(18), y1)
+    clk6m = blk_clock_buffer(sh, G(74), y1, sel)
+    div = clock_divider(sh, G(126), y1)
+    blk_pi_header(sh, G(206), y1)
+    # this half is powered entirely through J2, so its flags belong beside it
+    power_flags(sh, G(186), y1 - G(12), ("+5V", "+3V3", "GND"))
+
+    note_block(sh, (G(16), y2 - G(16)),
+            "INTERLEAVE AND LEVEL SHIFT  (L and R onto one DIN at 3.072 Mbps, "
+            "then 5 V -> 3.3 V for the Pi)", size=2.0)
+    link = interconnect(sh, G(24), y2, "J4", LINK_DIGITAL,
+                        NOTE_DIGITAL_LINK.replace("THE DIGITAL BOARD",
+                                                  "THE COMMON BOARD"))
+    mux = blk_mux(sh, G(100), y2)
+    lvl = blk_levelshift(sh, G(160), y2)
+
+    elbow(sh, clk6m, (div["clk"].x - G(6), div["clk"].y), G(100))
+    elbow(sh, link["MCLK"], mux["MCLK"], G(56))
+    elbow(sh, link["QL"], mux["QL"], G(62))
+    elbow(sh, link["QR"], mux["QR"], G(68))
+    # G(130) puts DIN's drop just clear of the mux's own decoupling run, which
+    # falls the full height of the package from pin 16 to pin 8 beside it
+    elbow(sh, mux["DIN"], lvl["DIN"], G(130))
+
+
+BOARDS = {
+    "vinyl_adc":           (board_full,    "A2", TITLE),
+    "vinyl_adc_common":    (board_common,  "A3", TITLE + "  -  COMMON BOARD"),
+    "vinyl_adc_channel_l": (lambda sh: board_channel(sh, "L"), "A2",
+                            TITLE + "  -  CHANNEL BOARD (built twice)"),
+    "vinyl_adc_channel_r": (lambda sh: board_channel(sh, "R"), "A2",
+                            TITLE + "  -  CHANNEL BOARD, R wiring"),
+    "vinyl_adc_digital":   (board_digital, "A3", TITLE + "  -  DIGITAL BOARD"),
+}
+
+
+def emit_board(name, compose, paper, title):
+    """Draw one sheet, check it, write it and its project.  Returns fault count."""
+    sh = new_sheet(title=title, project=name, paper=paper)
+    links = compose(sh) or {}
+
+    missing = assign_footprints(sh)
     problems = sh.check()
-    if problems:
-        print(f"{len(problems)} geometry problem(s):")
-        for p in problems[:40]:
-            print("   ", p)
-    else:
-        print("geometry OK")
-
-    name = ("vinyl_adc.kicad_sch" if bands == "ABCD"
-            else f"bisect_{bands}.kicad_sch")
-    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", name)
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                       name + ".kicad_sch")
     sh.emit(out)
     if links:
         add_hrefs(out, links)
-    print("wrote", os.path.normpath(out))
     write_project(out, sh.uuid)
+
+    print(f"{name}: {len(sh.parts)} symbols, "
+          + ("footprints OK" if not missing else f"{len(missing)} unfootprinted")
+          + ", "
+          + ("geometry OK" if not problems else f"{len(problems)} geometry faults"))
+    for p in problems[:20]:
+        print("    ", p)
+    for m in missing:
+        print("     no footprint:", m)
+    return len(problems) + len(missing)
+
+
+def main(which="all"):
+    if which == "all":
+        return 1 if sum(emit_board(n, *a) for n, a in BOARDS.items()) else 0
+    if which in BOARDS:
+        return 1 if emit_board(which, *BOARDS[which]) else 0
+
+    # a subset of the reference sheet's bands, for bisecting a geometry fault
+    sh = new_sheet(project="bisect")
+    for letter, draw in (("A", lambda: band_power(sh, G(27))),
+                         ("B", lambda: band_digital(sh, G(109))),
+                         ("C", lambda: modulator(sh, "L", G(191),
+                                                 refs_for("L", 20))),
+                         ("D", lambda: modulator(sh, "R", G(269),
+                                                 refs_for("R", 60)))):
+        if letter in which:
+            draw()
+    problems = sh.check()
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                       f"bisect_{which}.kicad_sch")
+    sh.emit(out)
+    write_project(out, sh.uuid)
+    for p in problems[:40]:
+        print("    ", p)
+    print(f"bisect_{which}: {len(problems)} geometry faults")
     return 1 if problems else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "ABCD"))
+    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "all"))

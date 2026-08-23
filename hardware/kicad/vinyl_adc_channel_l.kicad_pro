@@ -264,7 +264,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "vinyl_adc.kicad_pro",
+    "filename": "vinyl_adc_channel_l.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -319,15 +319,15 @@
     },
     "top_level_sheets": [
       {
-        "filename": "vinyl_adc.kicad_sch",
-        "name": "vinyl_adc",
+        "filename": "vinyl_adc_channel_l.kicad_sch",
+        "name": "vinyl_adc_channel_l",
         "uuid": "00000000-0000-0000-0000-000000000000"
       }
     ]
   },
   "sheets": [
     [
-      "34f1338d-c013-4572-bb14-0eb549e25216",
+      "c72d2cbc-02f5-47d9-b7f2-d76a06e33b9b",
       "Root"
     ]
   ],

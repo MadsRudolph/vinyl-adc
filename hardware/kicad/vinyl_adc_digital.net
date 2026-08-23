@@ -1,0 +1,2436 @@
+(export
+	(version "E")
+	(design
+		(source "C:\\Users\\Mads2\\Documents\\Projects\\Projects\\Vinyl ADC\\hardware\\kicad\\vinyl_adc_digital.kicad_sch")
+		(date "2026-08-23T14:27:34")
+		(tool "Eeschema 10.0.4")
+		(sheet
+			(number "1")
+			(name "/")
+			(tstamps "/")
+			(title_block
+				(title "Discrete 3rd-order delta-sigma vinyl ADC  -  stereo, 48 kHz  -  DIGITAL BOARD")
+				(company)
+				(rev)
+				(date)
+				(source "vinyl_adc_digital.kicad_sch")
+				(comment
+					(number "1")
+					(value "")
+				)
+				(comment
+					(number "2")
+					(value "")
+				)
+				(comment
+					(number "3")
+					(value "")
+				)
+				(comment
+					(number "4")
+					(value "")
+				)
+				(comment
+					(number "5")
+					(value "")
+				)
+				(comment
+					(number "6")
+					(value "")
+				)
+				(comment
+					(number "7")
+					(value "")
+				)
+				(comment
+					(number "8")
+					(value "")
+				)
+				(comment
+					(number "9")
+					(value "")
+				)
+			)
+		)
+	)
+	(components
+		(comp
+			(ref "C9")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "9298653a-8e99-4345-8a74-1f1a9fed46e1")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C10")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "a2e679b3-5527-4412-9043-aa425258e44a")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C11")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "0b48ac37-be51-4dd7-8d14-7fef01d1e837")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C13")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "8ef97074-dd75-44bb-b776-267b8fd21a8e")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C15")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "b4e2bcb0-8002-4f72-8cb1-19dc9ab7fcc5")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J1")
+			(value "CLK SEL")
+			(footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
+			(fields
+				(field
+					(name "Footprint") "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x03")
+				(description "Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "c18dc4f2-e7c5-45d9-8fe4-83e7c231358f")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J2")
+			(value "TO PI GPIO")
+			(footprint "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical")
+			(fields
+				(field
+					(name "Footprint") "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x08")
+				(description "Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ea1998d7-0152-4157-9eec-03d46d4fe099")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "8")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J4")
+			(value "2x6 IDC")
+			(footprint "Connector_IDC:IDC-Header_2x06_P2.54mm_Vertical")
+			(fields
+				(field
+					(name "Footprint") "Connector_IDC:IDC-Header_2x06_P2.54mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_02x06_Odd_Even")
+				(description "Generic connector, double row, 02x06, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_2x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "b9fae526-756a-4773-9595-63317513b43c")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "11")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "10")
+						)
+						(pin
+							(num "12")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U3")
+			(value "74HCT132")
+			(footprint "Package_DIP:DIP-14_W7.62mm_LongPads")
+			(fields
+				(field
+					(name "Footprint") "Package_DIP:DIP-14_W7.62mm_LongPads")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "74xx")
+				(part "74LS132")
+				(description "Quad 2-input NAND Schmitt trigger")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "TTL Nand2")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "DIP*W7.62mm*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "f64a4707-0419-4069-b512-b8c187c2c889" "f2952e3a-c457-4b46-8609-52cd9cd7a018"
+				"bc8cbc95-2af7-407e-b1c7-3fff6545251e" "b99a9bdd-f7ac-4863-a434-b91412622fdd"
+				"b461d583-2fef-4101-a136-1aa87367d807"
+			)
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+					)
+				)
+				(unit
+					(name "B")
+					(pins
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+					)
+				)
+				(unit
+					(name "C")
+					(pins
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "10")
+						)
+						(pin
+							(num "8")
+						)
+					)
+				)
+				(unit
+					(name "D")
+					(pins
+						(pin
+							(num "12")
+						)
+						(pin
+							(num "13")
+						)
+						(pin
+							(num "11")
+						)
+					)
+				)
+				(unit
+					(name "E")
+					(pins
+						(pin
+							(num "14")
+						)
+						(pin
+							(num "7")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U4")
+			(value "74HC4040")
+			(footprint "Package_DIP:DIP-16_W7.62mm_LongPads")
+			(fields
+				(field
+					(name "Footprint") "Package_DIP:DIP-16_W7.62mm_LongPads")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "4xxx")
+				(part "4040")
+				(description "Binary Counter 12 stages (Asynchronous)")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "CMOS CNT CNT12")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "DIP?16*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "c1b47989-0f1b-414c-8cdc-4a429e363b53")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "10")
+						)
+						(pin
+							(num "11")
+						)
+						(pin
+							(num "16")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "13")
+						)
+						(pin
+							(num "12")
+						)
+						(pin
+							(num "14")
+						)
+						(pin
+							(num "15")
+						)
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U6")
+			(value "74HC157")
+			(footprint "Package_DIP:DIP-16_W7.62mm_LongPads")
+			(fields
+				(field
+					(name "Footprint") "Package_DIP:DIP-16_W7.62mm_LongPads")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "74xx")
+				(part "74LS157")
+				(description "Quad 2 to 1 line Multiplexer")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "TTL MUX MUX2")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "DIP?16*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "476287ae-511b-4eab-8ad6-24f125d242d8")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "11")
+						)
+						(pin
+							(num "10")
+						)
+						(pin
+							(num "14")
+						)
+						(pin
+							(num "13")
+						)
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "15")
+						)
+						(pin
+							(num "16")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "12")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U8")
+			(value "74HC4049")
+			(footprint "Package_DIP:DIP-16_W7.62mm_LongPads")
+			(fields
+				(field
+					(name "Footprint") "Package_DIP:DIP-16_W7.62mm_LongPads")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "4xxx")
+				(part "4049")
+				(description "Hex Buffer Inverter")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "CMOS BUFFER")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "DIP?16*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "818c379b-6aa3-4d3d-99c5-c8cba9c3206e" "6c348672-1134-4b10-95bf-3e915c80539d"
+				"823805ef-886c-4f9e-b9ad-730f885cb18b" "440d8310-b980-46a3-918f-8a0e0e248041"
+				"396e901e-7d98-481a-b34f-2343dbc83976" "bfd73d5d-d474-40fb-b0ab-54ebcd5d9fb8"
+				"34e79ae6-c95e-45ac-8f4f-d4e6530cdd9c"
+			)
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+				(unit
+					(name "B")
+					(pins
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "4")
+						)
+					)
+				)
+				(unit
+					(name "C")
+					(pins
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "6")
+						)
+					)
+				)
+				(unit
+					(name "D")
+					(pins
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "10")
+						)
+					)
+				)
+				(unit
+					(name "E")
+					(pins
+						(pin
+							(num "11")
+						)
+						(pin
+							(num "12")
+						)
+					)
+				)
+				(unit
+					(name "F")
+					(pins
+						(pin
+							(num "14")
+						)
+						(pin
+							(num "15")
+						)
+					)
+				)
+				(unit
+					(name "G")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "8")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "X1")
+			(value "6.144MHz")
+			(footprint "Package_DIP:DIP-8_W7.62mm_LongPads")
+			(fields
+				(field
+					(name "Footprint") "Package_DIP:DIP-8_W7.62mm_LongPads")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Oscillator")
+				(part "CXO_DIP8")
+				(description "Crystal Clock Oscillator, DIP8-style metal package")
+			)
+			(property
+				(name "Sheetname")
+				(value "vinyl_adc_digital")
+			)
+			(property
+				(name "Sheetfile")
+				(value "vinyl_adc_digital.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "Crystal Clock Oscillator")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Oscillator*DIP*8*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "56b0f920-cb0e-47be-a5ad-def07b9df2e1")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+					)
+				)
+			)
+		)
+	)
+	(groups)
+	(variants)
+	(libparts
+		(libpart
+			(lib "4xxx")
+			(part "4040")
+			(description "Binary Counter 12 stages (Asynchronous)")
+			(docs "http://www.intersil.com/content/dam/Intersil/documents/cd40/cd4020bms-24bms-40bms.pdf")
+			(footprints
+				(fp "DIP?16*")
+			)
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "4040")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet") "http://www.intersil.com/content/dam/Intersil/documents/cd40/cd4020bms-24bms-40bms.pdf")
+				(field
+					(name "Description") "Binary Counter 12 stages (Asynchronous)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Q11")
+					(type "output")
+				)
+				(pin
+					(num "2")
+					(name "Q5")
+					(type "output")
+				)
+				(pin
+					(num "3")
+					(name "Q4")
+					(type "output")
+				)
+				(pin
+					(num "4")
+					(name "Q6")
+					(type "output")
+				)
+				(pin
+					(num "5")
+					(name "Q3")
+					(type "output")
+				)
+				(pin
+					(num "6")
+					(name "Q2")
+					(type "output")
+				)
+				(pin
+					(num "7")
+					(name "Q1")
+					(type "output")
+				)
+				(pin
+					(num "8")
+					(name "VSS")
+					(type "power_in")
+				)
+				(pin
+					(num "9")
+					(name "Q0")
+					(type "output")
+				)
+				(pin
+					(num "10")
+					(name "CLK")
+					(type "input")
+				)
+				(pin
+					(num "11")
+					(name "Reset")
+					(type "input")
+				)
+				(pin
+					(num "12")
+					(name "Q8")
+					(type "output")
+				)
+				(pin
+					(num "13")
+					(name "Q7")
+					(type "output")
+				)
+				(pin
+					(num "14")
+					(name "Q9")
+					(type "output")
+				)
+				(pin
+					(num "15")
+					(name "Q10")
+					(type "output")
+				)
+				(pin
+					(num "16")
+					(name "VDD")
+					(type "power_in")
+				)
+			)
+		)
+		(libpart
+			(lib "4xxx")
+			(part "4049")
+			(description "Hex Buffer Inverter")
+			(docs "http://www.intersil.com/content/dam/intersil/documents/cd40/cd4049ubms.pdf")
+			(footprints
+				(fp "DIP?16*")
+			)
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "4049")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet") "http://www.intersil.com/content/dam/intersil/documents/cd40/cd4049ubms.pdf")
+				(field
+					(name "Description") "Hex Buffer Inverter")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "VCC")
+					(type "power_in")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "3")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "4")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "5")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "6")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "7")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "8")
+					(name "VSS")
+					(type "power_in")
+				)
+				(pin
+					(num "9")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "10")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "11")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "12")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "14")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "15")
+					(name "")
+					(type "output")
+				)
+			)
+		)
+		(libpart
+			(lib "74xx")
+			(part "74LS132")
+			(description "Quad 2-input NAND Schmitt trigger")
+			(docs "http://www.ti.com/lit/gpn/sn74LS132")
+			(footprints
+				(fp "DIP*W7.62mm*")
+			)
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "74LS132")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet") "http://www.ti.com/lit/gpn/sn74LS132")
+				(field
+					(name "Description") "Quad 2-input NAND Schmitt trigger")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "3")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "4")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "5")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "6")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "7")
+					(name "GND")
+					(type "power_in")
+				)
+				(pin
+					(num "8")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "9")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "10")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "11")
+					(name "")
+					(type "output")
+				)
+				(pin
+					(num "12")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "13")
+					(name "")
+					(type "input")
+				)
+				(pin
+					(num "14")
+					(name "VCC")
+					(type "power_in")
+				)
+			)
+		)
+		(libpart
+			(lib "74xx")
+			(part "74LS157")
+			(description "Quad 2 to 1 line Multiplexer")
+			(docs "http://www.ti.com/lit/gpn/sn74LS157")
+			(footprints
+				(fp "DIP?16*")
+			)
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "74LS157")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet") "http://www.ti.com/lit/gpn/sn74LS157")
+				(field
+					(name "Description") "Quad 2 to 1 line Multiplexer")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "S")
+					(type "input")
+				)
+				(pin
+					(num "2")
+					(name "I0a")
+					(type "input")
+				)
+				(pin
+					(num "3")
+					(name "I1a")
+					(type "input")
+				)
+				(pin
+					(num "4")
+					(name "Za")
+					(type "output")
+				)
+				(pin
+					(num "5")
+					(name "I0b")
+					(type "input")
+				)
+				(pin
+					(num "6")
+					(name "I1b")
+					(type "input")
+				)
+				(pin
+					(num "7")
+					(name "Zb")
+					(type "output")
+				)
+				(pin
+					(num "8")
+					(name "GND")
+					(type "power_in")
+				)
+				(pin
+					(num "9")
+					(name "Zc")
+					(type "output")
+				)
+				(pin
+					(num "10")
+					(name "I1c")
+					(type "input")
+				)
+				(pin
+					(num "11")
+					(name "I0c")
+					(type "input")
+				)
+				(pin
+					(num "12")
+					(name "Zd")
+					(type "output")
+				)
+				(pin
+					(num "13")
+					(name "I1d")
+					(type "input")
+				)
+				(pin
+					(num "14")
+					(name "I0d")
+					(type "input")
+				)
+				(pin
+					(num "15")
+					(name "E")
+					(type "input")
+				)
+				(pin
+					(num "16")
+					(name "VCC")
+					(type "power_in")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector_Generic")
+			(part "Conn_01x03")
+			(description "Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "Connector*:*_1x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_01x03")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "Pin_3")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector_Generic")
+			(part "Conn_01x08")
+			(description "Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "Connector*:*_1x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_01x08")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "Pin_3")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "Pin_4")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "Pin_5")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "Pin_6")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "Pin_7")
+					(type "passive")
+				)
+				(pin
+					(num "8")
+					(name "Pin_8")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector_Generic")
+			(part "Conn_02x06_Odd_Even")
+			(description "Generic connector, double row, 02x06, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "Connector*:*_2x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_02x06_Odd_Even")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, double row, 02x06, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "Pin_3")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "Pin_4")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "Pin_5")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "Pin_6")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "Pin_7")
+					(type "passive")
+				)
+				(pin
+					(num "8")
+					(name "Pin_8")
+					(type "passive")
+				)
+				(pin
+					(num "9")
+					(name "Pin_9")
+					(type "passive")
+				)
+				(pin
+					(num "10")
+					(name "Pin_10")
+					(type "passive")
+				)
+				(pin
+					(num "11")
+					(name "Pin_11")
+					(type "passive")
+				)
+				(pin
+					(num "12")
+					(name "Pin_12")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "C")
+			(description "Unpolarized capacitor")
+			(footprints
+				(fp "C_*")
+			)
+			(fields
+				(field
+					(name "Reference") "C")
+				(field
+					(name "Value") "C")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Unpolarized capacitor")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Oscillator")
+			(part "CXO_DIP8")
+			(description "Crystal Clock Oscillator, DIP8-style metal package")
+			(docs "http://cdn-reichelt.de/documents/datenblatt/B400/OSZI.pdf")
+			(footprints
+				(fp "Oscillator*DIP*8*")
+			)
+			(fields
+				(field
+					(name "Reference") "Y")
+				(field
+					(name "Value") "CXO_DIP8")
+				(field
+					(name "Footprint") "Oscillator:Oscillator_DIP-8")
+				(field
+					(name "Datasheet") "http://cdn-reichelt.de/documents/datenblatt/B400/OSZI.pdf")
+				(field
+					(name "Description") "Crystal Clock Oscillator, DIP8-style metal package")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "EN")
+					(type "input")
+				)
+				(pin
+					(num "4")
+					(name "GND")
+					(type "power_in")
+				)
+				(pin
+					(num "5")
+					(name "OUT")
+					(type "output")
+				)
+				(pin
+					(num "8")
+					(name "Vcc")
+					(type "power_in")
+				)
+			)
+		)
+	)
+	(libraries
+		(library
+			(logical "4xxx")
+			(uri "${KICAD10_SYMBOL_DIR}/4xxx.kicad_sym")
+		)
+		(library
+			(logical "74xx")
+			(uri "${KICAD10_SYMBOL_DIR}/74xx.kicad_sym")
+		)
+		(library
+			(logical "Connector_Generic")
+			(uri "${KICAD10_SYMBOL_DIR}/Connector_Generic.kicad_sym")
+		)
+		(library
+			(logical "Device")
+			(uri "${KICAD10_SYMBOL_DIR}/Device.kicad_sym")
+		)
+		(library
+			(logical "Oscillator")
+			(uri "${KICAD10_SYMBOL_DIR}/Oscillator.kicad_sym")
+		)
+	)
+	(nets
+		(net
+			(code "1")
+			(name "+3V3")
+			(class "Default")
+			(node
+				(ref "C15")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "U8")
+				(pin "1")
+				(pinfunction "VCC_1")
+				(pintype "power_in")
+			)
+		)
+		(net
+			(code "2")
+			(name "+5V")
+			(class "Default")
+			(node
+				(ref "C10")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C11")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C13")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C9")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "12")
+				(pinfunction "Pin_12_12")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "14")
+				(pinfunction "VCC_14")
+				(pintype "power_in")
+			)
+			(node
+				(ref "U4")
+				(pin "16")
+				(pinfunction "VDD_16")
+				(pintype "power_in")
+			)
+			(node
+				(ref "U6")
+				(pin "16")
+				(pinfunction "VCC_16")
+				(pintype "power_in")
+			)
+			(node
+				(ref "X1")
+				(pin "1")
+				(pinfunction "EN_1")
+				(pintype "input")
+			)
+			(node
+				(ref "X1")
+				(pin "8")
+				(pinfunction "Vcc_8")
+				(pintype "power_in")
+			)
+		)
+		(net
+			(code "3")
+			(name "BCLK")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "9")
+				(pinfunction "Q0_9")
+				(pintype "output")
+			)
+			(node
+				(ref "U8")
+				(pin "3")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "4")
+			(name "CLK6M")
+			(class "Default")
+			(node
+				(ref "U3")
+				(pin "3")
+				(pintype "output")
+			)
+			(node
+				(ref "U4")
+				(pin "10")
+				(pinfunction "CLK_10")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "5")
+			(name "DIN")
+			(class "Default")
+			(node
+				(ref "U6")
+				(pin "4")
+				(pinfunction "Za_4")
+				(pintype "output")
+			)
+			(node
+				(ref "U8")
+				(pin "11")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "6")
+			(name "GND")
+			(class "Default")
+			(node
+				(ref "C10")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C11")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C13")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C15")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C9")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "8")
+				(pinfunction "Pin_8_8")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "11")
+				(pinfunction "Pin_11_11")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "7")
+				(pinfunction "Pin_7_7")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "9")
+				(pinfunction "Pin_9_9")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "10")
+				(pintype "input")
+			)
+			(node
+				(ref "U3")
+				(pin "12")
+				(pintype "input")
+			)
+			(node
+				(ref "U3")
+				(pin "13")
+				(pintype "input")
+			)
+			(node
+				(ref "U3")
+				(pin "4")
+				(pintype "input")
+			)
+			(node
+				(ref "U3")
+				(pin "5")
+				(pintype "input")
+			)
+			(node
+				(ref "U3")
+				(pin "7")
+				(pinfunction "GND_7")
+				(pintype "power_in")
+			)
+			(node
+				(ref "U3")
+				(pin "9")
+				(pintype "input")
+			)
+			(node
+				(ref "U4")
+				(pin "11")
+				(pinfunction "Reset_11")
+				(pintype "input")
+			)
+			(node
+				(ref "U4")
+				(pin "8")
+				(pinfunction "VSS_8")
+				(pintype "power_in")
+			)
+			(node
+				(ref "U6")
+				(pin "10")
+				(pinfunction "I1c_10")
+				(pintype "input")
+			)
+			(node
+				(ref "U6")
+				(pin "11")
+				(pinfunction "I0c_11")
+				(pintype "input")
+			)
+			(node
+				(ref "U6")
+				(pin "13")
+				(pinfunction "I1d_13")
+				(pintype "input")
+			)
+			(node
+				(ref "U6")
+				(pin "14")
+				(pinfunction "I0d_14")
+				(pintype "input")
+			)
+			(node
+				(ref "U6")
+				(pin "15")
+				(pinfunction "E_15")
+				(pintype "input")
+			)
+			(node
+				(ref "U6")
+				(pin "5")
+				(pinfunction "I0b_5")
+				(pintype "input")
+			)
+			(node
+				(ref "U6")
+				(pin "6")
+				(pinfunction "I1b_6")
+				(pintype "input")
+			)
+			(node
+				(ref "U6")
+				(pin "8")
+				(pinfunction "GND_8")
+				(pintype "power_in")
+			)
+			(node
+				(ref "U8")
+				(pin "8")
+				(pinfunction "VSS_8")
+				(pintype "power_in")
+			)
+			(node
+				(ref "X1")
+				(pin "4")
+				(pinfunction "GND_4")
+				(pintype "power_in")
+			)
+		)
+		(net
+			(code "7")
+			(name "GPCLK0")
+			(class "Default")
+			(node
+				(ref "J1")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "7")
+				(pinfunction "Pin_7_7")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "8")
+			(name "LRCLK")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "4")
+				(pinfunction "Q6_4")
+				(pintype "output")
+			)
+			(node
+				(ref "U8")
+				(pin "7")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "9")
+			(name "MCLK")
+			(class "Default")
+			(node
+				(ref "J4")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "7")
+				(pinfunction "Q1_7")
+				(pintype "output")
+			)
+			(node
+				(ref "U6")
+				(pin "1")
+				(pinfunction "S_1")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "10")
+			(name "Net-(J1-Pin_1)")
+			(class "Default")
+			(node
+				(ref "J1")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "X1")
+				(pin "5")
+				(pinfunction "OUT_5")
+				(pintype "output")
+			)
+		)
+		(net
+			(code "11")
+			(name "Net-(J1-Pin_2)")
+			(class "Default")
+			(node
+				(ref "J1")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "1")
+				(pintype "input")
+			)
+			(node
+				(ref "U3")
+				(pin "2")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "12")
+			(name "Net-(U8-Pad2)")
+			(class "Default")
+			(node
+				(ref "U8")
+				(pin "2")
+				(pintype "output")
+			)
+			(node
+				(ref "U8")
+				(pin "5")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "13")
+			(name "Net-(U8-Pad6)")
+			(class "Default")
+			(node
+				(ref "U8")
+				(pin "6")
+				(pintype "output")
+			)
+			(node
+				(ref "U8")
+				(pin "9")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "14")
+			(name "Net-(U8-Pad12)")
+			(class "Default")
+			(node
+				(ref "U8")
+				(pin "12")
+				(pintype "output")
+			)
+			(node
+				(ref "U8")
+				(pin "14")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "15")
+			(name "PI_BCLK")
+			(class "Default")
+			(node
+				(ref "J2")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "U8")
+				(pin "4")
+				(pintype "output")
+			)
+		)
+		(net
+			(code "16")
+			(name "PI_DIN")
+			(class "Default")
+			(node
+				(ref "J2")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "U8")
+				(pin "15")
+				(pintype "output")
+			)
+		)
+		(net
+			(code "17")
+			(name "PI_LRCLK")
+			(class "Default")
+			(node
+				(ref "J2")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "U8")
+				(pin "10")
+				(pintype "output")
+			)
+		)
+		(net
+			(code "18")
+			(name "PUMP")
+			(class "Default")
+			(node
+				(ref "J4")
+				(pin "10")
+				(pinfunction "Pin_10_10")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "3")
+				(pinfunction "Q4_3")
+				(pintype "output")
+			)
+		)
+		(net
+			(code "19")
+			(name "QL")
+			(class "Default")
+			(node
+				(ref "J4")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "U6")
+				(pin "3")
+				(pinfunction "I1a_3")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "20")
+			(name "QR")
+			(class "Default")
+			(node
+				(ref "J4")
+				(pin "8")
+				(pinfunction "Pin_8_8")
+				(pintype "passive")
+			)
+			(node
+				(ref "U6")
+				(pin "2")
+				(pinfunction "I0a_2")
+				(pintype "input")
+			)
+		)
+		(net
+			(code "21")
+			(name "unconnected-(U3-Pad6)")
+			(class "Default")
+			(node
+				(ref "U3")
+				(pin "6")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "22")
+			(name "unconnected-(U3-Pad8)")
+			(class "Default")
+			(node
+				(ref "U3")
+				(pin "8")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "23")
+			(name "unconnected-(U3-Pad11)")
+			(class "Default")
+			(node
+				(ref "U3")
+				(pin "11")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "24")
+			(name "unconnected-(U4-Q2-Pad6)")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "6")
+				(pinfunction "Q2_6")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "25")
+			(name "unconnected-(U4-Q3-Pad5)")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "5")
+				(pinfunction "Q3_5")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "26")
+			(name "unconnected-(U4-Q5-Pad2)")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "2")
+				(pinfunction "Q5_2")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "27")
+			(name "unconnected-(U4-Q7-Pad13)")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "13")
+				(pinfunction "Q7_13")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "28")
+			(name "unconnected-(U4-Q8-Pad12)")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "12")
+				(pinfunction "Q8_12")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "29")
+			(name "unconnected-(U4-Q9-Pad14)")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "14")
+				(pinfunction "Q9_14")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "30")
+			(name "unconnected-(U4-Q10-Pad15)")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "15")
+				(pinfunction "Q10_15")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "31")
+			(name "unconnected-(U4-Q11-Pad1)")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "1")
+				(pinfunction "Q11_1")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "32")
+			(name "unconnected-(U6-Zb-Pad7)")
+			(class "Default")
+			(node
+				(ref "U6")
+				(pin "7")
+				(pinfunction "Zb_7")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "33")
+			(name "unconnected-(U6-Zc-Pad9)")
+			(class "Default")
+			(node
+				(ref "U6")
+				(pin "9")
+				(pinfunction "Zc_9")
+				(pintype "output+no_connect")
+			)
+		)
+		(net
+			(code "34")
+			(name "unconnected-(U6-Zd-Pad12)")
+			(class "Default")
+			(node
+				(ref "U6")
+				(pin "12")
+				(pinfunction "Zd_12")
+				(pintype "output+no_connect")
+			)
+		)
+	)
+)

@@ -1,0 +1,102 @@
+** Drc report for vinyl_adc_common.kicad_pcb **
+** Created on 2026-08-23T14:08:28 **
+** Report includes: Errors, Warnings **
+
+** Found 4 DRC violations **
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(135.5190 mm, 83.0630 mm): Track [+5V] on B.Cu, length 0.1701 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(171.7880 mm, 72.1108 mm): Track [+5V] on B.Cu, length 0.0007 mm
+[isolated_copper]: Isolated copper fill
+    Local override; warning
+    @(19.9500 mm, 19.9500 mm): Zone [<no net>] on F.Cu, priority 0
+[isolated_copper]: Isolated copper fill
+    Local override; warning
+    @(19.9500 mm, 19.9500 mm): Zone [<no net>] on B.Cu, priority 0
+
+** Found 18 unconnected pads **
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(32.5288 mm, 81.4388 mm): Track [+5V] on B.Cu, length 1.7801 mm
+    @(64.1900 mm, 82.3800 mm): Track [+5V] on B.Cu, length 1.8526 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(39.1740 mm, 54.4234 mm): Track [+5V] on B.Cu, length 17.6817 mm
+    @(29.9625 mm, 81.4388 mm): Track [+5V] on B.Cu, length 2.5663 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(143.8100 mm, 86.1900 mm): Track [+5V] on F.Cu, length 15.5968 mm
+    @(171.7875 mm, 74.3800 mm): PTH pad 2 [+5V] of J5
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+    @(20.8000 mm, 20.8000 mm): Zone [GND] on B.Cu, priority 0
+
+** Found 0 Footprint errors **
+
+** Ignored checks **
+    - Footprint has no courtyard defined
+    - Track endpoint not centered on via
+    - Tuning profile track geometries
+    - Footprint doesn't match symbol's footprint filters
+    - Footprint component type doesn't match footprint pads
+
+** End of Report **

@@ -1,0 +1,5 @@
+# Gerbers, drill files and the silkscreen DXF are regenerated from the boards
+# by scripts/export_production.ps1 -- there is no reason to version them, and
+# every reason not to version a stale set that no longer matches the copper.
+*
+!.gitignore

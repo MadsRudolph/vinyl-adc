@@ -49,10 +49,15 @@ parts list. `docs/design-notes.md` has the numbers behind every such decision.
 
 | Path | What |
 |---|---|
-| `hardware/kicad/vinyl_adc.kicad_sch` | the schematic — open this |
+| `hardware/kicad/vinyl_adc.kicad_sch` | the whole converter on one page — **open this to read the circuit** |
+| `hardware/kicad/vinyl_adc_common.kicad_sch` | board 1: power, reference, quantiser |
+| `hardware/kicad/vinyl_adc_channel_l.kicad_sch` | board 2, **milled twice**: one modulator channel |
+| `hardware/kicad/vinyl_adc_digital.kicad_sch` | board 3: clock, interleave, level shift, Pi header |
+| `hardware/kicad/PCB-NOTES.md` | the boards: floorplans, pours, and what the mill dictates |
 | `hardware/kicad/vinyl_adc.pdf` | rendered, for reading away from KiCad |
-| `hardware/kicad/tools/vinyl_adc_layout.py` | draws the sheet; re-run to regenerate |
+| `hardware/kicad/tools/vinyl_adc_layout.py` | draws all five sheets; re-run to regenerate |
 | `hardware/kicad/tools/check_intent.py` | asserts the netlist is the intended circuit |
+| `hardware/kicad/tools/check_split.py` | asserts the four boards, welded at their ribbons, ARE that circuit |
 | `hardware/kicad/tools/make_bom.py` | BOM, checked against the shop stock list |
 | `hardware/kicad/sim/` | eight SPICE testbenches — open a `.kicad_pro` and press Run |
 | `hardware/kicad/sim/README.md` | what the simulations found, and the traps they hit |
@@ -64,8 +69,29 @@ parts list. `docs/design-notes.md` has the numbers behind every such decision.
 Regenerate everything:
 
 ```bash
-cd "hardware/kicad" && py -3.13 tools/vinyl_adc_layout.py && py -3.13 tools/check_intent.py && py -3.13 sim/tools/sim_layout.py
+cd "hardware/kicad" && py -3.13 tools/vinyl_adc_layout.py && py -3.13 tools/check_intent.py && py -3.13 tools/check_split.py && py -3.13 sim/tools/sim_layout.py
 ```
+
+### It is four boards, from three designs
+
+One copper layer with a ground plane on it has no room left for a second net
+that has to reach everywhere, and 2.54 mm DIP pitch leaves 0.84 mm between
+pads — too narrow for any track this process can cut, so everything routes
+*round* its package rather than between the pins. As one board it needed 45
+hand-soldered wire links. Split, it needs a fraction of that:
+
+```
+   common  ---12-way---  digital          the two channel boards are ONE
+     |  |                                 artwork, milled twice
+   14-way 14-way
+     |  |
+  channel L, channel R
+```
+
+`docs/design-notes.md` §11 has the measurements and the argument, including
+the one thing that changed as a result: the modulator's feedback loop now
+crosses a ribbon, which costs 0.5 ns against a 200 ns delay the loop already
+compensates for.
 
 ## What the simulations say
 
@@ -109,11 +135,14 @@ and is the right knob if the phono stage turns out louder or quieter than the
 
 ## Still to do
 
-- **PCB** via the DTU 62768 single-sided process. Footprints are not assigned
-  yet. Fair warning: 13 ICs and ~60 resistors will not fit the 104×104 mm jig
-  comfortably — expect to split it or negotiate a larger format.
-- **Order one part**: a 6.144 MHz oscillator can. Everything else is in the
-  shop. Worth ordering rather than substituting the Pi's GPCLK0, whose jitter
-  would become the dominant noise source.
+- **Cut the boards.** Gerbers and drill files come out of
+  `export_production.ps1`; `hardware/kicad/PCB-NOTES.md` has the commands and
+  the two footprint assumptions to check against the real parts first (the
+  2u2 film cap's lead pitch and the trimmer body).
+- **Order the parts the shop does not stock**: a 6.144 MHz oscillator can, and
+  the IDC box headers, sockets and ribbon for the three board-to-board links.
+  Everything else is in the shop. The can is worth ordering rather than
+  substituting the Pi's GPCLK0, whose jitter would become the dominant noise
+  source.
 - **Software**: CIC decimator (order ≥4) + FIR compensation + DC block on the
   Pi, then into the existing `pw-record` → sox → FLAC pipeline.

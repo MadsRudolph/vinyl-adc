@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "TerminalBlock")(type "KiCad")(uri "${KIPRJMOD}/lib/TerminalBlock.pretty")(options "")(descr "bornier-2 P5.08mm, vendored - KiCad 10 deleted it from the stock library"))
+)

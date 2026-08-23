@@ -458,3 +458,145 @@ notation the board and the BOM use. `hardware/kicad/sim/README.md` records
 the other traps — multi-unit symbols not exporting at all, power symbols
 landing on each other, and three ways a behavioural logic model can look
 like it works while producing noise.
+
+---
+
+## 11. Four boards, and why
+
+The board was drawn as one, and that is still the sheet to read:
+`hardware/kicad/vinyl_adc.kicad_sch`, the whole converter on one A2 page. It
+is what the testbenches link back to and what `check_intent.py` asserts
+against. **It is not what gets milled.**
+
+### What the one-board version measured
+
+Placed by hand, poured, and routed single-sided on the DTU 62768 process
+(0.8 mm end mill, 1.0 mm tracks, 0.85 mm clearance), 203 × 152 mm — the
+machine's whole envelope:
+
+| | |
+|---|---|
+| B.Cu | 483 segments, 3392 mm |
+| **F.Cu** | **289 segments = 45 separate wire runs** |
+| vias | 17 |
+| ground pads the pour could not reach | 25 |
+
+Every F.Cu run on a single-sided board is a wire you solder by hand across the
+component side. Forty-five of them is not a board, it is a kit — and the 25
+stranded ground pads are worse, because they look connected in the drawing.
+
+### The reason, in one number
+
+**0.84 mm.** That is what a 2.54 mm DIP pitch leaves between two 1.7 mm pads,
+and a 1.0 mm track with 0.85 mm clearance either side needs 2.7 mm. Nothing
+passes between adjacent DIP pins on this process — not a thinner track either,
+since even a zero-width one would need 1.7 mm. Every connection has to go
+round the outside of its package, and so does the copper pour.
+
+That makes routability a function of **space per part**, not of cleverness. The
+measured line on these boards is around **0.1 parts/cm²**; the one-board
+version was 0.37.
+
+### The cut
+
+Split at the two places the circuit is genuinely narrow — and the cuts are
+different in kind:
+
+- **Digital off first.** The clock generator, interleave mux, level shift and
+  Pi header have no analog constraint at all. Six nets cross: MCLK, QL, QR,
+  PUMP, +5V, GND. That half routed at **6 wire bridges** and every pad
+  connected. The analog half stayed at 39–43 no matter how it was arranged.
+- **Then the two channels.** They are identical, so this is one more *design*,
+  not two: `vinyl_adc_channel_l` is milled twice and `vinyl_adc_channel_r` is
+  the same drawing with every refdes forty higher, kept only so the split can
+  be checked. What is left — power, the ±2.5 V reference, the quantiser and
+  the 1-bit DAC — becomes the common board.
+
+### The loop does now cross a ribbon
+
+This is the one thing worth arguing about, and it goes the other way from what
+the earlier revision of these notes claimed. The modulator's feedback path is
+comparator → flip-flop → DAC gates → summing junction, and its delay is
+compensated by the coefficient `k0`. With the channels on their own boards,
+the comparator output leaves on a ribbon and the DAC drive comes back on one.
+
+The delay `k0` compensates is the **LM311's 200 ns**. Ten centimetres of
+ribbon adds about **0.5 ns** — a quarter of one percent of it, against a
+coefficient measured at |k0| = 0.228 versus a design value of 0.225. It does
+not matter.
+
+What would have mattered stays put: the 74HC04's own supply *is* the DAC's
+reference, so the gates keep their 100 n and the board's +5 V reservoir, and
+the two DAC drives leave as a ground-flanked pair on adjacent ribbon
+conductors. §9's DAC inter-symbol-interference limit is unchanged — it is set
+by the gates' rise/fall asymmetry, which no cable touches.
+
+### The gate
+
+`tools/check_split.py`. It welds each ribbon's pin *n* to its partner's pin
+*n*, drops the five connectors, and requires the resulting partition of every
+(ref, pin) node to be **identical** to the reference sheet's. It also proves
+channel R is channel L with the refdes bumped, which is what makes "one artwork
+built twice" a checked claim rather than an intention.
+
+This matters because the failure mode is invisible everywhere else: a block
+called from the wrong composer, or a label misspelt at one end of a cable,
+leaves score, ERC, geometry and footprint checks green on all five files. Each
+file is individually consistent. The fault only exists in the relationship
+between them. Sabotage-tested by moving the DAC gates to the digital board: it
+reported the four severed nets and the resistor pairs left dangling.
+
+### What it came out at, and what the split actually bought
+
+| Design | wire bridges | vias | pads off the pour |
+|---|---:|---:|---:|
+| common | 16 | 11 | 0 |
+| channel (each of two) | 10 | 4 | 3 |
+| digital | 6 | 1 | 0 |
+| **a stereo ADC** | **42** | **20** | **6** |
+
+Against 45 bridges, 17 vias and 25 stranded ground pads for the one-board
+version. **The split did not halve the wire count.** What it bought is that
+every ground pad now reaches its plane, that the boards are small enough to
+build and debug one at a time, and that two of the four are the same board.
+Being straight about that matters more than the story reading well: the
+digital board *did* fall out at six links, and the expectation that the
+channels would do the same was wrong.
+
+They did not because of the TL074. All four integrator sections live in one
+19 mm package, so seventeen resistors have to cluster round it and compete for
+the same few approaches — and on this process nothing gets between DIP pins.
+Two levers are left, both untried and both cheap:
+
+- **0.6 mm tracks instead of 1.0 mm.** The mill dictates the 0.8 mm *gap*, not
+  the track; 1.0 mm was a robustness choice. At 0.6 the corridor a track needs
+  between two obstacles falls from 2.7 mm to 2.3 — 15 % more usable width
+  everywhere, applied to exactly the quantity that is short. 0.6 mm of 35 µm
+  copper carries about 1.8 A against a 32 mA worst case here.
+- **Two TL072s per channel instead of one TL074.** It lets the integrator
+  pairs sit 40 mm apart, each with its own resistor cluster and summing node.
+  One more socket and one more 100 n per channel, both stocked.
+
+### What the PCB phase taught
+
+Four things that are not in any datasheet and cost a day between them:
+
+- **A net that crosses a supply spine severs it**, and a severed spine needs
+  more hand-soldered links than it saved. The floorplans are arranged so that
+  almost nothing crosses one — on the common board, only PUMP and −5 V's own
+  feed cross the corridor the two spines run in.
+- **Spines must stop short of the board edge.** Carried out to it, the only
+  ground joining the two halves is the sliver between the bar's end and the
+  outline, and one track crossing that sliver strands every ground pad beyond
+  it.
+- **Thermal reliefs do not work on this process.** They need the pour to
+  surround a pad, and the pour cannot enter between DIP pins. Solid pad
+  connections: four starved pads and eight unconnected became zero and zero.
+  The build cost is a hotter iron on every ground joint.
+- **More space is not monotonically better.** On the digital board, going from
+  2.0 mm to 3.5 mm between parts took the router from six wire bridges and
+  every net finished, to none and seven nets abandoned — the extra air pushed
+  the decoupling caps into the channels it wanted.
+
+The full account, with the regeneration commands, is in
+`hardware/kicad/PCB-NOTES.md`.
