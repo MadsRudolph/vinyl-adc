@@ -1,0 +1,117 @@
+ERC report (2026-08-27T15:01:38, Encoding UTF8)
+Report includes: Errors, Warnings
+
+***** Sheet /
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(144.78 mm, 261.62 mm): Symbol U20 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(144.78 mm, 401.32 mm): Symbol U60 [TL072]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(190.50 mm, 332.74 mm): Symbol U24 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(190.50 mm, 345.44 mm): Symbol U24 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(190.50 mm, 363.22 mm): Symbol U24 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(190.50 mm, 378.46 mm): Symbol U24 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(190.50 mm, 472.44 mm): Symbol U64 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(190.50 mm, 485.14 mm): Symbol U64 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(190.50 mm, 502.92 mm): Symbol U64 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(190.50 mm, 518.16 mm): Symbol U64 [74HC04]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(220.98 mm, 266.70 mm): Symbol U20 [TL072]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(220.98 mm, 363.22 mm): Symbol U24 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(220.98 mm, 378.46 mm): Symbol U24 [74HC04]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(220.98 mm, 406.40 mm): Symbol U60 [TL072]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(220.98 mm, 502.92 mm): Symbol U64 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(220.98 mm, 518.16 mm): Symbol U64 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(261.62 mm, 332.74 mm): Symbol U24 [74HC04]
+[lib_symbol_mismatch]: Symbol '74HC04' doesn't match copy in library '74xx'
+    ; warning
+    @(261.62 mm, 472.44 mm): Symbol U64 [74HC04]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(297.18 mm, 261.62 mm): Symbol U22 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(297.18 mm, 401.32 mm): Symbol U62 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(337.82 mm, 45.72 mm): Symbol U2 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(337.82 mm, 81.28 mm): Symbol U2 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(373.38 mm, 251.46 mm): Symbol U22 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(373.38 mm, 391.16 mm): Symbol U62 [TL072]
+[lib_symbol_mismatch]: Symbol '74HC74' doesn't match copy in library '74xx'
+    ; warning
+    @(401.32 mm, 332.74 mm): Symbol U23 [74HC74]
+[lib_symbol_mismatch]: Symbol '74HC74' doesn't match copy in library '74xx'
+    ; warning
+    @(401.32 mm, 363.22 mm): Symbol U23 [74HC74]
+[lib_symbol_mismatch]: Symbol '74HC74' doesn't match copy in library '74xx'
+    ; warning
+    @(401.32 mm, 472.44 mm): Symbol U63 [74HC74]
+[lib_symbol_mismatch]: Symbol '74HC74' doesn't match copy in library '74xx'
+    ; warning
+    @(401.32 mm, 502.92 mm): Symbol U63 [74HC74]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(416.56 mm, 71.12 mm): Symbol U2 [TL072]
+[lib_symbol_mismatch]: Symbol '74HC74' doesn't match copy in library '74xx'
+    ; warning
+    @(434.34 mm, 363.22 mm): Symbol U23 [74HC74]
+[lib_symbol_mismatch]: Symbol '74HC74' doesn't match copy in library '74xx'
+    ; warning
+    @(434.34 mm, 502.92 mm): Symbol U63 [74HC74]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(497.84 mm, 261.62 mm): Symbol U20 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(497.84 mm, 307.34 mm): Symbol U22 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(497.84 mm, 401.32 mm): Symbol U60 [TL072]
+[lib_symbol_mismatch]: Symbol 'TL072' doesn't match copy in library 'Amplifier_Operational'
+    ; warning
+    @(497.84 mm, 447.04 mm): Symbol U62 [TL072]
+
+ ** ERC messages: 35  Errors 0  Warnings 35
+
+ ** Ignored checks:
+    - Global label only appears once in the schematic
+    - Four connection points are joined together
+    - SPICE model issue
+    - Assigned footprint doesn't match footprint filters

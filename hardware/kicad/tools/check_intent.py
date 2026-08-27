@@ -16,6 +16,7 @@ import collections
 import os
 import subprocess
 import sys
+import paths
 
 sys.path.insert(0, r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts")
 import sexpdata  # noqa: E402
@@ -88,8 +89,18 @@ def exactly(nets, label, net_name, expected):
             f"      extra:   {sorted(nodes - exp)}")
 
 
-def channel(nets, ch, U, C, R, DN, DP):
-    """One modulator channel.  U=TL074 ref, C=LM311 ref, R=lambda role->refdes."""
+def channel(nets, ch, U, Ub, C, R, DN, DP):
+    """One modulator channel.
+
+    U  = TL072 carrying integrators 1 and 2   (pins 1/2 and 7/6)
+    Ub = TL072 carrying integrator 3 and the resonator inverter
+    C  = LM311 ref, R = lambda role->refdes.
+
+    Two duals rather than one quad: on a single-sided board nothing passes
+    between adjacent DIP pins, and seventeen resistors cannot all reach the
+    perimeter of one 19 mm package.  Integrators 1 and 2 keep the TL074's own
+    pin numbers, so only the int3/inverter halves move.
+    """
     p = f"[{ch}]"
     # --- the three integrators: each summing node carries exactly its own
     #     input, its DAC leg, its offset leg and its feedback cap
@@ -105,18 +116,18 @@ def channel(nets, ch, U, C, R, DN, DP):
          (U, "7"), (R("C2"), "2"), (R("R3"), "1"))
     same(nets, f"{p} int3 summing node",
          (R("R3"), "2"), (R("Rd3"), "2"), (R("Ro3"), "2"),
-         (R("C3"), "1"), (U, "9"))
+         (R("C3"), "1"), (Ub, "2"))
     # int3 output fans out three ways: its own cap, the resonator inverter and
     # the quantiser.  If the comparator tap went missing the loop still looks
     # complete and simply never quantises.
     same(nets, f"{p} int3 output -> inverter + comparator",
-         (U, "8"), (R("C3"), "2"), (R("Ri"), "1"), (R("Rs"), "1"))
+         (Ub, "1"), (R("C3"), "2"), (R("Ri"), "1"), (R("Rs"), "1"))
     # --- resonator: inverter output must reach int2 through Rg, and the
     #     inverter must actually invert (Rf across it), or g has the wrong sign
     same(nets, f"{p} inverter summing node",
-         (R("Ri"), "2"), (R("Rf"), "1"), (U, "13"))
+         (R("Ri"), "2"), (R("Rf"), "1"), (Ub, "6"))
     same(nets, f"{p} inverter output -> resonator resistor",
-         (U, "14"), (R("Rf"), "2"), (R("Rg"), "1"))
+         (Ub, "7"), (R("Rf"), "2"), (R("Rg"), "1"))
     # --- quantiser
     same(nets, f"{p} comparator summing node",
          (R("Rs"), "2"), (R("Rk0"), "2"), (R("Rsh"), "2"), (R("Rb"), "2"),
@@ -155,16 +166,18 @@ def channel(nets, ch, U, C, R, DN, DP):
         FAILURES.append(f"{p} LM311 V+ should be +5V")
     if netof(nets, C, "4") != "GND":
         FAILURES.append(f"{p} LM311 V- should be GND (single supply)")
-    # TL074 package must straddle both rails
-    if netof(nets, U, "4") != "+5V" or netof(nets, U, "11") != "-5V":
-        FAILURES.append(f"{p} TL074 supply pins wrong: "
-                        f"4->{netof(nets, U, '4')} 11->{netof(nets, U, '11')}")
+    # BOTH TL072 packages must straddle both rails.  A dual's supply pins are
+    # 8 (V+) and 4 (V-) -- not the quad's 4 and 11.
+    for pkg in (U, Ub):
+        if netof(nets, pkg, "8") != "+5V" or netof(nets, pkg, "4") != "-5V":
+            FAILURES.append(f"{p} {pkg} supply pins wrong: "
+                            f"8->{netof(nets, pkg, '8')} "
+                            f"4->{netof(nets, pkg, '4')}")
 
 
 def main():
-    here = os.path.dirname(os.path.abspath(__file__))
-    sch = os.path.join(here, "..", "vinyl_adc.kicad_sch")
-    net = os.path.join(here, "..", "vinyl_adc.net")
+    sch = paths.sch("vinyl_adc")
+    net = paths.net("vinyl_adc")
     nets = load(net, sch)
     print(f"{len(nets)} nets in {os.path.basename(sch)}")
 
@@ -175,22 +188,24 @@ def main():
     Rr = {k: ("R%d" % (int(v[1:]) + 40)) if v[0] == "R" else
           ("C%d" % (int(v[1:]) + 40)) for k, v in L.items()}
 
-    channel(nets, "L", "U20", "U21", L.get, "DACN_L", "DACP_L")
-    channel(nets, "R", "U60", "U61", Rr.get, "DACN_R", "DACP_R")
+    channel(nets, "L", "U20", "U22", "U21", L.get, "DACN_L", "DACP_L")
+    channel(nets, "R", "U60", "U62", "U61", Rr.get, "DACN_R", "DACP_R")
 
     # ---- clock tree and the Pi interface -------------------------------
     exactly(nets, "clock divider input", "CLK6M", {("U3", "3"), ("U4", "10")})
+    # Each channel retimes on its own flip-flop, on its own board, so MCLK
+    # reaches two packages rather than two halves of one.
     same(nets, "MCLK clocks both quantisers and selects the mux",
-         ("U4", "7"), ("U5", "3"), ("U5", "11"), ("U6", "1"))
+         ("U4", "7"), ("U23", "3"), ("U63", "3"), ("U6", "1"))
     same(nets, "BCLK reaches the level shifter", ("U4", "9"), ("U8", "3"))
     same(nets, "LRCLK reaches the level shifter", ("U4", "4"), ("U8", "7"))
     same(nets, "mux output is the Pi's data line", ("U6", "4"), ("U8", "11"))
-    same(nets, "L quantiser Q -> mux and DAC", ("U5", "5"), ("U6", "3"),
-         ("U7", "1"))
-    same(nets, "R quantiser Q -> mux and DAC", ("U5", "9"), ("U6", "2"),
-         ("U7", "5"))
-    same(nets, "L comparator -> L flip-flop D", ("U21", "7"), ("U5", "2"))
-    same(nets, "R comparator -> R flip-flop D", ("U61", "7"), ("U5", "12"))
+    same(nets, "L quantiser Q -> mux and DAC", ("U23", "5"), ("U6", "3"),
+         ("U24", "1"))
+    same(nets, "R quantiser Q -> mux and DAC", ("U63", "5"), ("U6", "2"),
+         ("U64", "1"))
+    same(nets, "L comparator -> L flip-flop D", ("U21", "7"), ("U23", "2"))
+    same(nets, "R comparator -> R flip-flop D", ("U61", "7"), ("U63", "2"))
     distinct(nets, "the four clock-tree nets must be separate",
              ("U4", "9"), ("U4", "7"), ("U4", "3"), ("U4", "4"))
     # the jumper must NOT short the can to GPCLK0 -- a vertical run down its

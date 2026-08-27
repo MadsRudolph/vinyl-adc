@@ -17,6 +17,7 @@ import csv
 import os
 import re
 import sys
+import paths
 
 sys.path.insert(0, r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts")
 import schlib  # noqa: E402
@@ -100,7 +101,7 @@ def main():
     groups = collections.defaultdict(list)
     where, mult = {}, {}
     for tag, name, n in BOARDS:
-        sch = schlib.Schematic(os.path.join(here, "..", name + ".kicad_sch"))
+        sch = schlib.Schematic(paths.sch(name))
         for s in sch.symbols:
             ref = s.ref
             if ref.startswith("#PWR") or not ref:

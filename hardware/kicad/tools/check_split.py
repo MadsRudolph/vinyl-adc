@@ -35,6 +35,7 @@ import os
 import re
 import sys
 from collections import defaultdict
+import paths
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -62,8 +63,7 @@ CHANNEL_OFFSET = 40
 
 def netlist(name):
     """The netlist KiCad exports, refreshed if the sheet is newer."""
-    return load(os.path.join(HERE, "..", name + ".net"),
-                os.path.join(HERE, "..", name + ".kicad_sch"))
+    return load(paths.net(name), paths.sch(name))
 
 
 class Union:

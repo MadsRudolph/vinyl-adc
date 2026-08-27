@@ -26,6 +26,8 @@ sys.path.insert(0, SKILL)
 from schdraw import Sheet                     # noqa: E402
 from simfields import add_hrefs               # noqa: E402
 
+import paths                                   # noqa: E402
+
 G = lambda n: round(n * 1.27, 2)              # noqa: E731
 
 TL07X = "Amplifier_Operational:TL074"
@@ -60,6 +62,36 @@ def ic_supply(sh, part, vcc, gnd, cref, x_cap, rail="+5V"):
     sh.seg((x_cap, ytop), c.pin(1))
     sh.seg(c.pin(2), (x_cap, ybot))
     sh.gnd((x_cap, ybot))
+
+
+def opamp_supply(sh, uref, at, ca_ref, cb_ref, unit=3, lib=None,
+                 value="TL072"):
+    """A dual-supply op-amp package's power unit, with its two 100n.
+
+    The caps sit in series across the rails with the midpoint grounded, so
+    each rail gets a 100n to ground and the pair also decouples rail to rail,
+    which is the loop the op-amp's own supply current actually takes.
+    """
+    sup = sh.place(lib or TL072, uref, at=at, unit=unit, value=value)
+    vp, vn = sup.pin("V+"), sup.pin("V-")
+    sh.seg(vp, (vp.x, vp.y - STUB))
+    sh.rail((vp.x, vp.y - STUB), net="+5V", rise=STUB)
+    sh.seg(vn, (vn.x, vn.y + STUB))
+    sh.rail((vn.x, vn.y + STUB), net="-5V", rise=-STUB)
+    cx = vp.x + G(10)
+    ca = sh.place(C_LIB, ca_ref, at=(cx, vp.y - STUB + G(3)), rot=0,
+                  value="100n")
+    cb = sh.place(C_LIB, cb_ref, at=(cx, vn.y + STUB - G(3)), rot=0,
+                  value="100n")
+    sh.seg((vp.x, vp.y - STUB), (cx, vp.y - STUB))
+    sh.seg((cx, vp.y - STUB), ca.pin(1))
+    sh.seg(ca.pin(2), cb.pin(1))
+    sh.seg(cb.pin(2), (cx, vn.y + STUB))
+    sh.seg((vn.x, vn.y + STUB), (cx, vn.y + STUB))
+    gy = round((ca.pin(2).y + cb.pin(1).y) / 2 / 1.27) * 1.27
+    sh.seg((cx, gy), (cx + G(6), gy))
+    sh.power("power:GND", (cx + G(6), gy), rot=270)
+    return sup
 
 
 def note_block(sh, at, text, size=1.27):
@@ -620,6 +652,96 @@ def blk_retime(sh, fx, y, power_at=None):
 
 
 
+def blk_retime_ch(sh, fx, y, ch, r, qsig=None, qnsig=None):
+    """74HC74, ONE PER CHANNEL: this channel's comparator re-clocked on MCLK.
+
+    It sits on the channel board, not on a shared one, because it closes the
+    modulator loop: comparator -> flip-flop -> DAC gates -> summing junction.
+    The k0 coefficient compensates the LM311's 200 ns and nothing else, so
+    that path must not leave the board.  Half the package is spare and is
+    tied off rather than left floating.
+    """
+    tips = {}
+    ff = sh.place("74xx:74HC74", r["Uff"], at=(fx, y + G(6)), unit=1,
+                  value="74HC74")
+    d, ck = ff.pin("D"), ff.pin("C")
+    sh.seg(d, (d.x - G(6), d.y))
+    sh.label((d.x - G(6), d.y), f"CMP_{ch}", kind="global")
+    tips[f"CMP_{ch}"] = (d.x - G(6), d.y)
+    sh.seg(ck, (ck.x - G(6), ck.y))
+    sh.label((ck.x - G(6), ck.y), "MCLK", kind="global")
+    tips["MCLK"] = (ck.x - G(6), ck.y)
+    qsig = qsig or f"Q{ch}"
+    qnsig = qnsig or f"QN{ch}"
+    q, qn = ff.pin("Q"), ff.pin("~{Q}")
+    sh.seg(q, (q.x + G(6), q.y))
+    sh.label((q.x + G(6), q.y), qsig, kind="global")
+    tips[qsig] = (q.x + G(6), q.y)
+    sh.seg(qn, (qn.x + G(6), qn.y))
+    sh.label((qn.x + G(6), qn.y), qnsig, kind="global")
+    tips[qnsig] = (qn.x + G(6), qn.y)
+    for pn in ("~{R}", "~{S}"):
+        pp = ff.pin(pn)
+        dy = STUB if pp.y > d.y else -STUB
+        sh.seg(pp, (pp.x, pp.y + dy))
+        sh.seg((pp.x, pp.y + dy), (pp.x + G(5), pp.y + dy))
+        sh.rail((pp.x + G(5), pp.y + dy), net="+5V",
+                rise=STUB if dy < 0 else -STUB)
+    sp = sh.place("74xx:74HC74", r["Uff"], at=(fx, y + G(30)), unit=2,
+                  value="74HC74")
+    tie_low(sh, sp.pin("D"), sp.pin("C"))
+    for pn in ("~{R}", "~{S}"):
+        pp = sp.pin(pn)
+        dy = STUB if pp.y > sp.pin("D").y else -STUB
+        sh.seg(pp, (pp.x, pp.y + dy))
+        sh.seg((pp.x, pp.y + dy), (pp.x + G(5), pp.y + dy))
+        sh.rail((pp.x + G(5), pp.y + dy), net="+5V",
+                rise=STUB if dy < 0 else -STUB)
+    sh.nc(sp.pin("Q"), sp.pin("~{Q}"))
+    pwr = sh.place("74xx:74HC74", r["Uff"], unit=3, value="74HC74",
+                   at=(fx + G(26), y + G(30)))
+    ic_supply(sh, pwr, 14, 7, r["Cf"], pwr.pin(14).x + G(10))
+    return tips
+
+
+def blk_dac_gates_ch(sh, gx, y, ch, r, qsig=None, qnsig=None):
+    """74HC04, ONE PER CHANNEL: the 1-bit DAC drive from Q and /Q.
+
+    These gates ARE the DAC -- their output levels are the reference the
+    converter measures against -- so they sit on the channel board beside the
+    summing junctions they drive, sharing that board's +5 V and its reservoir
+    rather than a rail at the far end of a cable.
+    """
+    note_block(sh, (gx - G(10), y - G(6)),
+            "1-BIT DAC DRIVE\nDACN = /Q, DACP = Q (taken from Q and /Q so the\n"
+            "two edges are as close to simultaneous as the parts allow)",
+            size=1.27)
+    tips = {}
+    for i, (src, dst) in enumerate((((qsig or f"Q{ch}"), f"DACN_{ch}"),
+                                    ((qnsig or f"QN{ch}"), f"DACP_{ch}"))):
+        g = sh.place("74xx:74HC04", r["Udac"], at=(gx, y + G(6) + i * G(10)),
+                     unit=i + 1, value="74HC04")
+        li, ri = gate_pins(g, gx)
+        ip, op = li[0], ri[0]
+        sh.seg(ip, (ip.x - G(6), ip.y))
+        sh.label((ip.x - G(6), ip.y), src, kind="global")
+        tips[src] = (ip.x - G(6), ip.y)
+        sh.seg(op, (op.x + G(6), op.y))
+        sh.label((op.x + G(6), op.y), dst, kind="global")
+        tips[dst] = (op.x + G(6), op.y)
+    for i, un in enumerate((3, 4, 5, 6)):
+        g = sh.place("74xx:74HC04", r["Udac"],
+                     at=(gx + (i % 2) * G(24), y + G(30) + (i // 2) * G(12)),
+                     unit=un, value="74HC04")
+        li, ri = gate_pins(g, gx + (i % 2) * G(24))
+        tie_low(sh, *li)
+        sh.nc(*ri)
+    pwr = sh.place("74xx:74HC04", r["Udac"], at=(gx + G(56), y + G(6)),
+                   unit=7, value="74HC04")
+    ic_supply(sh, pwr, 14, 7, r["Cg"], pwr.pin(14).x + G(10))
+    return tips
+
+
 def blk_mux(sh, mx, y):
     """74HC157: L and R interleaved onto one serial data line.  DIGITAL."""
     u6 = sh.place("74xx:74LS157", "U6", at=(mx, y + G(14)), value="74HC157")
@@ -798,11 +920,65 @@ def link_channel(ch):
                 f"CMP_{ch}", f"DACP_{ch}", f"DACN_{ch}", "-5V")
 
 
-def interconnect(sh, x, y, ref, pins, note):
-    """One IDC box header wired to `pins`, drawn the same way every time."""
+# THE STACKING BUS.  One 2x8 on every board, same pinout and same place, so
+# the four boards plug into each other on 11 mm standoffs instead of being
+# cabled.  Only eight nets have to cross, which is what keeping each
+# modulator loop on its own board bought.
+LINK_BUS = link("+5V", "VREF_P", "VREF_N", "MCLK", "PUMP", "QL", "QR", "-5V")
+
+NOTE_BUS = (
+    "STACKING BUS  2x8, 2.54 mm.  Every board carries this same connector at\n"
+    "the same coordinates; the stack is digital, channel L, channel R, power\n"
+    "on 11 mm standoffs.  Odd pins are all GND, so every signal has a\n"
+    "grounded neighbour either side -- which is what MCLK needs, its jitter\n"
+    "being what sets this converter's noise floor.")
+
+
+def stack_bus(sh, x, y, ref):
+    """The stacking bus: ONE 2x8 position per board, at the same coordinates.
+
+    It has to be one position, not a socket and a header side by side.  A
+    middle board must present a socket UPWARDS to the board above and pins
+    DOWNWARDS to the board below, and stacking identical boards puts the one
+    directly over the other -- so they must share an XY, which two separate
+    parts cannot do.  What goes in the holes is a build choice: a plain
+    socket on the top board, a long-pin header on the bottom one, and a
+    pass-through stacking header on the two in the middle.  All three are the
+    same sixteen pads on 2.54 mm, so the artwork does not care.
+    """
+    return interconnect(sh, x, y, ref, LINK_BUS, NOTE_BUS, value="2x8 BUS")
+
+
+def q_select(sh, x, y, ref):
+    """Which bus line this channel drives.
+
+    Both channel boards are the same copper, so nothing etched on the board
+    can say which channel it is.  The shunt does: 1-2 makes it left, 2-3
+    right.  The netlist is identical either way -- the choice is deliberately
+    NOT in the copper, which is what lets one artwork be milled twice.
+    """
+    j = sh.place("Connector_Generic:Conn_01x03", ref, at=(x, y), value="Q SEL")
+    for pin, net in ((1, "QL"), (2, "Q_OUT"), (3, "QR")):
+        pp = j.pin(pin)
+        sh.seg(pp, (pp.x + G(8), pp.y))
+        sh.label((pp.x + G(8), pp.y), net, kind="global")
+    note_block(sh, (x - G(6), y + G(12)),
+            "Q SELECT.  Shunt 1-2 = LEFT, 2-3 = RIGHT.  The two channel\n"
+            "boards are one artwork; this shunt is the only thing that\n"
+            "differs between them, so mark the board L or R when you fit it.",
+            size=1.27)
+    return j
+
+
+def interconnect(sh, x, y, ref, pins, note, value=None):
+    """One 2xN header wired to `pins`, drawn the same way every time.
+
+    `note` may be None, for the second of a pair that shares one caption.
+    `value` picks the footprint where two connectors share a symbol.
+    """
     n = len(pins) // 2
     lib = f"Connector_Generic:Conn_02x{n:02d}_Odd_Even"
-    j = sh.place(lib, ref, at=(x, y + G(14)), value=f"2x{n} IDC")
+    j = sh.place(lib, ref, at=(x, y + G(14)), value=value or f"2x{n} IDC")
     tips = {}
 
     # the grounds share one bus, set well clear of the pin column: a vertical
@@ -836,7 +1012,9 @@ def interconnect(sh, x, y, ref, pins, note):
         tips[net] = (tx, pin.y)
         sh.label((tx, pin.y), net, kind="global")
 
-    note_block(sh, (x - G(10), y + G(14) + G(2) * n + G(10)), note, size=1.27)
+    if note:
+        note_block(sh, (x - G(10), y + G(14) + G(2) * n + G(10)), note,
+                   size=1.27)
     return tips
 
 
@@ -850,11 +1028,9 @@ def band_digital(sh, y):
     # stub on the clock-select jumper
     blk_clock_buffer(sh, G(74), y, sel)
     clock_divider(sh, G(126), y)
-    blk_retime(sh, G(184), y)
-    blk_mux(sh, G(238), y)
-    blk_dac_gates(sh, G(300), y)
-    blk_levelshift(sh, G(352), y)
-    blk_pi_header(sh, G(424), y)
+    blk_mux(sh, G(184), y)
+    blk_levelshift(sh, G(240), y)
+    blk_pi_header(sh, G(310), y)
 
 
 # ====================================================== BANDS C/D: MODULATORS
@@ -1008,7 +1184,7 @@ def quantiser(sh, XC, y, r, ch, v3=None, rows_labelled=True):
 
 
 
-def modulator(sh, ch, y, refs):
+def modulator(sh, ch, y, refs, qsig=None, qnsig=None):
     """One complete channel. `refs` maps role -> refdes so L and R differ."""
     r = refs
     # kept short on purpose: a longer title overruns INTEGRATOR 1's caption
@@ -1025,7 +1201,7 @@ def modulator(sh, ch, y, refs):
     i1 = summing_stage(sh, X1, y, [(None, r["Rin"], "20k5"),
                                (f"DACN_{ch}", r["Rd1"], "14k7"),
                                ("VREF_N", r["Ro1"], "14k7")],
-                       r["U"], 1, "C", r["C1"], "220p",
+                       r["Ua"], 1, "C", r["C1"], "220p", opamp=TL072,
                        title="INTEGRATOR 1  (a1 = 0.247)")
     wpr = pot.pin(2)                       # wiper sits 3.81 below the top pin
     sh.seg(wpr, (wpr.x + G(4), wpr.y))
@@ -1036,21 +1212,21 @@ def modulator(sh, ch, y, refs):
                                (f"DACP_{ch}", r["Rd2"], "13k0"),
                                ("VREF_N", r["Ro2"], "13k0"),
                                (None, r["Rg"], "255k")],
-                       r["U"], 2, "C", r["C2"], "220p",
+                       r["Ua"], 2, "C", r["C2"], "220p", opamp=TL072,
                        title="INTEGRATOR 2  (a2 = 0.321, + resonator)")
     elbow(sh, i1["out"], (X2, y), X2 - G(4))
 
     i3 = summing_stage(sh, X3, y, [(None, r["R3"], "5k90"),
                                (f"DACN_{ch}", r["Rd3"], "8k25"),
                                ("VREF_N", r["Ro3"], "8k25")],
-                       r["U"], 3, "C", r["C3"], "220p",
+                       r["Ub"], 1, "C", r["C3"], "220p", opamp=TL072,
                        title="INTEGRATOR 3  (a3 = 0.611)")
     elbow(sh, i2["out"], (X3, y), X3 - G(4))
 
     # -- resonator inverter: -V3 back into integrator 2 ----------------------
     XI = G(256)
     inv = summing_stage(sh, XI, y, [(None, r["Ri"], "10k0")],
-                        r["U"], 4, "R", r["Rf"], "10k0",
+                        r["Ub"], 2, "R", r["Rf"], "10k0", opamp=TL072,
                         title="RESONATOR INVERTER  (g = 0.0297)")
     elbow(sh, i3["out"], (XI, y), XI - G(4))
 
@@ -1065,27 +1241,23 @@ def modulator(sh, ch, y, refs):
     # -- comparator ----------------------------------------------------------
     quantiser(sh, G(320), y, r, ch, v3=i3)
 
-    # -- TL074 package supply ------------------------------------------------
-    sup = sh.place(TL07X, r["U"], at=(G(404), y + G(6)), unit=5,
-                  value="TL074")
-    vp, vn = sup.pin("V+"), sup.pin("V-")
-    sh.seg(vp, (vp.x, vp.y - STUB))
-    sh.rail((vp.x, vp.y - STUB), net="+5V", rise=STUB)
-    sh.seg(vn, (vn.x, vn.y + STUB))
-    sh.rail((vn.x, vn.y + STUB), net="-5V", rise=-STUB)
-    cx = vp.x + G(10)
-    ca = sh.place(C_LIB, r["Ca"], at=(cx, vp.y - STUB + G(3)), rot=0,
-                  value="100n")
-    cb = sh.place(C_LIB, r["Cb"], at=(cx, vn.y + STUB - G(3)), rot=0,
-                  value="100n")
-    sh.seg((vp.x, vp.y - STUB), (cx, vp.y - STUB))
-    sh.seg((cx, vp.y - STUB), ca.pin(1))
-    sh.seg(ca.pin(2), cb.pin(1))
-    sh.seg(cb.pin(2), (cx, vn.y + STUB))
-    sh.seg((vn.x, vn.y + STUB), (cx, vn.y + STUB))
-    gy = round((ca.pin(2).y + cb.pin(1).y) / 2 / 1.27) * 1.27
-    sh.seg((cx, gy), (cx + G(6), gy))
-    sh.power("power:GND", (cx + G(6), gy), rot=270)
+    # -- the rest of the loop, on this board: retime, then drive the DAC -----
+    # Q/QN and DACP/DACN carry between these two by global label rather than
+    # by wire; on this sheet they are a row apart, and a wire would have to
+    # cross the whole return path to get there.
+    blk_retime_ch(sh, G(316), y + G(56), ch, r, qsig, qnsig)
+    blk_dac_gates_ch(sh, G(150), y + G(56), ch, r, qsig, qnsig)
+
+    # -- the two TL072 package supplies --------------------------------------
+    # Two duals rather than one quad: seventeen resistors cannot all reach the
+    # perimeter of a single 19 mm package when nothing passes between DIP
+    # pins, so the integrator pairs get a package each and a cluster each.
+    # G(36) apart, not G(26): each block reaches STUB past its rail symbol
+    # both ways, so at 26 the upper one's -5V stub meets the lower one's +5V
+    # and the two rails merge. Every geometry check still passed -- the
+    # netlist simply had no -5V net left at all.
+    opamp_supply(sh, r["Ua"], (G(392), y + G(6)), r["Ca"], r["Cb"])
+    opamp_supply(sh, r["Ub"], (G(392), y + G(42)), r["Cd"], r["Ce"])
     ccmp = sh.place(C_LIB, r["Cc"], at=(G(430), y + G(6)), rot=0, value="100n")
     sh.seg(ccmp.pin(1), (G(430), y + G(2)))
     sh.rail((G(430), y + G(2)), net="+5V", rise=STUB)
@@ -1096,7 +1268,9 @@ def refs_for(ch, n):
     def k(p):
         return f"{p}{n}"
     return {"J": k("J"), "Cin": k("C"), "Caa": f"C{n+1}", "Raa": k("R"),
-            "RV": k("RV"), "U": k("U"), "Ucmp": f"U{n+1}",
+            "RV": k("RV"), "Ua": k("U"), "Ucmp": f"U{n+1}",
+            "Jq": f"J{n+1}",
+            "Ub": f"U{n+2}", "Uff": f"U{n+3}", "Udac": f"U{n+4}",
             "Rin": f"R{n+1}", "Rd1": f"R{n+2}", "Ro1": f"R{n+3}",
             "R2": f"R{n+4}", "Rd2": f"R{n+5}", "Ro2": f"R{n+6}",
             "Rg": f"R{n+7}", "R3": f"R{n+8}", "Rd3": f"R{n+9}",
@@ -1104,7 +1278,9 @@ def refs_for(ch, n):
             "Rs": f"R{n+13}", "Rk0": f"R{n+14}", "Rsh": f"R{n+15}",
             "Rb": f"R{n+16}", "Rpu": f"R{n+17}",
             "C1": f"C{n+2}", "C2": f"C{n+3}", "C3": f"C{n+4}",
-            "Ca": f"C{n+5}", "Cb": f"C{n+6}", "Cc": f"C{n+7}"}
+            "Ca": f"C{n+5}", "Cb": f"C{n+6}", "Cc": f"C{n+7}",
+            "Cd": f"C{n+8}", "Ce": f"C{n+9}", "Cf": f"C{n+10}",
+            "Cg": f"C{n+11}"}
 
 
 # ============================================================== FOOTPRINTS
@@ -1125,8 +1301,12 @@ FP_DIP = "Package_DIP:DIP-{}_W7.62mm_LongPads"      # LongPads: the mill wants
 FOOTPRINTS = {
     "Device:R": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
     "Device:D_Schottky": "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",
+    # The level trim is NOT on the board. It is panel-mounted in the printed
+    # enclosure and wired back to these three pads, so what the board carries
+    # is a 3-way header -- RIGHT-ANGLE, because a vertical one with a Dupont
+    # housing pushed onto it stands ~13 mm and the stack only allows ~9.
     "Device:R_Potentiometer_Trim":
-        "Potentiometer_THT:Potentiometer_Bourns_3296W_Vertical",
+        "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal",
     "Comparator:LM311": FP_DIP.format(8),
     "Amplifier_Operational:TL072": FP_DIP.format(8),
     "Amplifier_Operational:TL074": FP_DIP.format(14),
@@ -1147,6 +1327,8 @@ FOOTPRINTS = {
         "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical",
     # shrouded and keyed, so the board-to-board ribbon cannot go in backwards
     # and put +5V across the ground column
+    "Connector_Generic:Conn_02x08_Odd_Even":
+        "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
     "Connector_Generic:Conn_02x06_Odd_Even":
         "Connector_IDC:IDC-Header_2x06_P2.54mm_Vertical",
     "Connector_Generic:Conn_02x07_Odd_Even":
@@ -1159,6 +1341,15 @@ FOOTPRINTS = {
 
 # Capacitors need the value as well as the symbol: a 2u2 film cap and a 220 pF
 # disc share Device:C and are nothing like the same part.
+# The two bus connectors share one symbol and need different footprints --
+# a socket facing up, a long-pin header reaching down -- so they are picked
+# by VALUE, which is the only thing that tells them apart.
+FOOTPRINTS_V = {
+    # Socket, long-pin header and pass-through stacking header are all the
+    # same sixteen pads; the footprint is the header one for all of them.
+    "2x8 BUS": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
+}
+
 FOOTPRINTS_C = {
     "2u2": "Capacitor_THT:C_Rect_L11.0mm_W6.3mm_P10.00mm_MKT",
     "470u": "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm",
@@ -1174,6 +1365,8 @@ def footprint_for(part):
         return ""
     if part.lib_id in ("Device:C", "Device:C_Polarized"):
         return FOOTPRINTS_C.get(part.value, FP_DISC)
+    if part.value in FOOTPRINTS_V:
+        return FOOTPRINTS_V[part.value]
     return FOOTPRINTS.get(part.lib_id, "")
 
 
@@ -1316,8 +1509,8 @@ def board_full(sh):
     """The reference: the entire converter on one A2 sheet."""
     band_power(sh, G(27))
     band_digital(sh, G(109))
-    modulator(sh, "L", G(191), refs_for("L", 20))
-    modulator(sh, "R", G(269), refs_for("R", 60))
+    modulator(sh, "L", G(200), refs_for("L", 20))
+    modulator(sh, "R", G(310), refs_for("R", 60))
     return sim_index(sh, G(150), G(56))
 
 
@@ -1333,37 +1526,17 @@ NOTE_CHANNEL_LINK = (
     "junctions.  Odd pins are all GND.  Shrouded and keyed.")
 
 
-def board_common(sh):
-    """Power, the reference, the quantiser, and the three ribbons out.
+def board_power(sh):
+    """Power and the reference.  What both channels share, and nothing else.
 
-    Everything both channels share, and nothing that belongs to one.
-
-    The four nets between the flip-flops and the DAC gates are drawn as wires:
-    on this sheet they are one block feeding the next, and Q -> gate -> DAC is
-    the whole point of the board. Everything else here genuinely goes to
-    another board and is correctly a label.
+    The quantiser and the 1-bit DAC used to live here.  That put both
+    channels' loop signals on one board -- 70 % of its wire bridges were
+    CMP/DAC/Q traffic -- and split each modulator loop across a cable.  They
+    are on the channel board now, and this one is just the supplies.
     """
-    ya, yb, yc = G(26), G(96), G(160)
-    band_power(sh, ya, flags=("+5V", "-5V", "GND"),
+    band_power(sh, G(26), flags=("+5V", "-5V", "GND"),
                pump_x=G(62), ref_x=G(150), flag_x=G(20))
-
-    note_block(sh, (G(16), yb - G(16)),
-            "QUANTISER AND 1-BIT DAC  (comparator in from each channel, "
-            "re-clocked on MCLK, DAC drive back out)", size=2.0)
-    ff = blk_retime(sh, G(24), yb, power_at=(G(20), yb + G(56)))
-    dac = blk_dac_gates(sh, G(140), yb)
-    interconnect(sh, G(196), yb, "J3", LINK_DIGITAL, NOTE_DIGITAL_LINK)
-
-    note_block(sh, (G(16), yc - G(16)),
-            "RIBBONS TO THE CHANNEL BOARDS  (same 14-way pinout on both, so "
-            "one artwork serves L and R)", size=2.0)
-    interconnect(sh, G(30), yc, "J5", link_channel("L"),
-                 NOTE_CHANNEL_LINK.format("L"))
-    interconnect(sh, G(120), yc, "J6", link_channel("R"),
-                 NOTE_CHANNEL_LINK.format("R"))
-
-    for k, net in enumerate(("QL", "QNL", "QR", "QNR")):
-        elbow(sh, ff[net], dac[net], G(74) + k * G(8))
+    stack_bus(sh, G(220), G(26), "J3")
 
 
 def board_channel(sh, ch):
@@ -1375,14 +1548,21 @@ def board_channel(sh, ch):
     board's plus forty, and `tools/check_split.py` proves the two drawings are
     otherwise identical.
     """
-    modulator(sh, ch, G(31), refs_for(ch, 20 if ch == "L" else 60))
+    r = refs_for(ch, 20 if ch == "L" else 60)
+    # Q_OUT, not QL/QR: the two channel boards are one artwork, so nothing on
+    # the board may name a channel.  The shunt on J{n+1} does that, and it is
+    # the only difference between the two built boards.
+    modulator(sh, ch, G(31), r, qsig="Q_OUT", qnsig="QN_OUT")
     # BELOW the chain, not beside it. The modulator is one 550 mm row -- that
     # is the right drawing for a signal chain and the wrong shape to hang a
     # connector off the end of: at G(392) the header's stubs land on the
     # quantiser's own wiring and short VREF_N and -5V to the DAC drive, with
     # every geometry check still reporting the sheet as clean.
-    interconnect(sh, G(416), G(70), "J7", link_channel(ch),
-                 NOTE_CHANNEL_LINK.format(ch))
+    # BELOW the chain, clear of the two TL072 supply blocks that occupy the
+    # right-hand end of the modulator row -- at G(400) the socket landed on
+    # the second package's decoupling cap.
+    stack_bus(sh, G(200), G(140), "J7")
+    q_select(sh, G(24), G(150), r["Jq"])
     power_flags(sh, G(20), G(96), ("+5V", "-5V", "GND"))
 
 
@@ -1414,24 +1594,23 @@ def board_digital(sh):
     note_block(sh, (G(16), y2 - G(16)),
             "INTERLEAVE AND LEVEL SHIFT  (L and R onto one DIN at 3.072 Mbps, "
             "then 5 V -> 3.3 V for the Pi)", size=2.0)
-    link = interconnect(sh, G(24), y2, "J4", LINK_DIGITAL,
-                        NOTE_DIGITAL_LINK.replace("THE DIGITAL BOARD",
-                                                  "THE COMMON BOARD"))
+    stack_bus(sh, G(24), y2, "J4")
     mux = blk_mux(sh, G(100), y2)
     lvl = blk_levelshift(sh, G(160), y2)
 
     elbow(sh, clk6m, (div["clk"].x - G(6), div["clk"].y), G(100))
-    elbow(sh, link["MCLK"], mux["MCLK"], G(56))
-    elbow(sh, link["QL"], mux["QL"], G(62))
-    elbow(sh, link["QR"], mux["QR"], G(68))
+    # MCLK, QL and QR reach the mux by global label now.  They used to be
+    # drawn as wires from the ribbon header two blocks away; with the bus
+    # they arrive on a connector at the far end of the sheet, and a wire
+    # across that distance is less readable than the label, not more.
     # G(130) puts DIN's drop just clear of the mux's own decoupling run, which
     # falls the full height of the package from pin 16 to pin 8 beside it
     elbow(sh, mux["DIN"], lvl["DIN"], G(130))
 
 
 BOARDS = {
-    "vinyl_adc":           (board_full,    "A2", TITLE),
-    "vinyl_adc_common":    (board_common,  "A3", TITLE + "  -  COMMON BOARD"),
+    "vinyl_adc":           (board_full,    "A1", TITLE),
+    "vinyl_adc_power":     (board_power,   "A3", TITLE + "  -  POWER BOARD"),
     "vinyl_adc_channel_l": (lambda sh: board_channel(sh, "L"), "A2",
                             TITLE + "  -  CHANNEL BOARD (built twice)"),
     "vinyl_adc_channel_r": (lambda sh: board_channel(sh, "R"), "A2",
@@ -1447,8 +1626,7 @@ def emit_board(name, compose, paper, title):
 
     missing = assign_footprints(sh)
     problems = sh.check()
-    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                       name + ".kicad_sch")
+    out = paths.sch(name)
     sh.emit(out)
     if links:
         add_hrefs(out, links)
@@ -1482,8 +1660,7 @@ def main(which="all"):
         if letter in which:
             draw()
     problems = sh.check()
-    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                       f"bisect_{which}.kicad_sch")
+    out = os.path.join(paths.ROOT, f"bisect_{which}.kicad_sch")
     sh.emit(out)
     write_project(out, sh.uuid)
     for p in problems[:40]:

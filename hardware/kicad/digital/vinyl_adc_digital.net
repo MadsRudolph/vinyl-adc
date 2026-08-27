@@ -1,8 +1,8 @@
 (export
 	(version "E")
 	(design
-		(source "C:\\Users\\Mads2\\Documents\\Projects\\Projects\\Vinyl ADC\\hardware\\kicad\\vinyl_adc_digital.kicad_sch")
-		(date "2026-08-23T14:27:34")
+		(source "C:\\Users\\Mads2\\personal-projects\\Projects\\Vinyl ADC\\hardware\\kicad\\digital\\vinyl_adc_digital.kicad_sch")
+		(date "2026-08-27T15:14:22")
 		(tool "Eeschema 10.0.4")
 		(sheet
 			(number "1")
@@ -93,7 +93,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "9298653a-8e99-4345-8a74-1f1a9fed46e1")
+			(tstamps "a42a4a58-abe6-4b18-bb07-4b9d9bb91661")
 			(units
 				(unit
 					(name "A")
@@ -147,7 +147,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "a2e679b3-5527-4412-9043-aa425258e44a")
+			(tstamps "7cc84419-e8c6-4901-975f-9ea324d44683")
 			(units
 				(unit
 					(name "A")
@@ -201,7 +201,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "0b48ac37-be51-4dd7-8d14-7fef01d1e837")
+			(tstamps "6c027265-7762-48db-9993-12817d904360")
 			(units
 				(unit
 					(name "A")
@@ -255,7 +255,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "8ef97074-dd75-44bb-b776-267b8fd21a8e")
+			(tstamps "ffdae819-3b4a-45cc-9a15-76f0a3ad77f9")
 			(units
 				(unit
 					(name "A")
@@ -309,7 +309,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "b4e2bcb0-8002-4f72-8cb1-19dc9ab7fcc5")
+			(tstamps "cee58301-8c43-470a-8eea-fa9527c18f2b")
 			(units
 				(unit
 					(name "A")
@@ -363,7 +363,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "c18dc4f2-e7c5-45d9-8fe4-83e7c231358f")
+			(tstamps "880b2542-472b-4681-9e58-5fb5629b2650")
 			(units
 				(unit
 					(name "A")
@@ -420,7 +420,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "ea1998d7-0152-4157-9eec-03d46d4fe099")
+			(tstamps "24f4c4c7-ced6-43dc-a5e1-b9bf2854d04d")
 			(units
 				(unit
 					(name "A")
@@ -455,11 +455,11 @@
 		)
 		(comp
 			(ref "J4")
-			(value "2x6 IDC")
-			(footprint "Connector_IDC:IDC-Header_2x06_P2.54mm_Vertical")
+			(value "2x8 BUS")
+			(footprint "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical")
 			(fields
 				(field
-					(name "Footprint") "Connector_IDC:IDC-Header_2x06_P2.54mm_Vertical")
+					(name "Footprint") "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical")
 				(field
 					(name "Datasheet")
 				)
@@ -469,8 +469,8 @@
 			)
 			(libsource
 				(lib "Connector_Generic")
-				(part "Conn_02x06_Odd_Even")
-				(description "Generic connector, double row, 02x06, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+				(part "Conn_02x08_Odd_Even")
+				(description "Generic connector, double row, 02x08, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
 			)
 			(property
 				(name "Sheetname")
@@ -492,7 +492,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "b9fae526-756a-4773-9595-63317513b43c")
+			(tstamps "ea600bd0-d21e-40a4-ba11-e10c2f5de6cd")
 			(units
 				(unit
 					(name "A")
@@ -516,6 +516,12 @@
 							(num "11")
 						)
 						(pin
+							(num "13")
+						)
+						(pin
+							(num "15")
+						)
+						(pin
 							(num "2")
 						)
 						(pin
@@ -532,6 +538,12 @@
 						)
 						(pin
 							(num "12")
+						)
+						(pin
+							(num "14")
+						)
+						(pin
+							(num "16")
 						)
 					)
 				)
@@ -576,9 +588,9 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "f64a4707-0419-4069-b512-b8c187c2c889" "f2952e3a-c457-4b46-8609-52cd9cd7a018"
-				"bc8cbc95-2af7-407e-b1c7-3fff6545251e" "b99a9bdd-f7ac-4863-a434-b91412622fdd"
-				"b461d583-2fef-4101-a136-1aa87367d807"
+			(tstamps "3b5d0587-fa1c-4ae5-a11a-dbda17cc575a" "27ee1289-11c6-4e21-b2e8-3ff3c39d6be4"
+				"a1fcf96b-9582-427e-8f7d-41f20ffcc026" "e37d39a6-650c-47dd-a222-a274e90ac421"
+				"0e0036c5-a598-4d70-be6a-b520fc16c78f"
 			)
 			(units
 				(unit
@@ -689,7 +701,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "c1b47989-0f1b-414c-8cdc-4a429e363b53")
+			(tstamps "89c93c12-bf3d-44c8-bb35-0cf09790089e")
 			(units
 				(unit
 					(name "A")
@@ -785,7 +797,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "476287ae-511b-4eab-8ad6-24f125d242d8")
+			(tstamps "8cb05534-2c47-4195-a9e6-dbf473c4a763")
 			(units
 				(unit
 					(name "A")
@@ -881,10 +893,10 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "818c379b-6aa3-4d3d-99c5-c8cba9c3206e" "6c348672-1134-4b10-95bf-3e915c80539d"
-				"823805ef-886c-4f9e-b9ad-730f885cb18b" "440d8310-b980-46a3-918f-8a0e0e248041"
-				"396e901e-7d98-481a-b34f-2343dbc83976" "bfd73d5d-d474-40fb-b0ab-54ebcd5d9fb8"
-				"34e79ae6-c95e-45ac-8f4f-d4e6530cdd9c"
+			(tstamps "dc75bcb7-1c74-4256-a1fa-682305e64bb3" "5db0185c-18af-453b-941f-fd930ecbb79a"
+				"1d2c5ea5-3170-47e0-b95b-1e203b49e6ec" "3a31acf1-3577-4420-86e7-3746f3d47933"
+				"4e7efe40-5f8b-4e1c-8f11-b4a7dcfdfd54" "9a0dab57-725c-48ae-a24e-c3c8be5bf5ac"
+				"1af82e37-3aae-4eec-92d1-47dae4d547a6"
 			)
 			(units
 				(unit
@@ -1005,7 +1017,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "56b0f920-cb0e-47be-a5ad-def07b9df2e1")
+			(tstamps "04f99fac-fbff-479c-95d1-ae989b2e2d52")
 			(units
 				(unit
 					(name "A")
@@ -1531,8 +1543,8 @@
 		)
 		(libpart
 			(lib "Connector_Generic")
-			(part "Conn_02x06_Odd_Even")
-			(description "Generic connector, double row, 02x06, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(part "Conn_02x08_Odd_Even")
+			(description "Generic connector, double row, 02x08, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
 			(footprints
 				(fp "Connector*:*_2x??_*")
 			)
@@ -1540,7 +1552,7 @@
 				(field
 					(name "Reference") "J")
 				(field
-					(name "Value") "Conn_02x06_Odd_Even")
+					(name "Value") "Conn_02x08_Odd_Even")
 				(field
 					(name "Footprint")
 				)
@@ -1548,7 +1560,7 @@
 					(name "Datasheet")
 				)
 				(field
-					(name "Description") "Generic connector, double row, 02x06, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+					(name "Description") "Generic connector, double row, 02x08, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
 			)
 			(pins
 				(pin
@@ -1609,6 +1621,26 @@
 				(pin
 					(num "12")
 					(name "Pin_12")
+					(type "passive")
+				)
+				(pin
+					(num "13")
+					(name "Pin_13")
+					(type "passive")
+				)
+				(pin
+					(num "14")
+					(name "Pin_14")
+					(type "passive")
+				)
+				(pin
+					(num "15")
+					(name "Pin_15")
+					(type "passive")
+				)
+				(pin
+					(num "16")
+					(name "Pin_16")
 					(type "passive")
 				)
 			)
@@ -1768,12 +1800,6 @@
 			)
 			(node
 				(ref "J4")
-				(pin "12")
-				(pinfunction "Pin_12_12")
-				(pintype "passive")
-			)
-			(node
-				(ref "J4")
 				(pin "2")
 				(pinfunction "Pin_2_2")
 				(pintype "passive")
@@ -1811,6 +1837,17 @@
 		)
 		(net
 			(code "3")
+			(name "-5V")
+			(class "Default")
+			(node
+				(ref "J4")
+				(pin "16")
+				(pinfunction "Pin_16_16")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "4")
 			(name "BCLK")
 			(class "Default")
 			(node
@@ -1826,7 +1863,7 @@
 			)
 		)
 		(net
-			(code "4")
+			(code "5")
 			(name "CLK6M")
 			(class "Default")
 			(node
@@ -1842,7 +1879,7 @@
 			)
 		)
 		(net
-			(code "5")
+			(code "6")
 			(name "DIN")
 			(class "Default")
 			(node
@@ -1858,7 +1895,7 @@
 			)
 		)
 		(net
-			(code "6")
+			(code "7")
 			(name "GND")
 			(class "Default")
 			(node
@@ -1908,6 +1945,18 @@
 				(ref "J4")
 				(pin "11")
 				(pinfunction "Pin_11_11")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "13")
+				(pinfunction "Pin_13_13")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "15")
+				(pinfunction "Pin_15_15")
 				(pintype "passive")
 			)
 			(node
@@ -2044,7 +2093,7 @@
 			)
 		)
 		(net
-			(code "7")
+			(code "8")
 			(name "GPCLK0")
 			(class "Default")
 			(node
@@ -2061,7 +2110,7 @@
 			)
 		)
 		(net
-			(code "8")
+			(code "9")
 			(name "LRCLK")
 			(class "Default")
 			(node
@@ -2077,13 +2126,13 @@
 			)
 		)
 		(net
-			(code "9")
+			(code "10")
 			(name "MCLK")
 			(class "Default")
 			(node
 				(ref "J4")
-				(pin "4")
-				(pinfunction "Pin_4_4")
+				(pin "8")
+				(pinfunction "Pin_8_8")
 				(pintype "passive")
 			)
 			(node
@@ -2100,7 +2149,7 @@
 			)
 		)
 		(net
-			(code "10")
+			(code "11")
 			(name "Net-(J1-Pin_1)")
 			(class "Default")
 			(node
@@ -2117,7 +2166,7 @@
 			)
 		)
 		(net
-			(code "11")
+			(code "12")
 			(name "Net-(J1-Pin_2)")
 			(class "Default")
 			(node
@@ -2138,7 +2187,7 @@
 			)
 		)
 		(net
-			(code "12")
+			(code "13")
 			(name "Net-(U8-Pad2)")
 			(class "Default")
 			(node
@@ -2153,7 +2202,7 @@
 			)
 		)
 		(net
-			(code "13")
+			(code "14")
 			(name "Net-(U8-Pad6)")
 			(class "Default")
 			(node
@@ -2168,7 +2217,7 @@
 			)
 		)
 		(net
-			(code "14")
+			(code "15")
 			(name "Net-(U8-Pad12)")
 			(class "Default")
 			(node
@@ -2183,7 +2232,7 @@
 			)
 		)
 		(net
-			(code "15")
+			(code "16")
 			(name "PI_BCLK")
 			(class "Default")
 			(node
@@ -2199,7 +2248,7 @@
 			)
 		)
 		(net
-			(code "16")
+			(code "17")
 			(name "PI_DIN")
 			(class "Default")
 			(node
@@ -2215,7 +2264,7 @@
 			)
 		)
 		(net
-			(code "17")
+			(code "18")
 			(name "PI_LRCLK")
 			(class "Default")
 			(node
@@ -2231,7 +2280,7 @@
 			)
 		)
 		(net
-			(code "18")
+			(code "19")
 			(name "PUMP")
 			(class "Default")
 			(node
@@ -2248,13 +2297,13 @@
 			)
 		)
 		(net
-			(code "19")
+			(code "20")
 			(name "QL")
 			(class "Default")
 			(node
 				(ref "J4")
-				(pin "6")
-				(pinfunction "Pin_6_6")
+				(pin "12")
+				(pinfunction "Pin_12_12")
 				(pintype "passive")
 			)
 			(node
@@ -2265,13 +2314,13 @@
 			)
 		)
 		(net
-			(code "20")
+			(code "21")
 			(name "QR")
 			(class "Default")
 			(node
 				(ref "J4")
-				(pin "8")
-				(pinfunction "Pin_8_8")
+				(pin "14")
+				(pinfunction "Pin_14_14")
 				(pintype "passive")
 			)
 			(node
@@ -2282,7 +2331,29 @@
 			)
 		)
 		(net
-			(code "21")
+			(code "22")
+			(name "VREF_N")
+			(class "Default")
+			(node
+				(ref "J4")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "23")
+			(name "VREF_P")
+			(class "Default")
+			(node
+				(ref "J4")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "24")
 			(name "unconnected-(U3-Pad6)")
 			(class "Default")
 			(node
@@ -2292,7 +2363,7 @@
 			)
 		)
 		(net
-			(code "22")
+			(code "25")
 			(name "unconnected-(U3-Pad8)")
 			(class "Default")
 			(node
@@ -2302,7 +2373,7 @@
 			)
 		)
 		(net
-			(code "23")
+			(code "26")
 			(name "unconnected-(U3-Pad11)")
 			(class "Default")
 			(node
@@ -2312,7 +2383,7 @@
 			)
 		)
 		(net
-			(code "24")
+			(code "27")
 			(name "unconnected-(U4-Q2-Pad6)")
 			(class "Default")
 			(node
@@ -2323,7 +2394,7 @@
 			)
 		)
 		(net
-			(code "25")
+			(code "28")
 			(name "unconnected-(U4-Q3-Pad5)")
 			(class "Default")
 			(node
@@ -2334,7 +2405,7 @@
 			)
 		)
 		(net
-			(code "26")
+			(code "29")
 			(name "unconnected-(U4-Q5-Pad2)")
 			(class "Default")
 			(node
@@ -2345,7 +2416,7 @@
 			)
 		)
 		(net
-			(code "27")
+			(code "30")
 			(name "unconnected-(U4-Q7-Pad13)")
 			(class "Default")
 			(node
@@ -2356,7 +2427,7 @@
 			)
 		)
 		(net
-			(code "28")
+			(code "31")
 			(name "unconnected-(U4-Q8-Pad12)")
 			(class "Default")
 			(node
@@ -2367,7 +2438,7 @@
 			)
 		)
 		(net
-			(code "29")
+			(code "32")
 			(name "unconnected-(U4-Q9-Pad14)")
 			(class "Default")
 			(node
@@ -2378,7 +2449,7 @@
 			)
 		)
 		(net
-			(code "30")
+			(code "33")
 			(name "unconnected-(U4-Q10-Pad15)")
 			(class "Default")
 			(node
@@ -2389,7 +2460,7 @@
 			)
 		)
 		(net
-			(code "31")
+			(code "34")
 			(name "unconnected-(U4-Q11-Pad1)")
 			(class "Default")
 			(node
@@ -2400,7 +2471,7 @@
 			)
 		)
 		(net
-			(code "32")
+			(code "35")
 			(name "unconnected-(U6-Zb-Pad7)")
 			(class "Default")
 			(node
@@ -2411,7 +2482,7 @@
 			)
 		)
 		(net
-			(code "33")
+			(code "36")
 			(name "unconnected-(U6-Zc-Pad9)")
 			(class "Default")
 			(node
@@ -2422,7 +2493,7 @@
 			)
 		)
 		(net
-			(code "34")
+			(code "37")
 			(name "unconnected-(U6-Zd-Pad12)")
 			(class "Default")
 			(node
