@@ -5,11 +5,18 @@ Anything the shop does not carry is flagged ORDER rather than quietly listed,
 because the whole design was constrained to shop parts and a silent gap there
 is exactly the surprise that stops a build on the bench.
 
-    py -3.13 make_bom.py > ../../docs/bom.md
+    py -3.13 make_bom.py > ../../../docs/bom.md
 
-Reads the two half-boards, not the one-page reference sheet: the halves are
-what actually gets built, and they carry the link header the reference sheet
-has no reason to show.  Each line says which board its parts sit on.
+Reads the three ARTWORKS, not the one-page reference sheet: the artworks are
+what actually gets milled, and they carry the stacking bus and the Q-select
+shunt that the reference sheet has no reason to show.  Each line says which
+board its parts sit on.
+
+The channel artwork is milled TWICE -- one board is channel L, the other
+channel R, and the only difference between them is which way the Q-select
+shunt is fitted.  So its quantities are doubled here and its refdes are the
+ones printed on the copper; the second copy carries the same ones, even though
+the reference sheet numbers that channel forty higher.
 """
 
 import collections
@@ -88,8 +95,9 @@ def ic_in_shop(shop, value):
     return None
 
 
-# tag, sheet, how many of that board a stereo ADC needs
-BOARDS = (("C", "vinyl_adc_common", 1),
+# tag, sheet, how many of that board a stereo ADC needs.  Three artworks,
+# four boards: the channel is the one that gets milled twice.
+BOARDS = (("P", "vinyl_adc_power", 1),
           ("M", "vinyl_adc_channel_l", 2),
           ("D", "vinyl_adc_digital", 1))
 
@@ -140,13 +148,19 @@ def main():
             avail = {"LINE IN L": "Terminal 2 pol skrueterminal",
                      "LINE IN R": "Terminal 2 pol skrueterminal",
                      "CLK SEL": "Header Male + Jumper",
+                     "Q SEL": "Header Male + Jumper",
                      "TO PI GPIO": "Header Male 1x8"}.get(value)
         status = avail or "** ORDER **"
         if not avail:
             orders.append((value, ", ".join(refs)))
-        boards = "".join(sorted({where[r] for r in refs}))
-        if "M" in boards:
-            boards += " x2"
+        # Spell the quantity out per board rather than tagging the line with
+        # the set of boards it touches. A line like 10k0 sits on power AND on
+        # the channel, and only the channel half doubles -- "MP x2" reads as
+        # though the whole line did, which is off by four.
+        per = collections.Counter(where[r] for r in refs)
+        boards = " + ".join(
+            f"{tag} {per[tag]}" + (" x2" if n_boards > 1 else "")
+            for tag, _name, n_boards in BOARDS if per[tag])
         lines.append((n, value, ", ".join(refs), boards, status))
 
     print("# Bill of materials - discrete delta-sigma vinyl ADC")
@@ -158,12 +172,14 @@ def main():
     print(f"{total} components in {len(lines)} distinct lines, for the four "
           "boards a stereo ADC needs.")
     print()
-    print("**Board** is **C** common (power, reference, quantiser), **M** "
-          "modulator channel, **D** digital (clock, interleave, Pi). The "
-          "channel board is ONE artwork built TWICE, so its lines are marked "
-          "`M x2` and the quantity already counts both; the refdes shown are "
-          "the ones printed on the board, and the second copy carries the "
-          "same ones.")
+    print("**Board** is **P** power (supplies and the +/-2.5 V reference), "
+          "**M** modulator channel, **D** digital (clock, interleave, level "
+          "shift, Pi). Three artworks, four boards: the channel is ONE "
+          "artwork MILLED TWICE, so its lines are marked `M x2` and the "
+          "quantity already counts both. The refdes shown are the ones "
+          "printed on the copper, and the second copy carries the same ones "
+          "-- the reference sheet numbers that channel forty higher, the "
+          "board does not.")
     print()
     print("| Qty | Value | Refs | Board | DTU shop |")
     print("|----:|-------|------|-------|----------|")
@@ -180,27 +196,42 @@ def main():
     print()
     print("## Sockets")
     print()
-    print("Use DIP sockets for every IC (all stocked): 8-pin for the LM311s and")
-    print("the oscillator can, 14-pin for the TL074s / 74HC04 / 74HC74 / 74HCT132,")
-    print("16-pin for the 74HC157 / 74HC4040 / 74HC4049, 20-pin for the 74HC244.")
+    print("Use DIP sockets for every IC (all stocked): 8-pin for the TL072s,")
+    print("the LM311s and the oscillator can, 14-pin for the 74HC04 / 74HC74 /")
+    print("74HCT132, 16-pin for the 74HC157 / 74HC4040 / 74HC4049, 20-pin for")
+    print("the 74HC244.")
     print()
-    print("## The board-to-board links")
+    print("## The stacking bus")
     print()
-    print("Three ribbons, all shrouded IDC box headers on 2.54 mm pitch:")
+    print("There are no ribbons. Every board carries the SAME 2x8 on 2.54 mm")
+    print("at the SAME coordinates, and the four boards plug into each other")
+    print("on 11 mm standoffs:")
     print()
-    print("| Cable | Header | Ways | Carries |")
+    print("| Board | Ref | Ways | Position in the stack |")
     print("|---|---|---|---|")
-    print("| common - digital | J3 / J4 | 2x6 | +5V, GND, MCLK, QL, QR, PUMP |")
-    print("| common - channel L | J5 / J7 | 2x7 | both supplies, both "
-          "references, CMP_L, DACP_L, DACN_L |")
-    print("| common - channel R | J6 / J7 | 2x7 | the same, R |")
+    print("| digital | J4 | 2x8 | top |")
+    print("| channel L | J7 | 2x8 | middle |")
+    print("| channel R | J7 | 2x8 | middle |")
+    print("| power | J3 | 2x8 | bottom |")
     print()
-    print("You need 2 x 2x6 headers, 4 x 2x7 headers, and matching IDC")
-    print("sockets and ribbon. The shop carries none of them, so they go on")
-    print("the same order as the oscillator can. A bare pin header would fit")
-    print("the same pads and would also plug in backwards -- which puts +5V")
-    print("straight across the ground column. The shroud's key is what makes")
-    print("that impossible, and it is the reason this is not a stocked part.")
+    print("Odd pins are all GND, so every signal has a grounded neighbour")
+    print("either side -- which is what MCLK needs, its jitter being what sets")
+    print("this converter's noise floor. The even pins carry, in order:")
+    print("**+5V, VREF_P, VREF_N, MCLK, PUMP, QL, QR, -5V**.")
+    print()
+    print("What goes in the sixteen holes is a build choice, not an artwork")
+    print("choice: a plain socket on the top board, a long-pin header on the")
+    print("bottom one, and a pass-through stacking header on the two in the")
+    print("middle. All three are the same sixteen pads. You need 4 sets plus")
+    print("16 x 11 mm M3 standoffs and the M3 screws; the shop carries none of")
+    print("them, so they go on the same order as the oscillator can.")
+    print()
+    print("## Which channel is which")
+    print()
+    print("Both channel boards are the same copper, so nothing etched on them")
+    print("says which channel a board is. The Q-select shunt does: **J21 1-2")
+    print("makes it LEFT, 2-3 makes it RIGHT**. Fit one jumper per channel")
+    print("board and they are otherwise interchangeable.")
 
 
 if __name__ == "__main__":

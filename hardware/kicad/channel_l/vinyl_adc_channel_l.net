@@ -2,7 +2,7 @@
 	(version "E")
 	(design
 		(source "C:\\Users\\Mads2\\personal-projects\\Projects\\Vinyl ADC\\hardware\\kicad\\channel_l\\vinyl_adc_channel_l.kicad_sch")
-		(date "2026-08-27T15:14:20")
+		(date "2026-08-30T16:05:26")
 		(tool "Eeschema 10.0.4")
 		(sheet
 			(number "1")
@@ -2319,9 +2319,9 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "e9346742-18d3-459a-8aa3-bb5f192ad02d" "f78e71f6-6a82-4854-a91b-f36e12083c79"
-				"d4cc76c8-e612-445c-95aa-aaed517b7c38" "d32f9dc2-0cb3-4d02-a471-991656ad54c2"
-				"aceb1424-70c3-4017-9fa0-21e482e4b4b5" "6d241ccf-9d7b-47e1-b313-af15c7f02e20"
+			(tstamps "f78e71f6-6a82-4854-a91b-f36e12083c79" "d4cc76c8-e612-445c-95aa-aaed517b7c38"
+				"e9346742-18d3-459a-8aa3-bb5f192ad02d" "aceb1424-70c3-4017-9fa0-21e482e4b4b5"
+				"6d241ccf-9d7b-47e1-b313-af15c7f02e20" "d32f9dc2-0cb3-4d02-a471-991656ad54c2"
 				"200be738-9c4c-498b-b1b5-92a1fcbd6c19"
 			)
 			(units

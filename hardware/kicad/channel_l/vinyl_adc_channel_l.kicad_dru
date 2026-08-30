@@ -1,0 +1,45 @@
+(version 1)
+
+# Custom DRC rules for the CHANNEL artwork of the CNC-milled vinyl ADC.
+# One artwork, milled twice -- this file covers both copies (channel_r is the
+# same copper with every refdes raised by 40, cut from this same file).
+#
+# THIS ARTWORK IS DOUBLE-SIDED. The power and digital boards are single-sided;
+# the channel is cut from double-sided stock, so it carries copper on B.Cu AND
+# F.Cu. The rules below are layer-agnostic on purpose: a through-hole pad exists
+# on both layers, so the same 0.84 mm intra-footprint gaps appear on the top as
+# on the bottom, and one rule per footprint covers both.
+#
+# Copper is isolation-milled with an 0.8 mm flat end mill, so 0.8 mm is the hard
+# floor on any copper-to-copper gap: the tool cannot enter anything narrower, and
+# a gap it cannot enter stays shorted. The Default netclass asks for 0.85 mm --
+# the `cnc` fabrication profile's number -- leaving every routed track ~0.025 mm
+# of copper either side of the cut as margin for runout and registration.
+#
+# Every footprint here was audited against that floor. Only the 2.54 mm headers
+# sit between the tool diameter and the netclass clearance:
+#
+#   J7     PinHeader_2x08_P2.54mm_Vertical    -> 0.84 mm pad-to-pad  (30 pairs)
+#   J21    PinHeader_1x03_P2.54mm_Vertical    -> 0.84 mm pad-to-pad  (4 pairs)
+#   RV20   PinHeader_1x03_P2.54mm_Horizontal  -> 0.84 mm pad-to-pad  (4 pairs)
+#
+# That gap is set by each header's own 2.54 mm pin pitch, not by anything we cut,
+# and it still clears the tool in a single pass. The rules below relax the
+# clearance ONLY between two items that both belong to one of those footprints.
+# The full 0.85 mm stays in force between different components and for every
+# track.
+#
+# Needing no exception: DIP-8/14 LongPads at 0.94 mm, the bornier terminal at
+# 2.08 mm, the MKT box cap at 3.4 mm, and every axial passive and disc wider.
+
+(rule "J7_intra_pad_clearance"
+	(condition "A.memberOfFootprint('J7') && B.memberOfFootprint('J7')")
+	(constraint clearance (min 0.8mm)))
+
+(rule "J21_intra_pad_clearance"
+	(condition "A.memberOfFootprint('J21') && B.memberOfFootprint('J21')")
+	(constraint clearance (min 0.8mm)))
+
+(rule "RV20_intra_pad_clearance"
+	(condition "A.memberOfFootprint('RV20') && B.memberOfFootprint('RV20')")
+	(constraint clearance (min 0.8mm)))

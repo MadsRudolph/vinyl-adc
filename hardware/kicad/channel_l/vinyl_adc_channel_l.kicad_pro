@@ -495,13 +495,13 @@
     "classes": [
       {
         "bus_width": 12,
-        "clearance": 0.5,
+        "clearance": 0.85,
         "line_style": 0,
         "name": "Default",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": -1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.6,
+        "track_width": 0.8,
         "tuning_profile": "",
         "via_diameter": 0.8,
         "via_drill": 0.4,
