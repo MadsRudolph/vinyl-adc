@@ -1,9 +1,11 @@
 # What is left before these boards can be cut
 
-State on 2026-08-30. The **channel artwork is now DOUBLE-SIDED** (cut twice from
-the two pieces of double-sided stock); power and digital stay single-sided.
-**No board has met its full acceptance bar yet, so nothing has been exported to
-`production/`.**
+State on 2026-08-30. The **channel artwork is DOUBLE-SIDED** (cut twice from the
+two pieces of double-sided stock); power and digital stay single-sided.
+
+**The channel artwork is FINISHED and EXPORTED** —
+`production/vinyl_adc_channel_l/`. Power and digital have not met their bar and
+have not been exported.
 
 Re-measure before trusting any of this:
 
@@ -18,14 +20,33 @@ py -3.13 ~/.claude/skills/kicad-place/scripts/place_score.py <board>.kicad_pcb
 
 | | sides | links left | wire bridges | vias | GND pour | DRC beyond the `.kicad_dru` exception | placement |
 |---|---|---:|---:|---:|---|---|---|
-| power | single | **0** | 1 | 0 | 1 piece, 0 stranded | 1 silk_overlap | 4/4 |
-| channel | **double** | **1** | 0 | **0** | whole, 0 stranded, 9 fragments | 8 isolated_copper, 13 silk_overlap | 4/4 |
+| **channel** | **double** | **0** | **0** | **0** | **1 piece**, 0 stranded | **none** (13 silk_overlap, cosmetic) | 4/4 |
+| power | single | 0 | 1 | 0 | 1 piece, 0 stranded | 1 silk_overlap | 4/4 |
 | digital | single | 13 | 0 | 0 | 2 pieces, 1 stranded, 19 fragments | none | 3/4 |
 
-The channel board went from **13 links to 1** by using the top layer. The one
-left is `VREF_N`: an F.Cu track at (68.88, 70.30) to **J7 pin 6** at
-(73.81, 32.54) — the reference coming off the stacking bus, a ~38 mm run.
-FreeRouting will not close it at 30 or 100 passes, with the whole top layer free.
+**The channel artwork is done.** The last link — `VREF_N` to J7 pin 6, which
+FreeRouting would not close at 30 or 100 passes with the whole top layer free —
+was routed by hand. 26/26 nets in one piece, both oracles agreeing at 0
+unconnected, 0 vias, 0 stranded pads, ground pour whole.
+
+One cleanup was applied after that: the GND zone had `island removal = Never`,
+which left 9 floating fragments (1.2–12.9 mm², none carrying a pad) showing as
+`isolated_copper`. Set to **Always** and refilled — pour went to 1 piece and
+those 9 DRC violations went to 0. Nothing depended on them (0 stranded pads
+before and after).
+
+**One advisory that is NOT in the acceptance bar.** `cutspan` reads 1.141 board
+diagonals — the ground return detours 161 mm further than the straight line, and
+the worst point is (78.89, 30.0), which is **J7 pin 1, the bus GND pin**. The
+automated route read 0.725 before the manual pass. It is not a fault and it does
+not block production, but this artwork is milled twice and it feeds a modulator
+whose noise floor is ground-dependent, so it is worth knowing.
+
+### Building the two channel boards
+
+One artwork, one production set, milled twice. The boards are otherwise
+identical — **the Q-select shunt is the only thing that names a channel**:
+J21 **1-2 = LEFT**, **2-3 = RIGHT**.
 
 ## Two gates now read "wrong" on the channel board, on purpose
 
@@ -133,6 +154,29 @@ pours, exactly at the budget before FreeRouting wedges. That means partitioning
 B.Cu into three plane regions, a real design change carrying gotcha 25 (two
 same-priority zones over one outline can invert their fill once there are
 tracks). Highest-value thing left on this board, and not attempted.
+
+## A bug in `export_production.ps1` that only bites on this project
+
+Its gerber and drill steps pass `-o "$OutDir\gerbers\"`. The trailing backslash
+before the closing quote is read by Windows argument parsing as an **escaped
+quote**, so the argument runs on into the next one and the path is mangled —
+here `...\Projects\Vinyl ADC\...` came back as `...\personal-projects\ADC\...`
+and kicad-cli reported *Board file does not exist*. The DXF steps are fine
+because they pass a full filename with no trailing separator.
+
+It is invisible on a path with no spaces, which is why it has never shown up
+before. **"Vinyl ADC" has a space.** Until the script is fixed, run the two
+steps by hand with the directory passed as a variable and no trailing slash:
+
+```powershell
+$out = "<proj>\production\<board>\gerbers"
+New-Item -ItemType Directory -Force $out | Out-Null
+& $kc pcb export gerbers -l "F.Cu,B.Cu,Edge.Cuts,B.Mask,F.Mask,F.Silkscreen,F.Fab" -o $out $pcb
+& $kc pcb export drill --format excellon -o $out $pcb
+```
+
+The script still writes the three DXFs correctly, including the laser
+silkscreen, so it is only the `gerbers/` half that needs this.
 
 ## Tooling added
 
