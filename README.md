@@ -16,21 +16,20 @@ Pro-Ject Debut Carbon ──> Phono Preamp ──> [ VINYL ADC ] ──> Raspber
 
 ---
 
-## Key Highlights
+## The 4-Board PCB Stack
 
-- **No ADC Chip:** Discrete third-order loop constructed from op-amp integrators, an LM311 high-speed comparator, a 74HC74 retiming flip-flop, and precision resistor-switched DAC feedback.
-- **Matched Dynamic Range:** Optimized for **68–70 dB SNR**, matching the physical noise floor of vinyl playback without unnecessary over-engineering.
-- **Interleaved I2S Stream:** Both channels are interleaved onto a single data line, appearing to the Raspberry Pi as a standard 48 kHz / 32-bit stereo I2S capture.
-- **4-Board Stacked Architecture:** Modular PCB stack connected via 2×8 2.54 mm stacking headers and M3 brass standoffs:
-  - **Tier 1 (Base):** Power Supply & Reference Board (`vinyl_adc_power`)
-  - **Tier 2:** Right Channel Modulator (`vinyl_adc_channel_r`)
-  - **Tier 3:** Left Channel Modulator (`vinyl_adc_channel_l`)
-  - **Tier 4 (Top):** Digital Clock, Interleaving Logic & Pi Interface (`vinyl_adc_digital`)
-- **Custom 3D-Printed & Laser-Cut Enclosure:** Sleek PETG chassis with recessed clear acrylic lid, M3 heat-set inserts, gold RCA jacks, ground post, and trim potentiometer.
+The converter is partitioned into four 100 × 100 mm stacked circuit boards, fabricated on an isolation milling machine (e.g. Roland SRM-20) and connected via 2×8 2.54 mm stacking headers and M3 brass standoffs:
+
+| Tier & Board | 3D Raytraced Board Render | Function & Key Components |
+|---|:---:|---|
+| **Tier 4 (Top)**<br>[`vinyl_adc_digital`](hardware/kicad/digital/) | <img src="media/pcb_renders/pcb_digital_3d.png" width="340" alt="Digital Board 3D Render"> | **Clock, Interleaving & Pi Interface:**<br>• 6.144 MHz crystal oscillator can (`X1`)<br>• `74HCT132` Schmitt-trigger clock buffer<br>• `74HC4040` binary clock divider (1.536 MHz $F_s$, 3.072 MHz BCLK, 48 kHz LRCLK)<br>• `74HC157` stereo bit-interleaving MUX<br>• `74HC4049` 5 V $\rightarrow$ 3.3 V level shifter to Raspberry Pi |
+| **Tier 3**<br>[`vinyl_adc_channel_l`](hardware/kicad/channel_l/) | <img src="media/pcb_renders/pcb_channel_3d.png" width="340" alt="Left Channel Modulator 3D Render"> | **Left Channel Modulator:**<br>• 3rd-order active RC integrators (`TL072`)<br>• `LM311` high-speed comparator<br>• `74HC74` retiming flip-flop & 1-bit DAC network<br>• Multi-turn input gain trim potentiometer<br>• Jumper set to Left (`pins 1-2`) |
+| **Tier 2**<br>[`vinyl_adc_channel_r`](hardware/kicad/channel_r/) | <img src="media/pcb_renders/pcb_channel_3d.png" width="340" alt="Right Channel Modulator 3D Render"> | **Right Channel Modulator:**<br>• Identical artwork to Tier 3 (milled twice)<br>• Jumper set to Right (`pins 2-3`)<br>• Independent ground plane & analog reference |
+| **Tier 1 (Base)**<br>[`vinyl_adc_power`](hardware/kicad/power/) | <img src="media/pcb_renders/pcb_power_3d.png" width="340" alt="Power Supply Board 3D Render"> | **Power & Reference Generation:**<br>• `74HC244` + `1N5817` charge-pump negative rail<br>• Low-noise precision virtual ground reference (`TL072`)<br>• High-capacity bulk reservoir & post-filter network<br>• 4× M3 mounting holes seated onto enclosure floor bosses |
 
 ---
 
-## System Architecture
+## System Architecture & Signal Flow
 
 ```mermaid
 graph TD
@@ -53,15 +52,15 @@ graph TD
     Divider -->|48 kHz LRCLK| Pi
 ```
 
+- **Expected Performance: 68–70 dB SNR**, purposefully matched to vinyl's physical dynamic range.
+- **Bit-Interleaved Stream:** Both channels alternate bits on a single line at 3.072 Mbps. The Pi captures this as standard 48 kHz / 32-bit stereo I2S.
+- **Software Decimation:** A dedicated CIC (Cascaded Integrator-Comb) filter + compensation FIR filter runs on the Raspberry Pi CPU to produce clean 24-bit / 48 kHz audio.
+
 ---
 
-## Enclosure & Physical Manufacturing
+## Enclosure & Manufacturing
 
 The project includes complete manufacturing files for both 3D printing and laser cutting:
-
-<p align="center">
-  <img src="media/vinyl_adc_assembly.gif" alt="3D CAD Enclosure Exploded View" width="550">
-</p>
 
 ### Files in [`enclosure/`](enclosure/):
 
@@ -74,9 +73,22 @@ The project includes complete manufacturing files for both 3D printing and laser
 | [**`vinyl_adc_enclosure.blend`**](enclosure/vinyl_adc_enclosure.blend) | Blender CAD | Full animated parametric scene with real KiCad 3D PCB exports, connectors, fasteners, and timeline animation. |
 
 ### Fastening Architecture:
-- **Enclosure Lid:** 4× M3 heated inserts seated into solid corner pillars at $(\pm 64.0\text{ mm}, \pm 64.0\text{ mm})$, providing $4.57\text{ mm}$ of internal plastic wall casing. 4× M3 $\times$ 8 mm stainless hex button-head screws clamp the $3.0\text{ mm}$ clear acrylic lid.
-- **PCB Stack Mounting:** 4× floor bosses ($\varnothing 9.0\text{ mm}$, height $6.0\text{ mm}$) at $(\pm 44.0\text{ mm}, \pm 44.0\text{ mm})$ with M3 heat-set inserts. Four M3 $\times$ 6 mm male-female base standoffs thread into the floor, followed by 12× M3 $\times$ 11 mm hex standoffs and 4× top M3 brass nuts clamping the entire stack.
-- **Underside Retention:** Counterbored through-holes allow M3 screws to be driven from underneath directly into the base standoffs.
+- **Lid Screws & Heated Inserts:** 4× M3 heated inserts seated into solid corner pillars at $(\pm 64.0\text{ mm}, \pm 64.0\text{ mm})$ with $4.57\text{ mm}$ of internal plastic casing. 4× M3 $\times$ 8 mm stainless screws clamp the $3.0\text{ mm}$ clear acrylic top lid.
+- **PCB Stack Retention:** 4× floor mounting bosses ($\varnothing 9.0\text{ mm}$, height $6.0\text{ mm}$) at $(\pm 44.0\text{ mm}, \pm 44.0\text{ mm})$ with M3 heat-set inserts. Four M3 $\times$ 6 mm base standoffs thread into the base, followed by 12× M3 $\times$ 11 mm standoffs and 4× top M3 brass nuts clamping the entire stack.
+- **Underside Screws:** Counterbored through-holes allow M3 screws to be driven from underneath directly into the base standoffs.
+
+---
+
+## Laser Cutting the Acrylic Top Lid (GCC Spirit)
+
+1. Open [**`vinyl_adc_plexiglass_top.dxf`**](enclosure/vinyl_adc_plexiglass_top.dxf) or [**`vinyl_adc_plexiglass_top.svg`**](enclosure/vinyl_adc_plexiglass_top.svg) in Adobe Illustrator.
+   - For DXF: Ensure **Scale:** `1 Units = 1 Millimeters` (100%).
+   - For SVG: Verify width is $140.0\text{ mm}$ and height is $140.0\text{ mm}$.
+2. Copy the drawing into the lab's `lasercutter template`.
+3. Check stroke rules:
+   - **Cut Lines:** Color Red (`#FF0000`), stroke width **`0.01 mm`** (`0.028 pt`).
+   - **Engrave (Optional):** Color Black (`#000000`), raster fill.
+4. Print via GCC Spirit Driver: Select `Acrylic 3.0 mm` from history, autofocus origin $(0, 0)$, and run!
 
 ---
 
@@ -101,24 +113,12 @@ The project includes complete manufacturing files for both 3D printing and laser
 │   ├── shopping-list.md           # Component shop procurement list
 │   ├── bom.md                     # Bill of materials
 │   └── design-notes.md            # Circuit design decisions and SPICE findings
-├── media/                          # Assembly renders, videos, and animations
+├── media/                          # Visuals, renders, and animations
+│   ├── vinyl_adc_assembly.gif     # Looping 3D exploded view animation
 │   ├── vinyl_adc_assembly.mp4     # 720p 24fps H.264 animation video
-│   └── vinyl_adc_assembly.gif     # Looping README animation
+│   └── pcb_renders/               # Raytraced KiCad 3D renders of each PCB tier
 └── sim/                            # Modulator numerical simulation models
 ```
-
----
-
-## Laser Cutting the Acrylic Top Lid (GCC Spirit)
-
-1. Open [**`vinyl_adc_plexiglass_top.dxf`**](enclosure/vinyl_adc_plexiglass_top.dxf) or [**`vinyl_adc_plexiglass_top.svg`**](enclosure/vinyl_adc_plexiglass_top.svg) in Adobe Illustrator.
-   - For DXF: Ensure **Scale:** `1 Units = 1 Millimeters` (100%).
-   - For SVG: Verify width is $140.0\text{ mm}$ and height is $140.0\text{ mm}$.
-2. Copy the drawing into the lab's `lasercutter template`.
-3. Check stroke rules:
-   - **Cut Lines:** Color Red (`#FF0000`), stroke width **`0.01 mm`** (`0.028 pt`).
-   - **Engrave (Optional):** Color Black (`#000000`), raster fill.
-4. Print via GCC Spirit Driver: Select `Acrylic 3.0 mm` from history, autofocus origin $(0, 0)$, and run!
 
 ---
 
