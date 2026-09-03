@@ -4,11 +4,10 @@
      height="140.0mm"
      viewBox="0 0 396.8504 396.8504"
      version="1.1">
-  <title>Vinyl ADC — Clear Acrylic Top Lid (Calibrated for Adobe Illustrator &amp; Spirit Laser)</title>
-  <desc>1:1 Scale: 140.0mm x 140.0mm. viewBox in points (72 DPI) so Adobe Illustrator opens at exact 140mm size.</desc>
+  <title>Vinyl ADC — Clear Acrylic Top Lid (Audiophile Engraved Edition)</title>
+  <desc>Calibrated for Adobe Illustrator &amp; GCC Spirit Laser Cutter: Cut = 0.01mm Red (#FF0000), Engrave = Black (#000000)</desc>
   
   <style>
-    /* GCC Spirit Laser Cutter Driver Settings */
     .spirit-cut {
       fill: none;
       stroke: #ff0000;
@@ -16,16 +15,35 @@
       stroke-linecap: round;
       stroke-linejoin: round;
     }
-    .spirit-raster {
-      fill: #000000;
-      stroke: none;
-      font-family: 'Arial', sans-serif;
-      font-size: 9.92pt;
+    .spirit-engrave-line {
+      fill: none;
+      stroke: #000000;
+      stroke-width: 0.02835pt;
+      stroke-dasharray: 5.67,2.83;
+    }
+    .text-title {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 9.07pt;
       font-weight: bold;
+      letter-spacing: 0.1em;
+      fill: #000000;
+    }
+    .text-sub {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 5.10pt;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      fill: #000000;
+    }
+    .text-micro {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 3.97pt;
+      font-weight: 400;
+      fill: #000000;
     }
   </style>
 
-  <!-- 1. CUT HOLES FIRST (M3 Screw clearance, dia 3.4mm, 6.0mm from edges) -->
+  <!-- 1. CUT HOLES FIRST (M3 Clearance, dia 3.4mm) -->
   <g id="CUT_HOLES" class="spirit-cut">
     <circle cx="17.0079" cy="17.0079" r="4.8189" />
     <circle cx="379.8425" cy="17.0079" r="4.8189" />
@@ -33,15 +51,42 @@
     <circle cx="17.0079" cy="379.8425" r="4.8189" />
   </g>
 
-  <!-- 2. OPTIONAL LASER ENGRAVING / SILKSCREEN -->
-  <g id="ENGRAVE_TEXT" style="display: block;">
-    <text x="198.43" y="68.03" text-anchor="middle" class="spirit-raster">VINYL ADC</text>
-    <text x="198.43" y="82.20" text-anchor="middle" fill="#000000" font-family="Arial" font-size="6.24pt">3rd-ORDER DELTA-SIGMA • 24-BIT / 48 kHz</text>
-    <text x="357.17" y="155.91" text-anchor="end" fill="#000000" font-family="Arial" font-size="5.10pt">CH-R IN</text>
-    <text x="357.17" y="240.94" text-anchor="end" fill="#000000" font-family="Arial" font-size="5.10pt">CH-L IN</text>
+  <!-- 2. AUDIOPHILE TECHNICAL ENGRAVING (BLACK #000000) -->
+  <g id="ENGRAVE_DIAGRAMS">
+    <!-- Header Block -->
+    <text x="198.43" y="51.02" text-anchor="middle" class="text-title">VINYL ADC</text>
+    <text x="198.43" y="63.78" text-anchor="middle" class="text-sub">DISCRETE 3rd-ORDER CONTINUOUS-TIME DELTA-SIGMA</text>
+    <text x="198.43" y="73.70" text-anchor="middle" class="text-micro">1.536 MHz MODULATOR • 68–70 dB SNR • 24-BIT / 48 kHz I2S</text>
+
+    <!-- Decorative hairline dividers -->
+    <line x1="56.69" y1="82.20" x2="340.16" y2="82.20" stroke="#000000" stroke-width="0.057pt" />
+
+    <!-- Circuit Architecture Outlines -->
+    <rect x="56.69" y="99.21" width="283.46" height="62.36" rx="5.67" class="spirit-engrave-line" />
+    <text x="68.03" y="116.22" class="text-sub">TIER 4: DIGITAL CLOCK &amp; INTERLEAVE</text>
+    <text x="68.03" y="133.23" class="text-micro">6.144 MHz XTAL (X1) ──> 74HCT132 BUFFER ──> 74HC4040 DIVIDER</text>
+    <text x="68.03" y="148.82" class="text-micro">STEREO MUX (74HC157) ──> LEVEL SHIFT (74HC4049) ──> PI 40-PIN I2S</text>
+
+    <rect x="56.69" y="175.75" width="283.46" height="68.03" rx="5.67" class="spirit-engrave-line" />
+    <text x="68.03" y="192.76" class="text-sub">TIER 2 &amp; 3: MODULATOR CHANNELS (L &amp; R)</text>
+    <text x="68.03" y="209.76" class="text-micro">ACTIVE RC INTEGRATORS (TL072) ──> COMPARATOR (LM311)</text>
+    <text x="68.03" y="225.35" class="text-micro">RETIMING D-FF (74HC74) ──> 1-BIT DAC RESISTIVE FEEDBACK</text>
+    <text x="68.03" y="236.69" class="text-micro">Q-SELECT: PINS 1-2 = LEFT CHANNEL  |  PINS 2-3 = RIGHT CHANNEL</text>
+
+    <rect x="56.69" y="257.95" width="283.46" height="51.02" rx="5.67" class="spirit-engrave-line" />
+    <text x="68.03" y="274.96" class="text-sub">TIER 1: POWER &amp; VIRTUAL GROUND REFERENCE</text>
+    <text x="68.03" y="291.97" class="text-micro">74HC244 + 1N5817 NEGATIVE CHARGE PUMP • TL072 PRECISION REFERENCE</text>
+
+    <!-- Peripheral Indicators -->
+    <text x="368.50" y="119.06" text-anchor="end" class="text-micro">CH-R IN ▶</text>
+    <text x="368.50" y="164.41" text-anchor="end" class="text-micro">CH-L IN ▶</text>
+    <text x="368.50" y="209.76" text-anchor="end" class="text-micro">GND ⏚ ▶</text>
+
+    <text x="70.87" y="362.83" class="text-micro">◀ GAIN TRIM</text>
+    <text x="198.43" y="362.83" text-anchor="middle" class="text-micro">PINOUT: BCM18 (BCLK) • BCM19 (LRCLK) • BCM20 (DIN)</text>
   </g>
 
-  <!-- 3. CUT OUTER PERIMETER LAST (140x140mm with R=6.0mm corner fillets) -->
+  <!-- 3. CUT OUTER PERIMETER LAST (140x140mm, R=6mm) -->
   <g id="CUT_OUTER" class="spirit-cut">
     <path d="M 17.0079 0.0
              L 379.8425 0.0
