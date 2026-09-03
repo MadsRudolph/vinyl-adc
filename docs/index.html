@@ -252,20 +252,22 @@
       src="vinyl_adc_assembled.glb"
       alt="Vinyl ADC 3D Model"
       auto-rotate
-      rotation-per-second="20deg"
+      rotation-per-second="15deg"
       camera-controls
       touch-action="pan-y"
-      shadow-intensity="1.5"
+      shadow-intensity="1.2"
       shadow-softness="0.8"
-      exposure="1.1"
-      camera-orbit="-45deg 65deg 550mm"
-      min-camera-orbit="auto auto 200mm"
-      max-camera-orbit="auto auto 1200mm">
+      exposure="1.05"
+      camera-orbit="-45deg 60deg auto"
+      camera-target="auto auto auto"
+      field-of-view="35deg"
+      min-camera-orbit="auto auto 5%"
+      max-camera-orbit="auto auto 400%">
 
-      <!-- Annotations -->
-      <div class="hotspot" slot="hotspot-lid" data-position="0 0 63mm" data-normal="0 0 1">Laser-Cut Acrylic Lid</div>
-      <div class="hotspot" slot="hotspot-ports" data-position="72mm 30mm 30mm" data-normal="1 0 0">Gold RCA Inputs</div>
-      <div class="hotspot" slot="hotspot-knob" data-position="-25mm -72mm 32mm" data-normal="0 -1 0">Level Trim Knob</div>
+      <!-- Annotations in true metric meters (Y is up) -->
+      <div class="hotspot" slot="hotspot-lid" data-position="0 0.065 0" data-normal="0 1 0">Laser-Cut Acrylic Lid</div>
+      <div class="hotspot" slot="hotspot-ports" data-position="0.072 0.030 0.030" data-normal="1 0 0">Gold RCA Inputs</div>
+      <div class="hotspot" slot="hotspot-knob" data-position="-0.025 0.032 -0.072" data-normal="0 0 -1">Level Trim Knob</div>
     </model-viewer>
 
     <div class="info-card">
@@ -284,6 +286,8 @@
         Play Assembly
       </button>
 
+      <button class="btn" id="btn-toggle-explode">💥 Explode</button>
+
       <div class="divider"></div>
 
       <div class="slider-container">
@@ -301,11 +305,13 @@
   <script>
     const viewer = document.getElementById('viewer');
     const btnAnim = document.getElementById('btn-toggle-anim');
+    const btnExplode = document.getElementById('btn-toggle-explode');
     const timeSlider = document.getElementById('time-slider');
     const btnReset = document.getElementById('btn-reset-cam');
     const btnTop = document.getElementById('btn-top-view');
 
     let isPlaying = false;
+    let isExploded = false;
 
     // Toggle Play/Pause
     btnAnim.addEventListener('click', () => {
@@ -322,9 +328,33 @@
       }
     });
 
+    // Quick Explode / Assemble Toggle
+    btnExplode.addEventListener('click', () => {
+      viewer.pause();
+      isPlaying = false;
+      btnAnim.classList.remove('active');
+      btnAnim.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Play Assembly`;
+      
+      if (!isExploded) {
+        viewer.currentTime = (viewer.duration ? viewer.duration / 2 : 2.08);
+        timeSlider.value = viewer.currentTime;
+        btnExplode.textContent = '📦 Assemble';
+        btnExplode.classList.add('active');
+        isExploded = true;
+      } else {
+        viewer.currentTime = 0;
+        timeSlider.value = 0;
+        btnExplode.textContent = '💥 Explode';
+        btnExplode.classList.remove('active');
+        isExploded = false;
+      }
+    });
+
     // Update slider as animation plays
     viewer.addEventListener('load', () => {
       timeSlider.max = viewer.duration || 4.16;
+      viewer.cameraOrbit = '-45deg 60deg auto';
+      viewer.cameraTarget = 'auto auto auto';
     });
 
     setInterval(() => {
@@ -344,13 +374,13 @@
 
     // Camera presets
     btnReset.addEventListener('click', () => {
-      viewer.cameraOrbit = '-45deg 65deg 550mm';
-      viewer.cameraTarget = '0 0 45mm';
+      viewer.cameraOrbit = '-45deg 60deg auto';
+      viewer.cameraTarget = 'auto auto auto';
     });
 
     btnTop.addEventListener('click', () => {
-      viewer.cameraOrbit = '0deg 0deg 500mm';
-      viewer.cameraTarget = '0 0 45mm';
+      viewer.cameraOrbit = '0deg 0deg auto';
+      viewer.cameraTarget = 'auto auto auto';
     });
   </script>
 </body>
