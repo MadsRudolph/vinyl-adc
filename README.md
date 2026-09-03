@@ -2,16 +2,17 @@
 
 <p align="center">
   <a href="https://madsrudolph.github.io/vinyl-adc/"><img src="https://img.shields.io/badge/🚀_Interactive_3D-Live_Web_Viewer-38bdf8?style=for-the-badge&logo=webgl&logoColor=white" alt="Live 3D Web Viewer"></a>
+  <a href="https://github.com/MadsRudolph/srm-cam"><img src="https://img.shields.io/badge/CNC_Milled_With-SRM--CAM-10b981?style=for-the-badge&logo=cmake&logoColor=white" alt="Milled with SRM-CAM"></a>
   <img src="https://img.shields.io/badge/Hardware-KiCad_10-0077c2?style=for-the-badge&logo=kicad&logoColor=white" alt="KiCad 10">
   <img src="https://img.shields.io/badge/Architecture-Discrete_3rd--Order_ΔΣ-f59e0b?style=for-the-badge" alt="Architecture">
-  <img src="https://img.shields.io/badge/Fabrication-Roland_SRM--20-10b981?style=for-the-badge" alt="Milling">
   <img src="https://img.shields.io/badge/Audio-24--bit_%2F_48_kHz-8b5cf6?style=for-the-badge" alt="Audio">
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
 </p>
 
 <p align="center">
   <strong>A Discrete 3rd-Order Continuous-Time Delta-Sigma Stereo Audio ADC</strong><br>
-  Engineered from standard analog op-amps &amp; 74HC CMOS logic — <em>zero dedicated ADC ICs anywhere in the signal chain</em>.
+  Engineered from standard analog op-amps &amp; 74HC CMOS logic — <em>zero dedicated ADC ICs anywhere in the signal chain</em>.<br>
+  All circuit boards isolation-milled on a <strong>Roland SRM-20</strong> CNC mill using <a href="https://github.com/MadsRudolph/srm-cam"><strong>SRM-CAM</strong></a>.
 </p>
 
 <p align="center">
@@ -36,6 +37,7 @@
 | **Digital Stream Format** | Bit-Interleaved PDM on standard I2S bus | 3.072 Mbps data stream, read as 32-bit stereo audio frames at 48 kHz |
 | **Analog Inputs** | Gold RCA Phono Jacks &amp; 5.08 mm Screw Terminals | Switchable input gain via front-panel multi-turn trim potentiometer |
 | **Analog Grounding** | Star-ground topology with tonearm binding post | Eliminates 50 Hz turntable motor hum and ground-loop switching transients |
+| **PCB Manufacturing** | Isolation-milled single-sided copper FR4 | Toolpaths generated via [**SRM-CAM**](https://github.com/MadsRudolph/srm-cam) on a **Roland SRM-20** mill |
 | **Enclosure Dimensions** | $144.0\text{ mm} \times 144.0\text{ mm} \times 65.0\text{ mm}$ | 3D-printed PETG base with recessed laser-engraved $3.0\text{ mm}$ acrylic lid |
 
 ---
@@ -104,24 +106,43 @@ To overcome the routing limitations of single-layer CNC isolation milling (0.84 
 
 ---
 
+## PCB Fabrication with SRM-CAM & Roland SRM-20
+
+All boards in this project are physical hardware designed for single-sided isolation milling on the **Roland SRM-20** desktop CNC mill at the DTU FabLab.
+
+<p align="center">
+  <a href="https://github.com/MadsRudolph/srm-cam"><img src="https://img.shields.io/badge/Toolpaths_Generated_By-SRM--CAM-10b981?style=for-the-badge&logo=cmake&logoColor=white" alt="SRM-CAM"></a>
+</p>
+
+The RML-1 milling toolpaths and G-code were generated directly using [**SRM-CAM**](https://github.com/MadsRudolph/srm-cam) (`gerber2rml`):
+- **Isolation Routing:** Traces isolation-milled on `B.Cu` using 0.2 mm / 0.4 mm V-bits with wide rubout for ground separation.
+- **Excellon Drilling:** Automatic hole-center extraction from KiCad `*.drl` files for all DIP sockets, film caps, resistors, and headers.
+- **Edge Routing:** Clean board profiling with 1.0 mm end mill for the 100 × 100 mm PCB footprint and M3 mounting holes.
+- **Workpiece Fixturing:** Copper-clad FR4 secured using the double-sided tape &amp; CA glue method documented in the [SRM-CAM User Guide: Holding the copper](https://madsrudolph.github.io/srm-cam/holding-the-copper.html).
+
+All production Gerbers and Excellon drill files ready for SRM-CAM are located in [`production/`](production/).
+
+---
+
 ## Raspberry Pi Wiring & Star-Grounding Architecture
 
 Turntable systems are exceptionally sensitive to 50/60 Hz hum and digital switching noise. The Vinyl ADC implements an isolated star-grounding architecture:
 
 ```mermaid
 graph TD
-    subgraph Enclosure Grounding
-        TT_Post["Chassis Ground Binding Post (Spade)"] --- StarGround(("★ STAR GROUND"))
-        RCA_Shield["RCA Jack Outer Shields"] --- StarGround
-        Board1_GND["Tier 1 Analog Virtual Ground"] --- StarGround
+    subgraph Analog Front-End
+        TT["Turntable Ground Spade"] --- Post["Chassis Ground Binding Post"]
+        RCA["RCA Input Outer Shield"] --- Post
+        Post --- Star(("★ STAR GROUND"))
+        Star --- Tier1["Tier 1 Analog Virtual Ground"]
     end
 
-    subgraph Pi Interface
-        StarGround -.->|Isolated Digital Return| Pi_GND["Pi Pin 6/9 (GND)"]
-        Digital_Bus["Tier 4 Digital Header"] -->|BCM 18 / Pin 12| Pi_BCLK["PCM_CLK (3.072 MHz)"]
-        Digital_Bus -->|BCM 19 / Pin 35| Pi_LRCLK["PCM_FS (48 kHz)"]
-        Digital_Bus -->|BCM 20 / Pin 38| Pi_DIN["PCM_DIN (3.072 Mbps PDM)"]
-        Pi_Power["Pi Pin 2/4 (+5V)"] -->|Filtered Supply| Power_Rail["Tier 1 Power In"]
+    subgraph Raspberry Pi Connection
+        Star -.->|Isolated Digital Return| Pi_GND["Pin 6 / 9 (GND)"]
+        Tier4["Tier 4 Logic Bus"] -->|Pin 12 / GPIO 18| Pi_BCLK["PCM_CLK (3.072 MHz)"]
+        Tier4 -->|Pin 35 / GPIO 19| Pi_LRCLK["PCM_FS (48 kHz)"]
+        Tier4 -->|Pin 38 / GPIO 20| Pi_DIN["PCM_DIN (3.072 Mbps)"]
+        Pi_Power["Pin 2 / 4 (+5V)"] -->|Filtered DC Rail| Tier1_Pwr["Tier 1 Power In"]
     end
 ```
 
@@ -189,13 +210,13 @@ The chassis combines a 3D-printable PETG base with a laser-cut, laser-engraved $
 │   ├── digital/                   # Tier 4: Digital clock & Pi interface
 │   ├── sim/                       # 8x SPICE testbenches for loop validation
 │   └── tools/                     # Python layout and netlist verification scripts
+├── production/                     # Production-ready Gerbers and Excellon drill files for SRM-CAM
 ├── media/                          # Visuals, renders, and animations
 │   ├── vinyl_adc_assembly.gif     # Looping 3D exploded view animation
 │   ├── vinyl_adc_assembly.mp4     # 720p 24fps H.264 animation video
 │   ├── noise_shaping_spectrum.png # Continuous-time 3rd-order FFT plot
 │   ├── laser_engraved_lid.png     # Clear acrylic lid technical artwork
 │   └── pcb_renders/               # Raytraced KiCad 3D renders of each PCB tier
-├── production/                     # Production-ready Gerbers and milling DXFs
 └── sim/                            # Modulator numerical simulation models
 ```
 
@@ -205,6 +226,12 @@ The chassis combines a 3D-printable PETG base with a laser-cut, laser-engraved $
 
 Test the 3D model and scrub the exploded assembly timeline directly in your browser:  
 🔗 **[https://madsrudolph.github.io/vinyl-adc/](https://madsrudolph.github.io/vinyl-adc/)**
+
+---
+
+## Related Projects
+
+- [**SRM-CAM (`gerber2rml`)**](https://github.com/MadsRudolph/srm-cam): Desktop CAM for the Roland SRM-20 CNC mill used to isolation-mill the PCBs for this project.
 
 ---
 
