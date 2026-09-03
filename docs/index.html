@@ -249,8 +249,9 @@
 
   <main>
     <model-viewer id="viewer"
-      src="vinyl_adc_assembled.glb"
+      src="vinyl_adc_assembled.glb?v=2"
       alt="Vinyl ADC 3D Model"
+      animation-name="Assembly"
       auto-rotate
       rotation-per-second="15deg"
       camera-controls
@@ -292,7 +293,7 @@
 
       <div class="slider-container">
         <label for="time-slider">Timeline</label>
-        <input type="range" id="time-slider" min="0" max="4.16" step="0.02" value="0">
+        <input type="range" id="time-slider" min="0.04" max="4.16" step="0.02" value="0.04">
       </div>
 
       <div class="divider"></div>
@@ -315,7 +316,7 @@
 
     // Toggle Play/Pause
     btnAnim.addEventListener('click', () => {
-      if (viewer.paused) {
+      if (!isPlaying) {
         viewer.play();
         btnAnim.classList.add('active');
         btnAnim.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Pause`;
@@ -336,27 +337,33 @@
       btnAnim.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Play Assembly`;
       
       if (!isExploded) {
-        viewer.currentTime = (viewer.duration ? viewer.duration / 2 : 2.08);
-        timeSlider.value = viewer.currentTime;
+        // Frame 50 apex (2.083s)
+        const explodeTime = 2.083;
+        viewer.currentTime = explodeTime;
+        timeSlider.value = explodeTime;
         btnExplode.textContent = '📦 Assemble';
         btnExplode.classList.add('active');
         isExploded = true;
       } else {
-        viewer.currentTime = 0;
-        timeSlider.value = 0;
+        // Assembled frame 1 (0.042s)
+        const assembleTime = 0.042;
+        viewer.currentTime = assembleTime;
+        timeSlider.value = assembleTime;
         btnExplode.textContent = '💥 Explode';
         btnExplode.classList.remove('active');
         isExploded = false;
       }
     });
 
-    // Update slider as animation plays
+    // When model loads
     viewer.addEventListener('load', () => {
+      viewer.animationName = 'Assembly';
       timeSlider.max = viewer.duration || 4.16;
       viewer.cameraOrbit = '-45deg 60deg auto';
       viewer.cameraTarget = 'auto auto auto';
     });
 
+    // Sync slider with animation time
     setInterval(() => {
       if (isPlaying && viewer.currentTime !== undefined) {
         timeSlider.value = viewer.currentTime;
@@ -366,9 +373,9 @@
     // Scrub timeline
     timeSlider.addEventListener('input', (e) => {
       viewer.pause();
+      isPlaying = false;
       btnAnim.classList.remove('active');
       btnAnim.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Play Assembly`;
-      isPlaying = false;
       viewer.currentTime = parseFloat(e.target.value);
     });
 
