@@ -519,7 +519,7 @@
     "last_paths": {
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "../../../production/Power/",
       "specctra_dsn": "",
       "vrml": ""
     },
