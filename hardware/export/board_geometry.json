@@ -1,0 +1,4321 @@
+{
+ "power": {
+  "file": "hardware\\kicad\\power\\vinyl_adc_power.kicad_pcb",
+  "outline": {
+   "bbox": [
+    20.0,
+    20.0,
+    120.0,
+    120.0
+   ],
+   "size": [
+    100.0,
+    100.0
+   ],
+   "segments": [
+    {
+     "type": "gr_line",
+     "pts": [
+      20.0,
+      20.0,
+      120.0,
+      20.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      20.0,
+      120.0,
+      20.0,
+      20.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      120.0,
+      20.0,
+      120.0,
+      120.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      120.0,
+      120.0,
+      20.0,
+      120.0
+     ]
+    }
+   ]
+  },
+  "holes": [
+   {
+    "ref": "H2",
+    "x": 114.0,
+    "y": 26.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H1",
+    "x": 26.0,
+    "y": 26.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H4",
+    "x": 114.0,
+    "y": 114.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H3",
+    "x": 26.0,
+    "y": 114.0,
+    "drill": 3.2
+   }
+  ],
+  "footprints": [
+   {
+    "ref": "D2",
+    "value": "1N5817",
+    "lib": "D_DO-41_SOD81_P10.16mm_Horizontal",
+    "x": 35.83,
+    "y": 39.152651,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     34.48,
+     37.553,
+     47.34,
+     40.753
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Diode_THT.3dshapes/D_DO-41_SOD81_P10.16mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 35.83,
+      "y": 39.153,
+      "drill": 1.1
+     },
+     {
+      "n": "2",
+      "x": 45.99,
+      "y": 39.153,
+      "drill": 1.1
+     }
+    ]
+   },
+   {
+    "ref": "WL1B",
+    "value": "-5V",
+    "lib": "WireLink_TH",
+    "x": 54.0,
+    "y": 28.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     53.2,
+     27.7,
+     54.8,
+     29.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 54.0,
+      "y": 28.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C8",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 91.8,
+    "y": 61.4,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     85.75,
+     59.9,
+     92.85,
+     62.9
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 91.8,
+      "y": 61.4,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 86.8,
+      "y": 61.4,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R5",
+    "value": "10k0",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 99.38,
+    "y": 54.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     98.33,
+     52.5,
+     108.05,
+     55.5
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 99.38,
+      "y": 54.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 107.0,
+      "y": 54.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R4",
+    "value": "10k0",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 90.38,
+    "y": 44.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     89.33,
+     42.5,
+     99.05,
+     45.5
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 90.38,
+      "y": 44.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 98.0,
+      "y": 44.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C2",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 97.0,
+    "y": 33.5,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     95.5,
+     27.45,
+     98.5,
+     34.55
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 97.0,
+      "y": 33.5,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 97.0,
+      "y": 28.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R3",
+    "value": "10k0",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 80.2,
+    "y": 60.09,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     78.7,
+     59.04,
+     81.7,
+     68.76
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 80.2,
+      "y": 60.09,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 80.2,
+      "y": 67.71,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R1",
+    "value": "4R75",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 46.19,
+    "y": 35.152651,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     45.14,
+     33.653,
+     54.86,
+     36.653
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 46.19,
+      "y": 35.153,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 53.81,
+      "y": 35.153,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "H2",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 114.0,
+    "y": 26.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     112.4,
+     24.4,
+     115.6,
+     27.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 114.0,
+      "y": 26.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "C3",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 42.7,
+    "y": 89.9,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     41.65,
+     88.4,
+     48.75,
+     91.4
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 42.7,
+      "y": 89.9,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 47.7,
+      "y": 89.9,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C1",
+    "value": "470u",
+    "lib": "CP_Radial_D10.0mm_P5.00mm",
+    "x": 89.3,
+    "y": 32.467677,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     88.3,
+     26.468,
+     90.3,
+     33.468
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/CP_Radial_D10.0mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 89.3,
+      "y": 32.468,
+      "drill": 1.0
+     },
+     {
+      "n": "2",
+      "x": 89.3,
+      "y": 27.468,
+      "drill": 1.0
+     }
+    ]
+   },
+   {
+    "ref": "WL1A",
+    "value": "-5V",
+    "lib": "WireLink_TH",
+    "x": 86.0,
+    "y": 37.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     85.2,
+     36.7,
+     86.8,
+     38.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 86.0,
+      "y": 37.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "J3",
+    "value": "2x8 BUS",
+    "lib": "PinHeader_2x08_P2.54mm_Vertical",
+    "x": 78.89,
+    "y": 30.0,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     59.34,
+     28.23,
+     80.66,
+     34.32
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x08_P2.54mm_Vertical.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 78.89,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "2",
+      "x": 78.89,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "3",
+      "x": 76.35,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "4",
+      "x": 76.35,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "5",
+      "x": 73.81,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "6",
+      "x": 73.81,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "7",
+      "x": 71.27,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "8",
+      "x": 71.27,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "9",
+      "x": 68.73,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "10",
+      "x": 68.73,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "11",
+      "x": 66.19,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "12",
+      "x": 66.19,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "13",
+      "x": 63.65,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "14",
+      "x": 63.65,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "15",
+      "x": 61.11,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "16",
+      "x": 61.11,
+      "y": 32.54,
+      "drill": 1.0
+     }
+    ]
+   },
+   {
+    "ref": "U1",
+    "value": "74HC244",
+    "lib": "DIP-20_W7.62mm_LongPads",
+    "x": 49.1,
+    "y": 83.42,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     40.03,
+     59.04,
+     50.55,
+     84.94
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-20_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 49.1,
+      "y": 83.42,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 49.1,
+      "y": 80.88,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 49.1,
+      "y": 78.34,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 49.1,
+      "y": 75.8,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 49.1,
+      "y": 73.26,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 49.1,
+      "y": 70.72,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 49.1,
+      "y": 68.18,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 49.1,
+      "y": 65.64,
+      "drill": 0.8
+     },
+     {
+      "n": "9",
+      "x": 49.1,
+      "y": 63.1,
+      "drill": 0.8
+     },
+     {
+      "n": "10",
+      "x": 49.1,
+      "y": 60.56,
+      "drill": 0.8
+     },
+     {
+      "n": "11",
+      "x": 41.48,
+      "y": 60.56,
+      "drill": 0.8
+     },
+     {
+      "n": "12",
+      "x": 41.48,
+      "y": 63.1,
+      "drill": 0.8
+     },
+     {
+      "n": "13",
+      "x": 41.48,
+      "y": 65.64,
+      "drill": 0.8
+     },
+     {
+      "n": "14",
+      "x": 41.48,
+      "y": 68.18,
+      "drill": 0.8
+     },
+     {
+      "n": "15",
+      "x": 41.48,
+      "y": 70.72,
+      "drill": 0.8
+     },
+     {
+      "n": "16",
+      "x": 41.48,
+      "y": 73.26,
+      "drill": 0.8
+     },
+     {
+      "n": "17",
+      "x": 41.48,
+      "y": 75.8,
+      "drill": 0.8
+     },
+     {
+      "n": "18",
+      "x": 41.48,
+      "y": 78.34,
+      "drill": 0.8
+     },
+     {
+      "n": "19",
+      "x": 41.48,
+      "y": 80.88,
+      "drill": 0.8
+     },
+     {
+      "n": "20",
+      "x": 41.48,
+      "y": 83.42,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C7",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 98.5,
+    "y": 49.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     97.45,
+     47.5,
+     104.55,
+     50.5
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 98.5,
+      "y": 49.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 103.5,
+      "y": 49.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R2",
+    "value": "10k0",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 75.2,
+    "y": 67.71,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     73.7,
+     59.04,
+     76.7,
+     68.76
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 75.2,
+      "y": 67.71,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 75.2,
+      "y": 60.09,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C5",
+    "value": "220u",
+    "lib": "CP_Radial_D8.0mm_P3.50mm",
+    "x": 54.0,
+    "y": 53.652651,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     53.2,
+     49.353,
+     54.8,
+     54.453
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/CP_Radial_D8.0mm_P3.50mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 54.0,
+      "y": 53.653,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 54.0,
+      "y": 50.153,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "D1",
+    "value": "1N5817",
+    "lib": "D_DO-41_SOD81_P10.16mm_Horizontal",
+    "x": 46.08,
+    "y": 48.152651,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     34.57,
+     46.553,
+     47.43,
+     49.753
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Diode_THT.3dshapes/D_DO-41_SOD81_P10.16mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 46.08,
+      "y": 48.153,
+      "drill": 1.1
+     },
+     {
+      "n": "2",
+      "x": 35.92,
+      "y": 48.153,
+      "drill": 1.1
+     }
+    ]
+   },
+   {
+    "ref": "U2",
+    "value": "TL072",
+    "lib": "DIP-8_W7.62mm_LongPads",
+    "x": 85.19,
+    "y": 49.19,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     83.74,
+     47.67,
+     94.26,
+     58.33
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-8_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 85.19,
+      "y": 49.19,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 85.19,
+      "y": 51.73,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 85.19,
+      "y": 54.27,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 85.19,
+      "y": 56.81,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 92.81,
+      "y": 56.81,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 92.81,
+      "y": 54.27,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 92.81,
+      "y": 51.73,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 92.81,
+      "y": 49.19,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C4",
+    "value": "10u",
+    "lib": "CP_Radial_D8.0mm_P3.50mm",
+    "x": 26.347349,
+    "y": 43.305302,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     25.547,
+     42.505,
+     30.647,
+     44.105
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/CP_Radial_D8.0mm_P3.50mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 26.347,
+      "y": 43.305,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 29.847,
+      "y": 43.305,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "H1",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 26.0,
+    "y": 26.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     24.4,
+     24.4,
+     27.6,
+     27.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 26.0,
+      "y": 26.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "C6",
+    "value": "220u",
+    "lib": "CP_Radial_D8.0mm_P3.50mm",
+    "x": 54.0,
+    "y": 43.805302,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     53.2,
+     39.505,
+     54.8,
+     44.605
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/CP_Radial_D8.0mm_P3.50mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 54.0,
+      "y": 43.805,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 54.0,
+      "y": 40.305,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "H4",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 114.0,
+    "y": 114.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     112.4,
+     112.4,
+     115.6,
+     115.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 114.0,
+      "y": 114.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "H3",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 26.0,
+    "y": 114.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     24.4,
+     112.4,
+     27.6,
+     115.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 26.0,
+      "y": 114.0,
+      "drill": 3.2
+     }
+    ]
+   }
+  ],
+  "n_footprints": 24,
+  "n_without_model": 6
+ },
+ "channel_l": {
+  "file": "hardware\\kicad\\channel_l\\vinyl_adc_channel_l.kicad_pcb",
+  "outline": {
+   "bbox": [
+    20.0,
+    20.0,
+    120.0,
+    120.0
+   ],
+   "size": [
+    100.0,
+    100.0
+   ],
+   "segments": [
+    {
+     "type": "gr_line",
+     "pts": [
+      20.0,
+      20.0,
+      120.0,
+      20.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      20.0,
+      120.0,
+      20.0,
+      20.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      120.0,
+      20.0,
+      120.0,
+      120.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      120.0,
+      120.0,
+      20.0,
+      120.0
+     ]
+    }
+   ]
+  },
+  "holes": [
+   {
+    "ref": "H2",
+    "x": 114.0,
+    "y": 26.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H1",
+    "x": 26.0,
+    "y": 26.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H4",
+    "x": 114.0,
+    "y": 114.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H3",
+    "x": 26.0,
+    "y": 114.0,
+    "drill": 3.2
+   }
+  ],
+  "footprints": [
+   {
+    "ref": "R20",
+    "value": "1k00",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 99.8,
+    "y": 93.395,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     98.3,
+     92.345,
+     101.3,
+     102.065
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 99.8,
+      "y": 93.395,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 99.8,
+      "y": 101.015,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C31",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 49.6,
+    "y": 72.6,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     48.1,
+     71.55,
+     51.1,
+     78.65
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 49.6,
+      "y": 72.6,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 49.6,
+      "y": 77.6,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C22",
+    "value": "220p",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 48.11,
+    "y": 90.205,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     47.06,
+     88.705,
+     54.16,
+     91.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 48.11,
+      "y": 90.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 53.11,
+      "y": 90.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "H2",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 114.0,
+    "y": 26.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     112.4,
+     24.4,
+     115.6,
+     27.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 114.0,
+      "y": 26.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "C26",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 63.11,
+    "y": 108.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     57.06,
+     106.705,
+     64.16,
+     109.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 63.11,
+      "y": 108.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 58.11,
+      "y": 108.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R23",
+    "value": "14k7",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 43.8,
+    "y": 102.205,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     42.75,
+     100.705,
+     52.47,
+     103.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 43.8,
+      "y": 102.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 51.42,
+      "y": 102.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R26",
+    "value": "13k0",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 79.42,
+    "y": 106.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     70.75,
+     104.705,
+     80.47,
+     107.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 79.42,
+      "y": 106.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 71.8,
+      "y": 106.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R22",
+    "value": "14k7",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 37.8,
+    "y": 98.205,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     36.75,
+     96.705,
+     46.47,
+     99.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 37.8,
+      "y": 98.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 45.42,
+      "y": 98.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C28",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 85.11,
+    "y": 67.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     79.06,
+     65.705,
+     86.16,
+     68.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 85.11,
+      "y": 67.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 80.11,
+      "y": 67.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "U21",
+    "value": "LM311",
+    "lib": "DIP-8_W7.62mm_LongPads",
+    "x": 88.8,
+    "y": 44.395,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     87.35,
+     42.875,
+     97.87,
+     53.535
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-8_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 88.8,
+      "y": 44.395,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 88.8,
+      "y": 46.935,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 88.8,
+      "y": 49.475,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 88.8,
+      "y": 52.015,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 96.42,
+      "y": 52.015,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 96.42,
+      "y": 49.475,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 96.42,
+      "y": 46.935,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 96.42,
+      "y": 44.395,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "U24",
+    "value": "74HC04",
+    "lib": "DIP-14_W7.62mm_LongPads",
+    "x": 36.79,
+    "y": 65.78,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     35.34,
+     64.25,
+     45.86,
+     82.55
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-14_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 36.79,
+      "y": 65.78,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 36.79,
+      "y": 68.32,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 36.79,
+      "y": 70.86,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 36.79,
+      "y": 73.4,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 36.79,
+      "y": 75.94,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 36.79,
+      "y": 78.48,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 36.79,
+      "y": 81.02,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 44.41,
+      "y": 81.02,
+      "drill": 0.8
+     },
+     {
+      "n": "9",
+      "x": 44.41,
+      "y": 78.48,
+      "drill": 0.8
+     },
+     {
+      "n": "10",
+      "x": 44.41,
+      "y": 75.94,
+      "drill": 0.8
+     },
+     {
+      "n": "11",
+      "x": 44.41,
+      "y": 73.4,
+      "drill": 0.8
+     },
+     {
+      "n": "12",
+      "x": 44.41,
+      "y": 70.86,
+      "drill": 0.8
+     },
+     {
+      "n": "13",
+      "x": 44.41,
+      "y": 68.32,
+      "drill": 0.8
+     },
+     {
+      "n": "14",
+      "x": 44.41,
+      "y": 65.78,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "U22",
+    "value": "TL072",
+    "lib": "DIP-8_W7.62mm_LongPads",
+    "x": 78.8,
+    "y": 71.395,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     77.35,
+     69.875,
+     87.87,
+     80.535
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-8_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 78.8,
+      "y": 71.395,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 78.8,
+      "y": 73.935,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 78.8,
+      "y": 76.475,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 78.8,
+      "y": 79.015,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 86.42,
+      "y": 79.015,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 86.42,
+      "y": 76.475,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 86.42,
+      "y": 73.935,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 86.42,
+      "y": 71.395,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R35",
+    "value": "22k1",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 74.8,
+    "y": 40.205,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     73.75,
+     38.705,
+     83.47,
+     41.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 74.8,
+      "y": 40.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 82.42,
+      "y": 40.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C20",
+    "value": "2u2",
+    "lib": "C_Rect_L11.0mm_W6.3mm_P10.00mm_MKT",
+    "x": 106.8,
+    "y": 102.205,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     103.4,
+     91.155,
+     110.2,
+     103.255
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Rect_L11.0mm_W6.3mm_P10.00mm_MKT.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 106.8,
+      "y": 102.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 106.8,
+      "y": 92.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R31",
+    "value": "10k0",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 92.18,
+    "y": 79.205,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     91.13,
+     77.705,
+     100.85,
+     80.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 92.18,
+      "y": 79.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 99.8,
+      "y": 79.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "U23",
+    "value": "74HC74",
+    "lib": "DIP-14_W7.62mm_LongPads",
+    "x": 52.8,
+    "y": 42.06,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     51.35,
+     40.53,
+     61.87,
+     58.83
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-14_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 52.8,
+      "y": 42.06,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 52.8,
+      "y": 44.6,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 52.8,
+      "y": 47.14,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 52.8,
+      "y": 49.68,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 52.8,
+      "y": 52.22,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 52.8,
+      "y": 54.76,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 52.8,
+      "y": 57.3,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 60.42,
+      "y": 57.3,
+      "drill": 0.8
+     },
+     {
+      "n": "9",
+      "x": 60.42,
+      "y": 54.76,
+      "drill": 0.8
+     },
+     {
+      "n": "10",
+      "x": 60.42,
+      "y": 52.22,
+      "drill": 0.8
+     },
+     {
+      "n": "11",
+      "x": 60.42,
+      "y": 49.68,
+      "drill": 0.8
+     },
+     {
+      "n": "12",
+      "x": 60.42,
+      "y": 47.14,
+      "drill": 0.8
+     },
+     {
+      "n": "13",
+      "x": 60.42,
+      "y": 44.6,
+      "drill": 0.8
+     },
+     {
+      "n": "14",
+      "x": 60.42,
+      "y": 42.06,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "H1",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 26.0,
+    "y": 26.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     24.4,
+     24.4,
+     27.6,
+     27.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 26.0,
+      "y": 26.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "R36",
+    "value": "22k1",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 74.8,
+    "y": 54.205,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     73.75,
+     52.705,
+     83.47,
+     55.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 74.8,
+      "y": 54.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 82.42,
+      "y": 54.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "J7",
+    "value": "2x8 BUS",
+    "lib": "PinHeader_2x08_P2.54mm_Vertical",
+    "x": 78.89,
+    "y": 30.0,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     59.34,
+     28.23,
+     80.66,
+     34.32
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x08_P2.54mm_Vertical.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 78.89,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "2",
+      "x": 78.89,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "3",
+      "x": 76.35,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "4",
+      "x": 76.35,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "5",
+      "x": 73.81,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "6",
+      "x": 73.81,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "7",
+      "x": 71.27,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "8",
+      "x": 71.27,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "9",
+      "x": 68.73,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "10",
+      "x": 68.73,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "11",
+      "x": 66.19,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "12",
+      "x": 66.19,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "13",
+      "x": 63.65,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "14",
+      "x": 63.65,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "15",
+      "x": 61.11,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "16",
+      "x": 61.11,
+      "y": 32.54,
+      "drill": 1.0
+     }
+    ]
+   },
+   {
+    "ref": "R33",
+    "value": "22k1",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 74.8,
+    "y": 49.5383,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     73.75,
+     48.038,
+     83.47,
+     51.038
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 74.8,
+      "y": 49.538,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 82.42,
+      "y": 49.538,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R32",
+    "value": "10k0",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 99.8,
+    "y": 74.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     91.13,
+     72.705,
+     100.85,
+     75.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 99.8,
+      "y": 74.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 92.18,
+      "y": 74.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R27",
+    "value": "255k",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 79.42,
+    "y": 91.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     70.75,
+     89.705,
+     80.47,
+     92.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 79.42,
+      "y": 91.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 71.8,
+      "y": 91.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R21",
+    "value": "20k5",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 43.8,
+    "y": 94.205,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     42.75,
+     92.705,
+     52.47,
+     95.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 43.8,
+      "y": 94.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 51.42,
+      "y": 94.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R37",
+    "value": "2k21",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 102.61,
+    "y": 39.395,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     101.11,
+     38.345,
+     104.11,
+     48.065
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 102.61,
+      "y": 39.395,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 102.61,
+      "y": 47.015,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C29",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 85.11,
+    "y": 84.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     79.06,
+     82.705,
+     86.16,
+     85.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 85.11,
+      "y": 84.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 80.11,
+      "y": 84.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R28",
+    "value": "5k90",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 65.78,
+    "y": 79.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     64.73,
+     77.5,
+     74.45,
+     80.5
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 65.78,
+      "y": 79.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 73.4,
+      "y": 79.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C30",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 65.61,
+    "y": 42.18,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     64.11,
+     41.13,
+     67.11,
+     48.23
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 65.61,
+      "y": 42.18,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 65.61,
+      "y": 47.18,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "RV20",
+    "value": "47k",
+    "lib": "PinHeader_1x03_P2.54mm_Horizontal",
+    "x": 92.14,
+    "y": 108.415,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     85.29,
+     106.645,
+     93.91,
+     118.955
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x03_P2.54mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 92.14,
+      "y": 108.415,
+      "drill": 1.0
+     },
+     {
+      "n": "2",
+      "x": 89.6,
+      "y": 108.415,
+      "drill": 1.0
+     },
+     {
+      "n": "3",
+      "x": 87.06,
+      "y": 108.415,
+      "drill": 1.0
+     }
+    ]
+   },
+   {
+    "ref": "H4",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 114.0,
+    "y": 114.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     112.4,
+     112.4,
+     115.6,
+     115.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 114.0,
+      "y": 114.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "U20",
+    "value": "TL072",
+    "lib": "DIP-8_W7.62mm_LongPads",
+    "x": 56.8,
+    "y": 94.395,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     55.35,
+     92.875,
+     65.87,
+     103.535
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-8_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 56.8,
+      "y": 94.395,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 56.8,
+      "y": 96.935,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 56.8,
+      "y": 99.475,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 56.8,
+      "y": 102.015,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 64.42,
+      "y": 102.015,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 64.42,
+      "y": 99.475,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 64.42,
+      "y": 96.935,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 64.42,
+      "y": 94.395,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R25",
+    "value": "13k0",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 61.98,
+    "y": 83.2,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     60.93,
+     81.7,
+     70.65,
+     84.7
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 61.98,
+      "y": 83.2,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 69.6,
+      "y": 83.2,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C21",
+    "value": "1n5",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 93.8,
+    "y": 100.705,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     92.3,
+     94.655,
+     95.3,
+     101.755
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 93.8,
+      "y": 100.705,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 93.8,
+      "y": 95.705,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C23",
+    "value": "220p",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 72.11,
+    "y": 87.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     66.06,
+     85.705,
+     73.16,
+     88.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 72.11,
+      "y": 87.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 67.11,
+      "y": 87.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C27",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 95.11,
+    "y": 39.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     89.06,
+     37.705,
+     96.16,
+     40.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 95.11,
+      "y": 39.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 90.11,
+      "y": 39.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "J20",
+    "value": "LINE IN L",
+    "lib": "TerminalBlock_bornier-2_P5.08mm",
+    "x": 115.8,
+    "y": 100.745,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     111.8,
+     92.955,
+     119.8,
+     103.455
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/TerminalBlock.3dshapes/TerminalBlock_bornier-2_P5.08mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 115.8,
+      "y": 100.745,
+      "drill": 1.52
+     },
+     {
+      "n": "2",
+      "x": 115.8,
+      "y": 95.665,
+      "drill": 1.52
+     }
+    ]
+   },
+   {
+    "ref": "C24",
+    "value": "220p",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 69.09,
+    "y": 62.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     68.04,
+     60.5,
+     75.14,
+     63.5
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 69.09,
+      "y": 62.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 74.09,
+      "y": 62.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R29",
+    "value": "8k25",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 65.78,
+    "y": 72.6,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     64.73,
+     71.1,
+     74.45,
+     74.1
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 65.78,
+      "y": 72.6,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 73.4,
+      "y": 72.6,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "H3",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 26.0,
+    "y": 114.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     24.4,
+     112.4,
+     27.6,
+     115.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 26.0,
+      "y": 114.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "J21",
+    "value": "Q SEL",
+    "lib": "PinHeader_1x03_P2.54mm_Vertical",
+    "x": 42.6,
+    "y": 40.4,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     40.83,
+     33.55,
+     44.37,
+     42.17
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x03_P2.54mm_Vertical.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 42.6,
+      "y": 40.4,
+      "drill": 1.0
+     },
+     {
+      "n": "2",
+      "x": 42.6,
+      "y": 37.86,
+      "drill": 1.0
+     },
+     {
+      "n": "3",
+      "x": 42.6,
+      "y": 35.32,
+      "drill": 1.0
+     }
+    ]
+   },
+   {
+    "ref": "C25",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 63.11,
+    "y": 89.205,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     57.06,
+     87.705,
+     64.16,
+     90.705
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 63.11,
+      "y": 89.205,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 58.11,
+      "y": 89.205,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R24",
+    "value": "10k5",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 79.41,
+    "y": 98.3383,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     70.74,
+     96.838,
+     80.46,
+     99.838
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 79.41,
+      "y": 98.338,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 71.79,
+      "y": 98.338,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R34",
+    "value": "165k",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 74.8,
+    "y": 44.8717,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     73.75,
+     43.372,
+     83.47,
+     46.372
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 74.8,
+      "y": 44.872,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 82.42,
+      "y": 44.872,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "R30",
+    "value": "8k25",
+    "lib": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x": 65.78,
+    "y": 67.2,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     64.73,
+     65.7,
+     74.45,
+     68.7
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 65.78,
+      "y": 67.2,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 73.4,
+      "y": 67.2,
+      "drill": 0.8
+     }
+    ]
+   }
+  ],
+  "n_footprints": 43,
+  "n_without_model": 4
+ },
+ "digital": {
+  "file": "hardware\\kicad\\digital\\vinyl_adc_digital.kicad_pcb",
+  "outline": {
+   "bbox": [
+    20.0,
+    20.0,
+    120.0,
+    120.0
+   ],
+   "size": [
+    100.0,
+    100.0
+   ],
+   "segments": [
+    {
+     "type": "gr_line",
+     "pts": [
+      20.0,
+      20.0,
+      120.0,
+      20.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      20.0,
+      120.0,
+      20.0,
+      20.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      120.0,
+      20.0,
+      120.0,
+      120.0
+     ]
+    },
+    {
+     "type": "gr_line",
+     "pts": [
+      120.0,
+      120.0,
+      20.0,
+      120.0
+     ]
+    }
+   ]
+  },
+  "holes": [
+   {
+    "ref": "H4",
+    "x": 114.0,
+    "y": 114.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H3",
+    "x": 26.0,
+    "y": 114.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H1",
+    "x": 26.0,
+    "y": 26.0,
+    "drill": 3.2
+   },
+   {
+    "ref": "H2",
+    "x": 114.0,
+    "y": 26.0,
+    "drill": 3.2
+   }
+  ],
+  "footprints": [
+   {
+    "ref": "J1",
+    "value": "CLK SEL",
+    "lib": "PinHeader_1x03_P2.54mm_Vertical",
+    "x": 32.3525,
+    "y": 49.9075,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     30.582,
+     43.057,
+     34.123,
+     51.678
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x03_P2.54mm_Vertical.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 32.352,
+      "y": 49.907,
+      "drill": 1.0
+     },
+     {
+      "n": "2",
+      "x": 32.352,
+      "y": 47.367,
+      "drill": 1.0
+     },
+     {
+      "n": "3",
+      "x": 32.352,
+      "y": 44.828,
+      "drill": 1.0
+     }
+    ]
+   },
+   {
+    "ref": "H4",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 114.0,
+    "y": 114.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     112.4,
+     112.4,
+     115.6,
+     115.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 114.0,
+      "y": 114.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "WL6B",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 53.5,
+    "y": 38.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     52.7,
+     37.7,
+     54.3,
+     39.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 53.5,
+      "y": 38.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "U6",
+    "value": "74HC157",
+    "lib": "DIP-16_W7.62mm_LongPads",
+    "x": 53.88,
+    "y": 80.26,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     52.43,
+     78.74,
+     62.95,
+     99.56
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-16_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 53.88,
+      "y": 80.26,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 53.88,
+      "y": 82.8,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 53.88,
+      "y": 85.34,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 53.88,
+      "y": 87.88,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 53.88,
+      "y": 90.42,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 53.88,
+      "y": 92.96,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 53.88,
+      "y": 95.5,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 53.88,
+      "y": 98.04,
+      "drill": 0.8
+     },
+     {
+      "n": "9",
+      "x": 61.5,
+      "y": 98.04,
+      "drill": 0.8
+     },
+     {
+      "n": "10",
+      "x": 61.5,
+      "y": 95.5,
+      "drill": 0.8
+     },
+     {
+      "n": "11",
+      "x": 61.5,
+      "y": 92.96,
+      "drill": 0.8
+     },
+     {
+      "n": "12",
+      "x": 61.5,
+      "y": 90.42,
+      "drill": 0.8
+     },
+     {
+      "n": "13",
+      "x": 61.5,
+      "y": 87.88,
+      "drill": 0.8
+     },
+     {
+      "n": "14",
+      "x": 61.5,
+      "y": 85.34,
+      "drill": 0.8
+     },
+     {
+      "n": "15",
+      "x": 61.5,
+      "y": 82.8,
+      "drill": 0.8
+     },
+     {
+      "n": "16",
+      "x": 61.5,
+      "y": 80.26,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL2A",
+    "value": "BCLK",
+    "lib": "WireLink_TH",
+    "x": 69.5,
+    "y": 42.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     68.7,
+     41.2,
+     70.3,
+     42.8
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 69.5,
+      "y": 42.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL9B",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 52.0,
+    "y": 68.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     51.2,
+     67.2,
+     52.8,
+     68.8
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 52.0,
+      "y": 68.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C13",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 65.5,
+    "y": 80.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     64.45,
+     78.5,
+     71.55,
+     81.5
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 65.5,
+      "y": 80.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 70.5,
+      "y": 80.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "U8",
+    "value": "74HC4049",
+    "lib": "DIP-16_W7.62mm_LongPads",
+    "x": 78.5,
+    "y": 80.26,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     77.05,
+     78.74,
+     87.57,
+     99.56
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-16_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 78.5,
+      "y": 80.26,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 78.5,
+      "y": 82.8,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 78.5,
+      "y": 85.34,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 78.5,
+      "y": 87.88,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 78.5,
+      "y": 90.42,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 78.5,
+      "y": 92.96,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 78.5,
+      "y": 95.5,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 78.5,
+      "y": 98.04,
+      "drill": 0.8
+     },
+     {
+      "n": "9",
+      "x": 86.12,
+      "y": 98.04,
+      "drill": 0.8
+     },
+     {
+      "n": "10",
+      "x": 86.12,
+      "y": 95.5,
+      "drill": 0.8
+     },
+     {
+      "n": "11",
+      "x": 86.12,
+      "y": 92.96,
+      "drill": 0.8
+     },
+     {
+      "n": "12",
+      "x": 86.12,
+      "y": 90.42,
+      "drill": 0.8
+     },
+     {
+      "n": "13",
+      "x": 86.12,
+      "y": 87.88,
+      "drill": 0.8
+     },
+     {
+      "n": "14",
+      "x": 86.12,
+      "y": 85.34,
+      "drill": 0.8
+     },
+     {
+      "n": "15",
+      "x": 86.12,
+      "y": 82.8,
+      "drill": 0.8
+     },
+     {
+      "n": "16",
+      "x": 86.12,
+      "y": 80.26,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL4A",
+    "value": "Net-(J1-Pin_2)",
+    "lib": "WireLink_TH",
+    "x": 37.8525,
+    "y": 47.3675,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     37.053,
+     46.568,
+     38.652,
+     48.167
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 37.852,
+      "y": 47.367,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL8B",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 91.5,
+    "y": 108.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     90.7,
+     107.7,
+     92.3,
+     109.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 91.5,
+      "y": 108.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL9A",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 52.5,
+    "y": 50.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     51.7,
+     49.7,
+     53.3,
+     51.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 52.5,
+      "y": 50.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL1B",
+    "value": "MCLK",
+    "lib": "WireLink_TH",
+    "x": 53.0,
+    "y": 75.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     52.2,
+     74.2,
+     53.8,
+     75.8
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 53.0,
+      "y": 75.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "X1",
+    "value": "6.144MHz",
+    "lib": "DIP-8_W7.62mm_LongPads",
+    "x": 28.69,
+    "y": 59.19,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     27.24,
+     57.67,
+     37.76,
+     68.33
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-8_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 28.69,
+      "y": 59.19,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 28.69,
+      "y": 61.73,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 28.69,
+      "y": 64.27,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 28.69,
+      "y": 66.81,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 36.31,
+      "y": 66.81,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 36.31,
+      "y": 64.27,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 36.31,
+      "y": 61.73,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 36.31,
+      "y": 59.19,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C15",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 75.0,
+    "y": 80.0,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     73.5,
+     73.95,
+     76.5,
+     81.05
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 75.0,
+      "y": 80.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 75.0,
+      "y": 75.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL3A",
+    "value": "DIN",
+    "lib": "WireLink_TH",
+    "x": 91.0,
+    "y": 93.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     90.2,
+     92.2,
+     91.8,
+     93.8
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 91.0,
+      "y": 93.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL5A",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 80.5,
+    "y": 65.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     79.7,
+     64.7,
+     81.3,
+     66.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 80.5,
+      "y": 65.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "H3",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 26.0,
+    "y": 114.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     24.4,
+     112.4,
+     27.6,
+     115.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 26.0,
+      "y": 114.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "H1",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 26.0,
+    "y": 26.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     24.4,
+     24.4,
+     27.6,
+     27.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 26.0,
+      "y": 26.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "C9",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 35.5,
+    "y": 74.0,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     29.45,
+     72.5,
+     36.55,
+     75.5
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 35.5,
+      "y": 74.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 30.5,
+      "y": 74.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL7B",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 82.5,
+    "y": 37.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     81.7,
+     36.2,
+     83.3,
+     37.8
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 82.5,
+      "y": 37.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "C10",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 53.0,
+    "y": 58.5,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     51.5,
+     57.45,
+     54.5,
+     64.55
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 53.0,
+      "y": 58.5,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 53.0,
+      "y": 63.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL6A",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 64.5,
+    "y": 38.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     63.7,
+     37.7,
+     65.3,
+     39.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 64.5,
+      "y": 38.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL1A",
+    "value": "MCLK",
+    "lib": "WireLink_TH",
+    "x": 87.5,
+    "y": 45.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     86.7,
+     44.2,
+     88.3,
+     45.8
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 87.5,
+      "y": 45.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "U4",
+    "value": "74HC4040",
+    "lib": "DIP-16_W7.62mm_LongPads",
+    "x": 81.89,
+    "y": 59.89,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     72.82,
+     40.59,
+     83.34,
+     61.41
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-16_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 81.89,
+      "y": 59.89,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 81.89,
+      "y": 57.35,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 81.89,
+      "y": 54.81,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 81.89,
+      "y": 52.27,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 81.89,
+      "y": 49.73,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 81.89,
+      "y": 47.19,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 81.89,
+      "y": 44.65,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 81.89,
+      "y": 42.11,
+      "drill": 0.8
+     },
+     {
+      "n": "9",
+      "x": 74.27,
+      "y": 42.11,
+      "drill": 0.8
+     },
+     {
+      "n": "10",
+      "x": 74.27,
+      "y": 44.65,
+      "drill": 0.8
+     },
+     {
+      "n": "11",
+      "x": 74.27,
+      "y": 47.19,
+      "drill": 0.8
+     },
+     {
+      "n": "12",
+      "x": 74.27,
+      "y": 49.73,
+      "drill": 0.8
+     },
+     {
+      "n": "13",
+      "x": 74.27,
+      "y": 52.27,
+      "drill": 0.8
+     },
+     {
+      "n": "14",
+      "x": 74.27,
+      "y": 54.81,
+      "drill": 0.8
+     },
+     {
+      "n": "15",
+      "x": 74.27,
+      "y": 57.35,
+      "drill": 0.8
+     },
+     {
+      "n": "16",
+      "x": 74.27,
+      "y": 59.89,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL3B",
+    "value": "DIN",
+    "lib": "WireLink_TH",
+    "x": 49.5,
+    "y": 88.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     48.7,
+     87.2,
+     50.3,
+     88.8
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 49.5,
+      "y": 88.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL5B",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 88.5,
+    "y": 65.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     87.7,
+     64.7,
+     89.3,
+     66.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 88.5,
+      "y": 65.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "U3",
+    "value": "74HCT132",
+    "lib": "DIP-14_W7.62mm_LongPads",
+    "x": 65.31,
+    "y": 58.62,
+    "rot": 180.0,
+    "layer": "F.Cu",
+    "bbox": [
+     56.24,
+     41.85,
+     66.76,
+     60.15
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-14_W7.62mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 65.31,
+      "y": 58.62,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 65.31,
+      "y": 56.08,
+      "drill": 0.8
+     },
+     {
+      "n": "3",
+      "x": 65.31,
+      "y": 53.54,
+      "drill": 0.8
+     },
+     {
+      "n": "4",
+      "x": 65.31,
+      "y": 51.0,
+      "drill": 0.8
+     },
+     {
+      "n": "5",
+      "x": 65.31,
+      "y": 48.46,
+      "drill": 0.8
+     },
+     {
+      "n": "6",
+      "x": 65.31,
+      "y": 45.92,
+      "drill": 0.8
+     },
+     {
+      "n": "7",
+      "x": 65.31,
+      "y": 43.38,
+      "drill": 0.8
+     },
+     {
+      "n": "8",
+      "x": 57.69,
+      "y": 43.38,
+      "drill": 0.8
+     },
+     {
+      "n": "9",
+      "x": 57.69,
+      "y": 45.92,
+      "drill": 0.8
+     },
+     {
+      "n": "10",
+      "x": 57.69,
+      "y": 48.46,
+      "drill": 0.8
+     },
+     {
+      "n": "11",
+      "x": 57.69,
+      "y": 51.0,
+      "drill": 0.8
+     },
+     {
+      "n": "12",
+      "x": 57.69,
+      "y": 53.54,
+      "drill": 0.8
+     },
+     {
+      "n": "13",
+      "x": 57.69,
+      "y": 56.08,
+      "drill": 0.8
+     },
+     {
+      "n": "14",
+      "x": 57.69,
+      "y": 58.62,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "J2",
+    "value": "TO PI GPIO",
+    "lib": "PinHeader_1x08_P2.54mm_Vertical",
+    "x": 60.22,
+    "y": 115.6,
+    "rot": 90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     58.45,
+     113.83,
+     79.77,
+     117.37
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x08_P2.54mm_Vertical.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 60.22,
+      "y": 115.6,
+      "drill": 1.0
+     },
+     {
+      "n": "2",
+      "x": 62.76,
+      "y": 115.6,
+      "drill": 1.0
+     },
+     {
+      "n": "3",
+      "x": 65.3,
+      "y": 115.6,
+      "drill": 1.0
+     },
+     {
+      "n": "4",
+      "x": 67.84,
+      "y": 115.6,
+      "drill": 1.0
+     },
+     {
+      "n": "5",
+      "x": 70.38,
+      "y": 115.6,
+      "drill": 1.0
+     },
+     {
+      "n": "6",
+      "x": 72.92,
+      "y": 115.6,
+      "drill": 1.0
+     },
+     {
+      "n": "7",
+      "x": 75.46,
+      "y": 115.6,
+      "drill": 1.0
+     },
+     {
+      "n": "8",
+      "x": 78.0,
+      "y": 115.6,
+      "drill": 1.0
+     }
+    ]
+   },
+   {
+    "ref": "WL8A",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 77.5,
+    "y": 102.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     76.7,
+     101.7,
+     78.3,
+     103.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 77.5,
+      "y": 102.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL2B",
+    "value": "BCLK",
+    "lib": "WireLink_TH",
+    "x": 75.0,
+    "y": 85.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     74.2,
+     84.7,
+     75.8,
+     86.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 75.0,
+      "y": 85.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL4B",
+    "value": "Net-(J1-Pin_2)",
+    "lib": "WireLink_TH",
+    "x": 68.81,
+    "y": 56.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     68.01,
+     55.2,
+     69.61,
+     56.8
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 68.81,
+      "y": 56.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "H2",
+    "value": "MountingHole_3.2mm_M3",
+    "lib": "MountingHole_3.2mm_M3",
+    "x": 114.0,
+    "y": 26.0,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     112.4,
+     24.4,
+     115.6,
+     27.6
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "",
+      "x": 114.0,
+      "y": 26.0,
+      "drill": 3.2
+     }
+    ]
+   },
+   {
+    "ref": "C11",
+    "value": "100n",
+    "lib": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+    "x": 74.5,
+    "y": 65.0,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     73.0,
+     63.95,
+     76.0,
+     71.05
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Capacitor_THT.3dshapes/C_Disc_D5.0mm_W2.5mm_P5.00mm.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 74.5,
+      "y": 65.0,
+      "drill": 0.8
+     },
+     {
+      "n": "2",
+      "x": 74.5,
+      "y": 70.0,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "WL7A",
+    "value": "GND",
+    "lib": "WireLink_TH",
+    "x": 69.5,
+    "y": 38.5,
+    "rot": 0.0,
+    "layer": "F.Cu",
+    "bbox": [
+     68.7,
+     37.7,
+     70.3,
+     39.3
+    ],
+    "models": [],
+    "pads": [
+     {
+      "n": "1",
+      "x": 69.5,
+      "y": 38.5,
+      "drill": 0.8
+     }
+    ]
+   },
+   {
+    "ref": "J4",
+    "value": "2x8 BUS",
+    "lib": "PinHeader_2x08_P2.54mm_Vertical",
+    "x": 78.89,
+    "y": 30.0,
+    "rot": -90.0,
+    "layer": "F.Cu",
+    "bbox": [
+     59.34,
+     28.23,
+     80.66,
+     34.32
+    ],
+    "models": [
+     "${KICAD9_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x08_P2.54mm_Vertical.step"
+    ],
+    "pads": [
+     {
+      "n": "1",
+      "x": 78.89,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "2",
+      "x": 78.89,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "3",
+      "x": 76.35,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "4",
+      "x": 76.35,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "5",
+      "x": 73.81,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "6",
+      "x": 73.81,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "7",
+      "x": 71.27,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "8",
+      "x": 71.27,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "9",
+      "x": 68.73,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "10",
+      "x": 68.73,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "11",
+      "x": 66.19,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "12",
+      "x": 66.19,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "13",
+      "x": 63.65,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "14",
+      "x": 63.65,
+      "y": 32.54,
+      "drill": 1.0
+     },
+     {
+      "n": "15",
+      "x": 61.11,
+      "y": 30.0,
+      "drill": 1.0
+     },
+     {
+      "n": "16",
+      "x": 61.11,
+      "y": 32.54,
+      "drill": 1.0
+     }
+    ]
+   }
+  ],
+  "n_footprints": 35,
+  "n_without_model": 22
+ }
+}

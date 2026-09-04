@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Vinyl ADC: A Discrete 3rd-Order Continuous-Time Delta-Sigma Stereo Audio ADC built from op-amps and CMOS logic.">
+  <title>Vinyl ADC — Discrete 3rd-Order Delta-Sigma Stereo Audio ADC</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-hover: #1f242c;
+      --surface-elevated: #21262d;
+      --border: #30363d;
+      --border-accent: #38bdf8;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --text-heading: #ffffff;
+      --accent: #38bdf8;
+      --accent-secondary: #818cf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --badge-bg: rgba(56, 189, 248, 0.1);
+      --badge-border: rgba(56, 189, 248, 0.25);
+      --badge-text: #7dd3fc;
+      --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f8fa;
+        --surface: #ffffff;
+        --surface-hover: #f3f4f6;
+        --surface-elevated: #eaeef2;
+        --border: #d0d7de;
+        --border-accent: #0284c7;
+        --text: #1f2328;
+        --text-muted: #656d76;
+        --text-heading: #0f172a;
+        --accent: #0284c7;
+        --accent-secondary: #6366f1;
+        --accent-glow: rgba(2, 132, 199, 0.12);
+        --badge-bg: rgba(2, 132, 199, 0.08);
+        --badge-border: rgba(2, 132, 199, 0.2);
+        --badge-text: #0369a1;
+        --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header & Navigation */
+    header {
+      padding: 30px 0 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      border: 1px solid var(--badge-border);
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    /* Hero Section (Above the Fold) */
+    .hero {
+      padding: 48px 0 36px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .badge.highlight {
+      background: var(--badge-bg);
+      border-color: var(--badge-border);
+      color: var(--badge-text);
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-heading);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .tagline {
+      font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: -0.01em;
+    }
+
+    .lead-paragraph {
+      font-size: 1.05rem;
+      color: var(--text);
+      max-width: 900px;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    .hero-render-container {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 40px;
+    }
+
+    .hero-render-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+
+    .hero-render-img:hover {
+      transform: scale(1.01);
+    }
+
+    .hero-caption {
+      padding: 16px 24px;
+      background: var(--surface-elevated);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .hero-caption strong {
+      color: var(--text-heading);
+    }
+
+    /* Specs Section */
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-heading);
+      margin-bottom: 8px;
+    }
+
+    .section-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 50px;
+    }
+
+    .spec-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .spec-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    .spec-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .spec-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin-bottom: 6px;
+    }
+
+    .spec-detail {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Gallery Section */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+      margin-bottom: 50px;
+    }
+
+    .gallery-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s;
+    }
+
+    .gallery-card:hover {
+      border-color: var(--accent);
+    }
+
+    .gallery-img-wrap {
+      background: #080a0f;
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+    }
+
+    .gallery-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-card:hover .gallery-img {
+      transform: scale(1.03);
+    }
+
+    .gallery-info {
+      padding: 18px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .gallery-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin-bottom: 6px;
+    }
+
+    .gallery-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* How It Was Built Section */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 50px;
+    }
+
+    .pipeline-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 20px;
+      position: relative;
+    }
+
+    .step-number {
+      font-size: 0.75rem;
+      font-weight: 800;
+      background: var(--accent);
+      color: #000;
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Technical Architecture Diagram Box */
+    .flow-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 50px;
+      overflow-x: auto;
+    }
+
+    .flow-code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+      white-space: pre;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .hero {
+        padding: 30px 0 20px;
+      }
+      .nav-links {
+        display: none;
+      }
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+      .specs-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav-inner">
+      <div class="brand">
+        Vinyl ADC
+        <span class="brand-tag">Continuous-Time ΔΣ</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#hero">Overview</a></li>
+        <li><a href="#specs">Specifications</a></li>
+        <li><a href="#gallery">3D Renders</a></li>
+        <li><a href="#build">Engineering Pipeline</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- HERO SECTION (Above the fold) -->
+    <section class="hero" id="hero">
+      <div class="hero-meta">
+        <span class="badge highlight">Discrete 3rd-Order CIFB</span>
+        <span class="badge">24-bit / 48 kHz Linear PCM</span>
+        <span class="badge">1.536 MHz CT-ΔΣ PDM</span>
+        <span class="badge">KiCad 10 & Roland SRM-20</span>
+        <span class="badge">3D Parametric Enclosure</span>
+      </div>
+
+      <h1>Vinyl ADC — Audiophile Discrete Converter</h1>
+      <div class="tagline">Zero dedicated ADC ICs in the analog signal path. Pure discrete continuous-time conversion.</div>
+
+      <p class="lead-paragraph">
+        An audiophile-grade stereo analog-to-digital converter engineered entirely from standard analog op-amps (TL072), precision comparators (LM311), and 74HC CMOS logic—completely eliminating proprietary single-chip ADC ICs from the analog signal chain. Designed specifically for high-fidelity turntable digitization between a cartridge phono stage and a Raspberry Pi, it converts incoming analog signals directly into a continuous-time 1.536&nbsp;MHz bitstream with third-order noise shaping (+60&nbsp;dB/decade) and delivers bit-perfect 24-bit / 48&nbsp;kHz Linear PCM FLAC via software CIC and FIR decimation.
+      </p>
+
+      <div class="hero-render-container">
+        <img class="hero-render-img" src="images/vinyl-adc-hero.png" alt="Vinyl ADC Assembled Hero Render (3/4 Perspective)">
+        <div class="hero-caption">
+          <div><strong>Hero 3/4 Studio Perspective:</strong> Finished Vinyl ADC product in custom matte PLA chassis with crystal-clear laser lid and gold RCA connectors.</div>
+          <div>1920 × 1080 • Neutral Studio 3-Point Lighting</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPECIFICATIONS BLOCK -->
+    <section id="specs">
+      <h2 class="section-title">Hardware & Audio Specifications</h2>
+      <p class="section-subtitle">Parameters derived directly from the physical hardware schematics, SPICE simulations, and CAD measurements.</p>
+
+      <div class="specs-grid">
+        <div class="spec-card">
+          <div class="spec-label">Audio Output Format</div>
+          <div class="spec-value">24-bit / 48 kHz FLAC</div>
+          <div class="spec-detail">Bit-perfect Linear PCM captured via ALSA I2S bus and decimated through 4th-order CIC + FIR droop compensation.</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-label">Modulator Sampling Rate</div>
+          <div class="spec-value">1.536 MHz (32× OSR)</div>
+          <div class="spec-detail">Continuous-time 3rd-order Cascade of Integrators with local Feedback (CIFB) resonator (G = 0.03).</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-label">Master Clock Source</div>
+          <div class="spec-value">6.144 MHz DIP-8 Can</div>
+          <div class="spec-detail">Dedicated low-jitter crystal oscillator (&lt;50 ps phase jitter) buffered via 74HCT132 Schmitt trigger.</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-label">Dynamic Range & SNR</div>
+          <div class="spec-value">68.3 dB Measured</div>
+          <div class="spec-detail">Audible band (20 Hz – 20 kHz); purposefully matched to the physical vinyl groove noise floor (~60–65 dB).</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-label">Analog & Digital Connectors</div>
+          <div class="spec-value">Gold RCA & 5.08 mm Bornier</div>
+          <div class="spec-detail">Panel-mount gold RCA phono jacks (L/R), terminal blocks, tonearm star-ground binding post, and 8-pin Pi I2S header.</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-label">Board Dimensions</div>
+          <div class="spec-value">100.0 × 100.0 mm</div>
+          <div class="spec-detail">4-tier modular stack (1.6 mm single-sided FR4) connected by 2×8 2.54 mm stacking bus and M3 standoffs.</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-label">Parametric Enclosure Dimensions</div>
+          <div class="spec-value">107.0 × 107.0 × 65.0 mm</div>
+          <div class="spec-detail">101.0 × 101.0 mm inner cavity (0.5 mm board clearance on all sides), 3.0 mm walls, 3.0 mm floor and lid.</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-label">Studio Chassis Dimensions</div>
+          <div class="spec-value">144.0 × 144.0 × 65.0 mm</div>
+          <div class="spec-detail">FDM-printed base with outward corner pillars, internal M3 heat-set inserts, and 140 × 140 × 3.0 mm clear acrylic lid.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUCT RENDERS GALLERY -->
+    <section id="gallery">
+      <h2 class="section-title">Portfolio 3D Visualisation Gallery</h2>
+      <p class="section-subtitle">High-resolution 1920 × 1080 studio renders generated in Blender showing the assembled product, connectors, and exploded tier architecture.</p>
+
+      <div class="gallery-grid">
+        <div class="gallery-card">
+          <div class="gallery-img-wrap">
+            <img class="gallery-img" src="images/vinyl-adc-hero.png" alt="Vinyl ADC Hero 3/4 Perspective Render">
+          </div>
+          <div class="gallery-info">
+            <h3 class="gallery-title">Hero Shot (3/4 Perspective)</h3>
+            <p class="gallery-desc">Full isometric angle displaying the dark charcoal matte PLA enclosure, crystal-clear acrylic top lid, corner M3 hex fasteners, and side gold RCA inputs.</p>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <div class="gallery-img-wrap">
+            <img class="gallery-img" src="images/vinyl-adc-front.png" alt="Vinyl ADC Front Panel and Connector View">
+          </div>
+          <div class="gallery-info">
+            <h3 class="gallery-title">Front Panel & Connector View</h3>
+            <p class="gallery-desc">Front elevation detailing the calibrated multi-turn input gain trim potentiometer, status LED indicator, and right-panel gold phono jacks with dedicated ground binding post.</p>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <div class="gallery-img-wrap">
+            <img class="gallery-img" src="images/vinyl-adc-exploded.png" alt="Vinyl ADC Exploded Assembly View">
+          </div>
+          <div class="gallery-info">
+            <h3 class="gallery-title">Exploded Assembly View</h3>
+            <p class="gallery-desc">Vertical stage explosion showcasing the transparent lid lifted above the 4-tier PCB architecture: Digital Clock Board, Dual Modulator Channels, and Base Power Supply.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WAS BUILT -->
+    <section id="build">
+      <h2 class="section-title">How It Was Built: Engineering Pipeline</h2>
+      <p class="section-subtitle">From SPICE simulation and KiCad PCB layout through parametric mechanical CAD to photorealistic Blender studio rendering.</p>
+
+      <div class="pipeline-grid">
+        <div class="pipeline-step">
+          <span class="step-number">Step 1</span>
+          <h3 class="step-title">KiCad 10 Design & SRM-CAM</h3>
+          <p class="step-desc">Modular 4-board architecture (100 × 100 mm each) engineered for single-sided isolation milling on a Roland SRM-20 CNC mill via SRM-CAM. Star-ground architecture isolates analog audio returns from digital switching noise.</p>
+        </div>
+
+        <div class="pipeline-step">
+          <span class="step-number">Step 2</span>
+          <h3 class="step-title">3D CAD Board Export</h3>
+          <p class="step-desc">Exported using <code>kicad-cli pcb export step</code> and <code>glb</code> with native footprints and 3D packages (DIP-8, DIP-14, DIP-16, DIP-20, axial resistors, capacitors, and stacking headers).</p>
+        </div>
+
+        <div class="pipeline-step">
+          <span class="step-number">Step 3</span>
+          <h3 class="step-title">Parametric Enclosure</h3>
+          <p class="step-desc">Parametrically modeled in OpenSCAD with 0.5 mm board clearance on all sides, 3.0 mm wall thickness, M3 mounting bosses at (±44 mm, ±44 mm), and cutouts matching connector coordinates.</p>
+        </div>
+
+        <div class="pipeline-step">
+          <span class="step-number">Step 4</span>
+          <h3 class="step-title">Blender Studio Rendering</h3>
+          <p class="step-desc">Assembled in Blender with 3-point soft area lighting, physical material nodes (matte PLA roughness 0.48, crystal clear acrylic transmission 0.95, polished brass), and rendered at 1920 × 1080.</p>
+        </div>
+      </div>
+
+      <!-- Signal Flow Block -->
+      <div class="flow-box">
+        <div class="flow-code">
+Signal Processing Flow:
+Turntable (Ortofon 2M Red) ──> Phono Stage ──> [ VINYL ADC ] ──> 1.536 MHz PDM ──> 74HC157 Mux ──> 3.072 Mbps Stream
+                                                 Gold RCA In     TL072 + LM311      Stereo Interleave     │
+                                                                                                          ▼
+Jellyfin Media Server &lt;── 24-bit / 48 kHz FLAC &lt;── FIR Compensation &lt;── 4th-Order CIC Decimator &lt;── Raspberry Pi I2S
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container footer-content">
+      <div>Vinyl ADC Project — Designed by Mads Rudolph • MIT License</div>
+      <div>Single self-contained presentation • Works 100% offline • No external CDNs or scripts</div>
+    </div>
+  </footer>
+
+</body>
+</html>
