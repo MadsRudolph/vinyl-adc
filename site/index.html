@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Vinyl ADC — discrete delta-sigma audio converter</title>
+<meta name="description" content="A discrete 3rd-order continuous-time delta-sigma stereo ADC built from op-amps and 74HC logic, in a 3D-printed enclosure. KiCad boards, parametric enclosure, Blender renders.">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --bg-2: #ffffff;
+    --fg: #1b1a17;
+    --muted: #5c5a53;
+    --line: #dcd9d0;
+    --accent: #b8722c;
+    --accent-2: #2b6e5a;
+    --radius: 14px;
+    --maxw: 1120px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141416;
+      --bg-2: #1d1d21;
+      --fg: #ece9e2;
+      --muted: #a29f96;
+      --line: #2c2c31;
+      --accent: #e0a05a;
+      --accent-2: #6fc3a6;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  img { max-width: 100%; height: auto; display: block; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 0.92em; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+  header.top {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding: 22px 0 10px; border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  header.top .brand { font-weight: 700; letter-spacing: 0.02em; }
+  header.top nav { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.95em; }
+  header.top nav a { color: var(--muted); }
+
+  .hero { padding: 40px 0 10px; }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.05; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .hero .kicker { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.8rem; margin: 0 0 14px; }
+  .hero p.lead { max-width: 60ch; color: var(--muted); margin: 0 0 26px; font-size: 1.08em; }
+  .hero figure { margin: 0; border-radius: var(--radius); overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); }
+  .hero figcaption, figcaption { font-size: 0.85em; color: var(--muted); padding: 10px 14px; }
+
+  section { padding: 46px 0 8px; }
+  section h2 { font-size: 1.55rem; margin: 0 0 6px; }
+  section p.sub { color: var(--muted); margin: 0 0 22px; max-width: 65ch; }
+
+  .specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .spec { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .spec h3 { margin: 0 0 8px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .spec dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+  .spec dt { color: var(--muted); font-size: 0.92em; }
+  .spec dd { margin: 0; font-weight: 600; }
+  .spec dd small { font-weight: 400; color: var(--muted); }
+  .tbd { color: var(--accent); font-weight: 600; }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .gallery figure { margin: 0; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+
+  .stack { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; align-items: start; }
+  .stack svg { width: 100%; height: auto; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); }
+  .stack table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+  .stack th, .stack td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .stack th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  ol.steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; counter-reset: step; }
+  ol.steps li { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 18px 16px; position: relative; }
+  ol.steps li::before { counter-increment: step; content: counter(step); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 0.85em; margin-bottom: 10px; }
+  ol.steps h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  ol.steps p { margin: 0; color: var(--muted); font-size: 0.95em; }
+
+  .cutouts { overflow-x: auto; }
+  .cutouts table { border-collapse: collapse; min-width: 640px; width: 100%; font-size: 0.92em; }
+  .cutouts th, .cutouts td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  .cutouts th { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  footer { margin-top: 56px; padding: 26px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9em; }
+  footer p { margin: 4px 0; }
+
+  @media (max-width: 720px) {
+    .stack { grid-template-columns: 1fr; }
+    body { font-size: 16px; }
+    section { padding-top: 36px; }
+  }
+  @media (max-width: 420px) {
+    .wrap { padding: 0 14px; }
+    .spec dl { grid-template-columns: 1fr; gap: 2px; }
+    .spec dt { margin-top: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand">Vinyl ADC</div>
+  <nav aria-label="Sections">
+    <a href="#specs">Specs</a>
+    <a href="#gallery">Gallery</a>
+    <a href="#stack">Stack</a>
+    <a href="#build">How it was built</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" id="top">
+    <p class="kicker">Discrete delta-sigma · stereo · 24-bit / 48 kHz</p>
+    <h1>Vinyl ADC</h1>
+    <p class="lead">
+      A stereo analogue-to-digital converter for a turntable that contains no ADC chip at all.
+      Each channel is a third-order continuous-time delta-sigma modulator built from TL07x op-amps,
+      an LM311 comparator and 74HC logic, clocked at 1.536 MHz from a crystal oscillator can; the
+      two 1-bit streams are interleaved onto a standard I²S bus and decimated to 24-bit / 48 kHz PCM
+      on a Raspberry Pi. Four single-sided, CNC-milled 100 × 100 mm boards stack on M3 standoffs
+      inside a two-part 3D-printed enclosure.
+    </p>
+    <figure>
+      <img src="img/hero.png" width="1920" height="1080" alt="Hero render: the assembled Vinyl ADC in its matte charcoal enclosure, three-quarter view showing the engraved lid, the LINE IN windows on the right wall and the Pi ribbon leaving the front notch." fetchpriority="high">
+      <figcaption>Hero — assembled product, Cycles render from the KiCad 3D exports and the OpenSCAD enclosure.</figcaption>
+    </figure>
+  </section>
+
+  <section id="specs">
+    <h2>Specifications</h2>
+    <p class="sub">Every figure below is taken from the repository (README, <code>docs/design-notes.md</code>, the <code>.kicad_pcb</code> files and the derived <code>enclosure/assembly.json</code>). Anything not derivable is marked TBD rather than guessed.</p>
+    <div class="specs">
+      <div class="spec">
+        <h3>Conversion</h3>
+        <dl>
+          <dt>Topology</dt><dd>3rd-order CT ΔΣ, CIFB <small>+ resonator, ELD-compensated</small></dd>
+          <dt>Modulator clock</dt><dd>1.536 MHz <small>(OSR 32)</small></dd>
+          <dt>Master clock</dt><dd>6.144 MHz crystal oscillator can</dd>
+          <dt>Output</dt><dd>24-bit / 48 kHz PCM <small>(CIC + FIR on the Pi)</small></dd>
+          <dt>SNR (20 kHz band)</dt><dd>≈ 68 dB <small>simulated, −8 dBFS</small></dd>
+          <dt>Full scale</dt><dd>2.47 V<sub>rms</sub> <small>at max trimmer</small></dd>
+        </dl>
+      </div>
+      <div class="spec">
+        <h3>Interfaces (from the boards)</h3>
+        <dl>
+          <dt>Analogue in</dt><dd>2 × 5.08 mm screw terminal <small>(J20, L and R tiers)</small></dd>
+          <dt>Gain</dt><dd>2 × multi-turn trimmer <small>(RV20, per channel)</small></dd>
+          <dt>Digital / power</dt><dd>8-way header to Pi GPIO <small>(J2: BCLK 3.072 MHz, LRCLK 48 kHz, DIN, +5 V, GND)</small></dd>
+          <dt>Inter-board bus</dt><dd>16-way ribbon <small>(2×8 header on every tier)</small></dd>
+          <dt>Power</dt><dd>+5 V from the Pi; −5 V by on-board charge pump</dd>
+          <dt>RCA / USB</dt><dd><span class="tbd">TBD</span> <small>— no such footprints on the boards</small></dd>
+        </dl>
+      </div>
+      <div class="spec">
+        <h3>Mechanical</h3>
+        <dl>
+          <dt>Enclosure (outer)</dt><dd class="num">107.0 × 107.0 × 90.4 mm</dd>
+          <dt>Cavity</dt><dd class="num">101.0 × 101.0 mm <small>(0.5 mm clearance)</small></dd>
+          <dt>Wall / floor / lid</dt><dd class="num">3.0 / 3.0 / 3.0 mm</dd>
+          <dt>Boards</dt><dd class="num">4 × 100.0 × 100.0 × 1.6 mm</dd>
+          <dt>Tier pitch</dt><dd class="num">19.6 mm <small>(M3 × 18 standoffs)</small></dd>
+          <dt>Mounting</dt><dd>4 × M3 at 6 mm inset, heat-set inserts</dd>
+          <dt>Material</dt><dd>Matte PLA / PETG, FDM, no supports</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <h2>Gallery</h2>
+    <p class="sub">1920 × 1080 Cycles renders. The enclosure is the exported STL, the boards are the kicad-cli GLB exports with their stock 3D models; the only invented bodies are the ones listed in <code>DECISIONS.md</code>.</p>
+    <div class="gallery">
+      <figure>
+        <img src="img/front_panel.png" width="1920" height="1080" loading="lazy" alt="Front panel view: the two gain-trimmer holes and the Pi ribbon notch on the front wall, and the two LINE IN windows on the right wall.">
+        <figcaption>Front panel — Pi ribbon notch (top tier), GAIN L / GAIN R trimmer access, LINE IN windows on the right.</figcaption>
+      </figure>
+      <figure>
+        <img src="img/line_in_side.png" width="1920" height="1080" loading="lazy" alt="Right side view showing the two LINE IN screw-terminal windows, one per channel tier.">
+        <figcaption>Right wall — LINE IN L (tier 3) and LINE IN R (tier 2) screw-terminal windows.</figcaption>
+      </figure>
+      <figure>
+        <img src="img/exploded.png" width="1920" height="1080" loading="lazy" alt="Exploded view: lid lifted, the four boards separated on their brass standoffs above the base.">
+        <figcaption>Exploded — lid, digital tier, channel L, channel R and power tier on their M3 × 18 standoffs.</figcaption>
+      </figure>
+      <figure>
+        <img src="img/hero.png" width="1920" height="1080" loading="lazy" alt="Hero three-quarter view of the assembled enclosure.">
+        <figcaption>Hero — three-quarter view.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="stack">
+    <h2>The stack, in numbers</h2>
+    <p class="sub">Heights are derived, not chosen: the tallest part on any board (the 470 µF capacitor and the 2.2 µF film capacitor, both 11.6 mm from the GLB exports) and the 16-way IDC socket on the bus header set an 18 mm standoff. All Z values are measured from the outside of the floor.</p>
+    <div class="stack">
+      <svg viewBox="0 0 420 300" role="img" aria-labelledby="stack-title">
+        <title id="stack-title">Cross-section of the enclosure showing the four board tiers</title>
+        <!-- scale: 1 mm = 2.6 px in Y, drawn from Z=0 (bottom, y=280) -->
+        <g fill="none" stroke="currentColor" stroke-width="1.5">
+          <!-- base: outer 0..107 wide, floor 3, walls to 87.4 -->
+          <path d="M60 280 H360 V52.8 H352.2 V272.2 H67.8 V52.8 H60 Z"/>
+          <!-- lid plate 87.4..90.4 -->
+          <rect x="60" y="45" width="300" height="7.8"/>
+        </g>
+        <g fill="var(--accent-2)" opacity="0.9">
+          <!-- boards: 1.6 mm = 4.16 px, tops at 10.6, 30.2, 49.8, 69.4 -->
+          <rect x="75" y="252.4" width="270" height="4.2"/>
+          <rect x="75" y="201.5" width="270" height="4.2"/>
+          <rect x="75" y="150.5" width="270" height="4.2"/>
+          <rect x="75" y="99.6" width="270" height="4.2"/>
+        </g>
+        <g fill="var(--accent)">
+          <!-- standoffs 18 mm = 46.8 px above each board top, and floor bosses 6 mm -->
+          <rect x="84" y="205.6" width="6" height="46.8"/><rect x="330" y="205.6" width="6" height="46.8"/>
+          <rect x="84" y="154.7" width="6" height="46.8"/><rect x="330" y="154.7" width="6" height="46.8"/>
+          <rect x="84" y="103.8" width="6" height="46.8"/><rect x="330" y="103.8" width="6" height="46.8"/>
+          <rect x="84" y="52.8" width="6" height="46.8"/><rect x="330" y="52.8" width="6" height="46.8"/>
+          <rect x="82" y="256.6" width="10" height="15.6"/><rect x="328" y="256.6" width="10" height="15.6"/>
+        </g>
+        <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="10" fill="currentColor">
+          <text x="366" y="103">Z 69.4 · tier 4 digital</text>
+          <text x="366" y="154">Z 49.8 · tier 3 channel L</text>
+          <text x="366" y="205">Z 30.2 · tier 2 channel R</text>
+          <text x="366" y="256">Z 10.6 · tier 1 power</text>
+          <text x="366" y="50">Z 87.4 · lid</text>
+          <text x="366" y="283">Z 0</text>
+          <text x="60" y="296">107 mm outer · 90.4 mm tall · all dimensions mm</text>
+        </g>
+      </svg>
+      <table>
+        <thead><tr><th>Tier</th><th>Board</th><th>Board top Z</th><th>Tallest part</th></tr></thead>
+        <tbody>
+          <tr><td>4</td><td>digital — clock, interleave, Pi interface</td><td class="num">69.4 mm</td><td class="num">10.1 mm</td></tr>
+          <tr><td>3</td><td>channel L modulator</td><td class="num">49.8 mm</td><td class="num">11.6 mm</td></tr>
+          <tr><td>2</td><td>channel R modulator (same artwork, jumper R)</td><td class="num">30.2 mm</td><td class="num">11.6 mm</td></tr>
+          <tr><td>1</td><td>power &amp; reference</td><td class="num">10.6 mm</td><td class="num">11.6 mm</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin:28px 0 8px;font-size:1.1rem">Wall cutouts, at the connector coordinates from the boards</h3>
+    <div class="cutouts">
+      <table>
+        <thead><tr><th>Cutout</th><th>Wall</th><th>Ref (KiCad x, y, rot)</th><th>Enclosure position</th><th>Size</th></tr></thead>
+        <tbody>
+          <tr><td>LINE IN R window</td><td>+X (right)</td><td class="mono">J20 tier 2 (115.80, 100.75, 90°)</td><td class="num">Y 19.3–31.3, Z 30.5–41.5</td><td class="num">12 × 11 mm</td></tr>
+          <tr><td>LINE IN L window</td><td>+X (right)</td><td class="mono">J20 tier 3 (115.80, 100.75, 90°)</td><td class="num">Y 19.3–31.3, Z 50.1–61.1</td><td class="num">12 × 11 mm</td></tr>
+          <tr><td>GAIN R access</td><td>−Y (front)</td><td class="mono">RV20 tier 2 (92.14, 108.42, −90°)</td><td class="num">X 75.64, Z 35.2</td><td class="num">Ø 5 mm</td></tr>
+          <tr><td>GAIN L access</td><td>−Y (front)</td><td class="mono">RV20 tier 3 (92.14, 108.42, −90°)</td><td class="num">X 75.64, Z 54.8</td><td class="num">Ø 5 mm</td></tr>
+          <tr><td>Pi ribbon notch</td><td>−Y (front)</td><td class="mono">J2 tier 4 (60.22, 115.60, 90°)</td><td class="num">X 40.45–64.77, Z 72.4–87.4</td><td class="num">24.3 × 15 mm, open top</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="build">
+    <h2>How it was built</h2>
+    <p class="sub">One pipeline, every step scripted and re-runnable from a clean checkout (exact commands in <code>DECISIONS.md</code>).</p>
+    <ol class="steps">
+      <li>
+        <h3>KiCad → geometry</h3>
+        <p><code>extract_geometry.py</code> parses the three <code>.kicad_pcb</code> files: 100 × 100 mm outlines, four Ø3.2 mm holes at 6 mm inset, and the position and rotation of every connector.</p>
+      </li>
+      <li>
+        <h3>3D export</h3>
+        <p><code>kicad-cli pcb export glb</code> (and <code>step</code>) with copper, silk and mask, then <code>glb_heights.py</code> reads the exact height of every 3D model from the glTF accessors.</p>
+      </li>
+      <li>
+        <h3>Parametric enclosure</h3>
+        <p><code>make_params.py</code> turns those numbers into <code>vinyl_adc_params.scad</code>; OpenSCAD builds the base and lid and exports the STLs, which <code>check_stl.py</code> verifies as watertight.</p>
+      </li>
+      <li>
+        <h3>Blender</h3>
+        <p><code>build_scene.py</code> imports the GLBs and STLs, adds standoffs, ribbons and the listed placeholders, lights a neutral studio and renders four 1080p Cycles frames — headless, reproducibly.</p>
+      </li>
+    </ol>
+  </section>
+</main>
+
+<footer>
+  <p><strong>Vinyl ADC</strong> — discrete 3rd-order delta-sigma stereo ADC. Boards designed in KiCad 10 and isolation-milled on a Roland SRM-20; enclosure in OpenSCAD; renders in Blender 4.4 / Cycles.</p>
+  <p>This page is a single self-contained file: no scripts, no external fonts, no network requests. Copy the <code>site/</code> folder anywhere.</p>
+</footer>
+
+</div>
+</body>
+</html>

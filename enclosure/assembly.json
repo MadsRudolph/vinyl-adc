@@ -1,0 +1,219 @@
+{
+ "units": "mm",
+ "frame": "enclosure: origin outer bottom-left-front corner, X right, Y back, Z up",
+ "kicad_to_enclosure": {
+  "X": "kx - 20 + 0.5 + 3",
+  "Y": "(120 - ky) + 0.5 + 3"
+ },
+ "params": {
+  "CLR": 0.5,
+  "WALL": 3.0,
+  "FLOOR": 3.0,
+  "LID_T": 3.0,
+  "LID_LIP_H": 4.0,
+  "LID_LIP_T": 2.0,
+  "LID_LIP_CLR": 0.25,
+  "T_PCB": 1.6,
+  "BOSS_H": 6.0,
+  "BOSS_D": 8.0,
+  "INSERT_D": 4.0,
+  "INSERT_DEPTH": 7.0,
+  "STANDOFF": 18.0,
+  "CORNER_R": 3.0,
+  "TIER_PITCH": 19.6,
+  "BOARD": 100.0,
+  "INNER": 101.0,
+  "OUTER": 107.0,
+  "Z_LID_UNDER": 87.4,
+  "Z_OUTER_TOP": 90.4,
+  "HOLES": [
+   [
+    9.5,
+    97.5
+   ],
+   [
+    9.5,
+    9.5
+   ],
+   [
+    97.5,
+    97.5
+   ],
+   [
+    97.5,
+    9.5
+   ]
+  ],
+  "TIER_Z_TOP": [
+   10.6,
+   30.2,
+   49.8,
+   69.4
+  ]
+ },
+ "tiers": [
+  {
+   "tier": 1,
+   "board": "power",
+   "label": "Power & reference",
+   "z_top": 10.6,
+   "z_bottom": 9.0,
+   "max_component_height": 11.6
+  },
+  {
+   "tier": 2,
+   "board": "channel_l",
+   "label": "Channel R modulator (channel_l artwork, jumper R)",
+   "z_top": 30.2,
+   "z_bottom": 28.6,
+   "max_component_height": 11.6
+  },
+  {
+   "tier": 3,
+   "board": "channel_l",
+   "label": "Channel L modulator",
+   "z_top": 49.8,
+   "z_bottom": 48.2,
+   "max_component_height": 11.6
+  },
+  {
+   "tier": 4,
+   "board": "digital",
+   "label": "Clock, interleave & Pi interface",
+   "z_top": 69.4,
+   "z_bottom": 67.8,
+   "max_component_height": 10.13
+  }
+ ],
+ "cutouts": [
+  {
+   "kind": "window",
+   "wall": "+X",
+   "ref": "J20",
+   "tier": 2,
+   "label": "LINE IN R",
+   "kicad": {
+    "ref_at": [
+     115.8,
+     100.745
+    ],
+    "rot": 90.0,
+    "bbox": [
+     111.8,
+     92.955,
+     119.8,
+     103.455
+    ]
+   },
+   "y0": 19.295,
+   "y1": 31.295,
+   "z0": 30.5,
+   "z1": 41.5
+  },
+  {
+   "kind": "window",
+   "wall": "+X",
+   "ref": "J20",
+   "tier": 3,
+   "label": "LINE IN L",
+   "kicad": {
+    "ref_at": [
+     115.8,
+     100.745
+    ],
+    "rot": 90.0,
+    "bbox": [
+     111.8,
+     92.955,
+     119.8,
+     103.455
+    ]
+   },
+   "y0": 19.295,
+   "y1": 31.295,
+   "z0": 50.1,
+   "z1": 61.1
+  },
+  {
+   "kind": "hole",
+   "wall": "-Y",
+   "ref": "RV20",
+   "tier": 2,
+   "label": "GAIN R",
+   "kicad": {
+    "ref_at": [
+     92.14,
+     108.415
+    ],
+    "rot": -90.0,
+    "bbox": [
+     85.29,
+     106.645,
+     93.91,
+     118.955
+    ]
+   },
+   "x": 75.64,
+   "z": 35.2,
+   "d": 5.0
+  },
+  {
+   "kind": "hole",
+   "wall": "-Y",
+   "ref": "RV20",
+   "tier": 3,
+   "label": "GAIN L",
+   "kicad": {
+    "ref_at": [
+     92.14,
+     108.415
+    ],
+    "rot": -90.0,
+    "bbox": [
+     85.29,
+     106.645,
+     93.91,
+     118.955
+    ]
+   },
+   "x": 75.64,
+   "z": 54.8,
+   "d": 5.0
+  },
+  {
+   "kind": "notch",
+   "wall": "-Y",
+   "ref": "J2",
+   "tier": 4,
+   "label": "TO PI GPIO (8-way ribbon)",
+   "kicad": {
+    "ref_at": [
+     60.22,
+     115.6
+    ],
+    "rot": 90.0,
+    "bbox": [
+     58.45,
+     113.83,
+     79.77,
+     117.37
+    ]
+   },
+   "x0": 40.45,
+   "x1": 64.77,
+   "z0": 72.4,
+   "z1": 87.4
+  }
+ ],
+ "board_glb": {
+  "power": "hardware/export/vinyl-adc-power.glb",
+  "channel_l": "hardware/export/vinyl-adc-channel_l.glb",
+  "digital": "hardware/export/vinyl-adc-digital.glb"
+ },
+ "outer_size": [
+  107.0,
+  107.0,
+  90.4
+ ],
+ "stack_clearance_needed": 17.2
+}
