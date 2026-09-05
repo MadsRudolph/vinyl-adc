@@ -484,8 +484,16 @@ blend = ROOT / "render" / "vinyl-adc-assembly.blend"
 bpy.ops.wm.save_as_mainfile(filepath=str(blend), compress=True)
 print("saved", blend)
 
-glb_out = ROOT / "hardware" / "export" / "vinyl-adc-assembly.glb"
-for o in bpy.data.objects:
-    o.select_set(o.type in ("MESH", "EMPTY") and not any(c.name in ("Studio", "Cameras") for c in o.users_collection))
-bpy.ops.export_scene.gltf(filepath=str(glb_out), export_format="GLB", use_selection=True, export_apply=True)
-print("exported", glb_out)
+def export_glb(path, collections):
+    for o in bpy.data.objects:
+        o.select_set(o.type in ("MESH", "EMPTY") and any(c.name in collections for c in o.users_collection))
+    bpy.ops.export_scene.gltf(filepath=str(path), export_format="GLB", use_selection=True, export_apply=True)
+    print("exported", path)
+
+
+# full product (boards + placeholders + cables + hardware + enclosure)
+export_glb(ROOT / "hardware" / "export" / "vinyl-adc-assembly.glb",
+           ("Boards", "Placeholders", "Cables", "Hardware", "Enclosure"))
+# the four-tier board stack alone, with its standoffs and placeholders (deliverable 1)
+export_glb(ROOT / "hardware" / "export" / "vinyl-adc-board.glb",
+           ("Boards", "Placeholders", "Hardware"))
