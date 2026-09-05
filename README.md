@@ -175,36 +175,6 @@ graph TD
 
 ---
 
-## Enclosure & Laser-Cut Clear Acrylic Top Lid
-
-<p align="center">
-  <img src="media/laser_engraved_lid.png" alt="Audiophile Laser Engraved Lid Artwork" width="450">
-</p>
-
-The chassis combines a 3D-printable PETG base with a laser-cut, laser-engraved $3.0\text{ mm}$ clear cast acrylic lid. When looking through the transparent top, the laser-etched block diagrams and technical labels float directly above the corresponding ICs and standoffs.
-
-### Manufacturing Files in [`enclosure/`](enclosure/):
-
-| File | Type | Description |
-|---|---|---|
-| [**`vinyl_adc_enclosure_base.3mf`**](enclosure/vinyl_adc_enclosure_base.3mf) | PrusaSlicer 3MF | **Recommended for 3D printing.** Explicit millimeter headers, zero overhang, sits flat on bed ($144 \times 144 \times 65\text{ mm}$). |
-| [**`vinyl_adc_enclosure_base.stl`**](enclosure/vinyl_adc_enclosure_base.stl) | Binary STL | 100% watertight 2-manifold (`manifold = yes`, `open_edges = 0`), positive build quadrant ($X, Y, Z \ge 0$). |
-| [**`vinyl_adc_plexiglass_top.svg`**](enclosure/vinyl_adc_plexiglass_top.svg) | Laser SVG | 1:1 scale for Adobe Illustrator (72 pt/in calibrated, $140 \times 140\text{ mm}$, $0.01\text{ mm}$ Red cut strokes, Black text). |
-| [**`vinyl_adc_plexiglass_top.dxf`**](enclosure/vinyl_adc_plexiglass_top.dxf) | AutoCAD R12 DXF | 1:1 DXF for laser cutting / CNC milling (`1 Units = 1 Millimeter`). |
-| [**`vinyl_adc_enclosure.blend`**](enclosure/vinyl_adc_enclosure.blend) | Blender CAD | Full animated parametric scene with real KiCad 3D PCB exports, connectors, fasteners, and timeline animation. |
-
-### Laser Cutter Setup (GCC Spirit at DTU):
-1. Open [**`vinyl_adc_plexiglass_top.dxf`**](enclosure/vinyl_adc_plexiglass_top.dxf) or [**`vinyl_adc_plexiglass_top.svg`**](enclosure/vinyl_adc_plexiglass_top.svg) in Adobe Illustrator.
-   - For DXF: Ensure **Scale:** `1 Units = 1 Millimeters` (100%).
-   - For SVG: Calibrated to Illustrator's 72 DPI point system ($396.85\text{ pt} = 140.0\text{ mm}$).
-2. Copy the drawing into the lab's `lasercutter template`.
-3. Check laser driver rules:
-   - **Cut Lines (Outer contour + 4x M3 holes):** Color Red (`#FF0000`), stroke width **`0.01 mm`** (`0.028 pt`).
-   - **Engraving (Labels & Circuit blocks):** Color Black (`#000000`), raster engraving.
-4. Run job using `Acrylic 3.0 mm` preset from the printer history.
-
----
-
 ## Repository Structure
 
 ```
