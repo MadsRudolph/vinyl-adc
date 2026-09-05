@@ -16,8 +16,25 @@
 </p>
 
 <p align="center">
-  <img src="media/vinyl_adc_assembly.gif" alt="Vinyl ADC 3D Exploded Assembly Animation" width="720">
+  <img src="media/showcase/assembly.gif" alt="Vinyl ADC 3D Exploded Assembly Animation" width="720">
 </p>
+
+<p align="center">
+  <a href="media/showcase/README.md">Download MP4 videos &amp; website embeds</a>
+</p>
+
+<details>
+<summary><strong>More views: product orbit and four-board close-up</strong></summary>
+
+### Product orbit
+
+![Vinyl ADC enclosure rotating through a full turn](media/showcase/orbit.gif)
+
+### Four-board close-up
+
+![Vinyl ADC power, right-channel, left-channel, and digital boards](media/showcase/electronics.gif)
+
+</details>
 
 <p align="center">
   👉 <strong><a href="https://madsrudolph.github.io/vinyl-adc/">Launch Live Interactive 3D Web Viewer &amp; Explosion Slider</a></strong> 👈

@@ -1,0 +1,29 @@
+[
+  {
+    "name": "orbit",
+    "seconds": 6,
+    "width": 960,
+    "height": 720,
+    "fps": 24,
+    "mp4_bytes": 829295,
+    "gif_bytes": 4510172
+  },
+  {
+    "name": "assembly",
+    "seconds": 6,
+    "width": 960,
+    "height": 720,
+    "fps": 24,
+    "mp4_bytes": 613119,
+    "gif_bytes": 4204144
+  },
+  {
+    "name": "electronics",
+    "seconds": 6,
+    "width": 960,
+    "height": 720,
+    "fps": 24,
+    "mp4_bytes": 860572,
+    "gif_bytes": 4620821
+  }
+]
