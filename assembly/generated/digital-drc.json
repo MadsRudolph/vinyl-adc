@@ -1,0 +1,83 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-09-06T00:56:44",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.0.5",
+    "schematic_parity": [],
+    "source": "vinyl_adc_digital.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.8500 mm; actual 0.8000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 1 [+5V] of C11",
+                    "pos": {
+                        "x": 74.5,
+                        "y": 65.0
+                    },
+                    "uuid": "4bef9ba3-8c0f-4e94-a6d3-f8d4a5f065c1"
+                },
+                {
+                    "description": "Track [BCLK] on F.Cu, length 3.2017 mm",
+                    "pos": {
+                        "x": 72.5,
+                        "y": 67.100862
+                    },
+                    "uuid": "91c6ce4a-4eee-4735-8c88-41299217616a"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.8500 mm; actual 0.8000 mm)",
+            "items": [
+                {
+                    "description": "Track [BCLK] on F.Cu, length 8.6009 mm",
+                    "pos": {
+                        "x": 72.5,
+                        "y": 77.5
+                    },
+                    "uuid": "006c5465-d2f8-444e-8280-5f8d65550e91"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C11",
+                    "pos": {
+                        "x": 74.5,
+                        "y": 70.0
+                    },
+                    "uuid": "2b9a9c7b-c49c-4d18-9fd9-8dca4f88ed1c"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        }
+    ]
+}

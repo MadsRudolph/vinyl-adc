@@ -1,0 +1,210 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vinyl ADC · Assembly bench</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="testing-guide.css"><link rel="stylesheet" href="visual-wiring.css"><script defer src="testing-guide.js"></script><script defer src="visual-wiring.js"></script><link rel="stylesheet" href="session-log.css"><script defer src="session-log.js"></script>
+<body><header><a class="brand" href="./">◉ <span>VINYL ADC <small>ASSEMBLY BENCH</small></span></a><div id="overall"></div><button id="export">Save backup</button><label class="button">Restore<input type="file" id="import" accept="application/json" hidden></label><button onclick="print()">Print</button></header>
+<section id="testing-guide" class="testing-guide" aria-labelledby="testing-title">
+  <p class="eyebrow">START HERE · KORAD KD3005D + ANALOG DISCOVERY 3</p>
+  <h1 id="testing-title">One wire at a time.</h1>
+  <p class="testing-lede">Use this visual guide with <strong>WaveForms, your BNC adapter, two probes and the W1 coax</strong>. Select a wire, match the board orientation, then use the enlarged pad view to connect it.</p>
+  <div class="testing-status"><span>Current route: manual WaveForms</span><span>Korad = +5 V only</span><span class="waiting">Channels stay disconnected</span></div>
+  <section id="bench-handoff" aria-label="Saved bench session"><p>Loading today’s bench handoff…</p></section>
+  <details id="bnc-setup">
+    <summary>Set up first: BNC jumpers DC · probes 10× · W1 output 0 Ω</summary>
+    <div class="testing-body">
+      <div class="vw-equipment" aria-label="BNC connection overview; locate connectors by their printed labels, not positions in this illustration">
+        <div><span class="vw-jack scope1">1</span><strong>Scope 1 BNC</strong><span>Probe 1 → tip + ground clip</span></div>
+        <div><span class="vw-jack scope2">2</span><strong>Scope 2 BNC</strong><span>Probe 2 → tip + ground clip</span></div>
+        <div><span class="vw-jack wavegen">W1</span><strong>Wavegen W1 BNC</strong><span>Coax → centre signal + shield GND</span></div>
+        <div><span class="vw-jack supply">V+</span><strong>Remaining red V+ wire</strong><span>Digital board’s +3.3 V only</span></div>
+      </div>
+      <p>Find the adapter’s <strong>printed connector labels</strong>; this overview does not depict its physical port order. Set <strong>both scope coupling jumpers to DC</strong> on the adapter—the default may be AC. Set the W1 output-impedance jumper to <strong>0 Ω</strong>; do not add a 50 Ω terminator. Set both probes to <strong>10×</strong> and both WaveForms scope channels’ attenuation to <strong>10×</strong>. All voltages below are the corrected values at the probe tip. Compensate the probes in the first visual step.</p>
+      <p class="testing-callout"><strong>Probe ground clips and BNC shields are common ground.</strong> A negative rail is measured with the <strong>tip</strong>, never the ground clip. The BNC adapter makes the scope inputs single-ended. Leave unused scope flywires, W2, V− and DIO outputs disconnected/off.</p>
+      <p id="vw-coax-note"><strong>Coax board end:</strong> use a BNC-to-clips or BNC-to-terminal breakout. The centre conductor is W1 signal; the outer shield is GND. If your cable has a BNC connector at both ends, it cannot attach directly to PCB header pins without a suitable breakout. Do not push a bare BNC centre pin onto a PCB pad.</p>
+      <p>Before the board steps, complete the <a href="#test-inspect">unpowered assembly inspection</a>. Check pin 1 and component positions in KiCad against your actual board; the illustrations use the current PCB files. Use grabbers on component leads or properly soldered insulated test tails for crowded IC pads. Do not balance loose probe tips across neighbouring pins.</p>
+      <p class="muted">Reference: <a href="https://files.digilent.com/manuals/WaveForms/3.24.4/startadbnc.html">Digilent BNC adapter setup</a> and <a href="https://files.digilent.com/manuals/WaveForms/3.25.1/scope.html">scope probe attenuation</a>. The graphical route is manual only: the existing SDK assumes direct 1× flywire inputs and must not be used with these 10× probes without a driver change.</p>
+    </div>
+  </details>
+  <div id="visual-wiring" aria-label="Interactive visual wiring guide"><p>Loading your PCB wiring diagrams…</p></div>
+  <details id="vw-power-limits"><summary>Power measurements — limits for the graphical BNC fixture</summary><div class="testing-body">
+    <p>Keep the wiring shown in the selected visual step. With both probe switches and WaveForms attenuation at 10×, displayed voltages refer to the probe tip. Use DC coupling jumpers. Ground clips stay on GND.</p>
+    <div class="testing-table"><table><thead><tr><th>Measurement</th><th>Initial screening range</th></tr></thead><tbody><tr><td>+5 V</td><td>4.75–5.25 V</td></tr><tr><td>Generated negative rail</td><td>−5.25 to −3.50 V</td></tr><tr><td>VREF_P / VREF_N</td><td>+2.35…+2.65 V / −2.65…−2.35 V</td></tr><tr><td>Reference tracking</td><td>Within 3% of ±half the measured +5 V</td></tr><tr><td>Gross ripple</td><td>≤150 mVpp; capture at least 8 ms at ≥1 MS/s, with the complete DC rail visible</td></tr></tbody></table></div>
+    <p>These are provisional fault screens, not a measurement of microvolt noise. Record current and voltages. The negative supply is generated by the charge pump, not regulated to precisely −5 V. If it is missing, verify the pump clock and diode/capacitor polarity. Positive voltage on the negative rail, persistent CC or heating: turn off and inspect. No channel load is permitted until decoupling is fitted.</p>
+  </div></details>
+  <details id="vw-digital-limits"><summary>Digital measurements — limits for the graphical BNC fixture</summary><div class="testing-body">
+    <p>Keep the visual fixture: J1 2–3, external clock on J2.7, both probes at 10× with matching software scaling, DC coupling. Power off for every clock-pair or mux-case change.</p>
+    <div class="testing-table"><table><thead><tr><th>Measurement</th><th>Initial screening range</th></tr></thead><tbody><tr><td>Supplies</td><td>+5 V: 4.75–5.25 V; +3.3 V: 3.15–3.45 V</td></tr><tr><td>5 V logic</td><td>Low −0.3…0.45 V; high 4.0…5.3 V</td></tr><tr><td>Pi-facing 3.3 V logic</td><td>Low −0.3…0.45 V; high 2.7…3.6 V</td></tr><tr><td>Clocks</td><td>±2% of the selected nominal frequency, 35–65% duty cycle</td></tr><tr><td>Divider relationships</td><td>BCLK = CLK6M ÷2; MCLK = ÷4; PUMP = ÷32; LRCLK = ÷128</td></tr></tbody></table></div>
+    <p>MCLK low selects QR; high selects QL. Test QL/QR = 0/0, 1/0, 0/1 and 1/1 for both raw DIN and PI_DIN. Ignore switching edges when comparing settled levels. All channel boards remain disconnected during the rail-tie tests. Pi clocks should retain the raw clock polarity, with a short propagation delay; 50 MS/s gives 20 ns per sample, not precision jitter measurement.</p>
+  </div></details>
+  <details id="text-testing-guide">
+  <summary>Reference notes, limits and troubleshooting — older flywire fixtures</summary>
+  <div class="testing-body">
+  <p class="testing-callout">For your BNC equipment, follow the graphical route above. These detailed notes also describe the original direct-flywire fixture. References to scope 1−/2− mean ground clips in the BNC setup, and the old SDK scripts assume 1× direct inputs. Do not switch to a second fixture halfway through a test.</p>
+  <nav class="testing-nav" aria-label="Testing guide"><a href="#test-supply">1 · Supply</a><a href="#test-inspect">2 · Inspect</a><a href="#test-power">3 · Power board</a><a href="#test-digital">4 · Digital board</a><a href="#test-mux">5 · Data paths</a><a href="#test-together">6 · Two boards</a><a href="#test-later">7 · Channels later</a><a href="#test-faults">Troubleshooting</a><a href="#assembly-workspace">Assembly &amp; PCB map ↓</a></nav>
+
+  <details id="test-supply" open>
+    <summary>1 · Where does −5 V come from?</summary>
+    <div class="testing-body">
+      <p>The KD3005D has one adjustable output. At 5.00 V, the red terminal is 5 V above the black terminal. It cannot provide independent +5 V and −5 V rails around the same ground simultaneously. The green terminal is protective earth, not a third supply output; leave it unused for this fixture and do not alter any existing earth bonds.</p>
+      <p>Your power board uses <strong>U1 (74HC244), C4, D1/D2, C5/C6 and R1</strong> as an inverting charge pump and filter. With +5 V and a 192 kHz, 0–5 V input at PUMP, it generates a negative voltage at <strong>power J3 pin 16</strong>. The net is called “−5V”, but it is not regulated to exactly −5.000 V. Its voltage depends on load and losses. No pump clock means no useful negative supply.</p>
+      <ol>
+        <li>Disconnect the Korad leads from every PCB. Power the supply on and set <strong>5.00 V</strong> and a <strong>0.100 A / 100 mA current limit</strong> using its voltage/current adjustment controls. Check the displayed setpoints; the current setting is a limit, not a current forced into the board.</li>
+        <li>Switch the Korad <strong>POWER off</strong> before attaching leads. On the KD3005D, do not assume a separate output-enable button exists. Whenever this guide says “bench off”, use POWER off if that is your available control. Let the output discharge and verify near 0 V before handling the board.</li>
+        <li>For the standalone power test, red goes to <strong>power J3.2 (+5V)</strong>; black goes to <strong>power J3.1 (GND)</strong>. AD3 GND and both scope minus leads join this same GND.</li>
+        <li>When instructed to power on, watch the supply. Normal operation should settle in <strong>CV</strong>. Persistent <strong>CC</strong>, an OCP trip, unexpected current or heating means switch off and investigate. Do not raise the limit just to make a failed test continue.</li>
+      </ol>
+      <p class="testing-callout">Measure a negative rail with <strong>scope 2+ on the negative rail and 2− on GND</strong>. A multimeter uses red on the negative rail, black on GND and should display a minus sign. Never put AD3 GND on the negative rail.</p>
+      <p class="muted">100 mA is a provisional protection setting for a standalone power or digital board, not a measured consumption specification. Use 100 mA initially for the unloaded power + digital pair too. Current-limit trips require diagnosis.</p>
+    </div>
+  </details>
+
+  <details id="test-inspect">
+    <summary>2 · Unpowered inspection and finding pins on bare copper</summary>
+    <div class="testing-body">
+      <ol>
+        <li>Keep both channel boards unplugged. Remove all external power, USB power paths and signal sources from the boards. Use an insulated work surface.</li>
+        <li>Open the matching PCB in KiCad. Hover a pad to read its <strong>reference, pin number and net</strong>; match it against the PCB map below. “J3.2” means connector J3, pin 2, not the second pad from whichever side you are looking at. The underside view is mirrored. The power bus is J3; digital is J4; channels are J7.</li>
+        <li>Check IC notch/pin-1 orientation, solder bridges, copper whiskers and every required wire link. On bottom-only power copper, fit <strong>WL1A–WL1B</strong>. On bottom-only digital copper, fit all nine WL pairs and the extra <strong>U8.3-to-BCLK-anchor and U8.11-to-DIN-anchor</strong> connections shown in the assembly guide. Inspect the tight clearances around digital C11.</li>
+        <li>Power-board polarity: <strong>C5 and C6 positive leads go to GND</strong>; their negative leads face the negative supply nodes. C4 positive faces the U1 driver output. D1’s cathode band faces GND; D2’s cathode band faces the C4/D1 pump junction. Verify against KiCad, not package position alone.</li>
+        <li>With a multimeter, check continuity of intended links and GND connections, and check each supply against GND for an unintended short. Capacitors may cause a brief beep or a resistance that rises; a persistent near-zero reading requires investigation. Do not use resistance/continuity mode on a powered board.</li>
+        <li>Confirm digital U3 is <strong>74HCT132</strong>, not 74HC132; the 3.3 V external clock relies on HCT input thresholds. Confirm the digital board’s own five 100 nF capacitors are fitted. X1 can remain empty.</li>
+      </ol>
+      <p>All grounds on the 2×8 bus are odd-numbered pins. Even pins: <strong>2 +5V · 4 VREF_P · 6 VREF_N · 8 MCLK · 10 PUMP · 12 QL · 14 QR · 16 −5V</strong>. Verify orientation in KiCad before making any connection.</p>
+    </div>
+  </details>
+
+  <details id="test-power">
+    <summary>3 · Power board alone — generate and measure the negative rail</summary>
+    <div class="testing-body">
+      <p><strong>Choose either the terminal script or manual WaveForms for this test.</strong> They cannot own the AD3 at the same time. Leave W2, V+, V− and digital pattern outputs off and disconnected.</p>
+      <h3>Option A: guided SDK test with saved captures</h3>
+      <p>Close WaveForms. In a terminal, run:</p>
+      <pre class="command">cd /home/mads/Projects/vinyl-adc
+python assembly/bench/run.py devices
+python assembly/bench/run.py power</pre>
+      <p>The script first checks W1 with <strong>no PCB attached</strong>, then prompts for the power-board wiring and two sets of rail measurements. Type READY, ON and OFF only after completing the requested action. It cannot switch your Korad off. Reports and raw captures appear under <code>assembly/bench/results/</code>; use “Board tests · AD3” below to refresh results. Multiple devices: add <code>--serial YOUR_SERIAL</code>.</p>
+      <h3>Option B: manual WaveForms test</h3>
+      <ol>
+        <li>Open WaveForms with no test script running. In <strong>Wavegen → W1</strong>, select Square, <strong>192 kHz</strong>, 50% symmetry, <strong>amplitude 2.5 V, offset +2.5 V</strong>. That means <strong>5 Vpp, 0–5 V</strong>, not ±5 V. Keep it stopped while wiring.</li>
+        <li>With the PCB disconnected, connect scope <strong>1+ to W1</strong>, <strong>1− to AD3 GND</strong>. Set DC coupling/direct 1× flywires, about 1 V/div and 2 µs/div; trigger on channel 1 rising at about 2.5 V. Run W1 and Scope. Confirm approximately 192 kHz, 0 V low and 5 V high, with no substantial overshoot. Stop W1.</li>
+        <li>Switch the Korad off, then connect the fixture in the table below. Scope 1 now measures +5 V; scope 2 measures the negative rail. Set both scope channels DC coupled, about 1 V/div, with offsets that show their respective rails. Use Auto trigger.</li>
+        <li>Turn the Korad on at 5.00 V / 100 mA. If it settles in CV, start W1 immediately. Do not leave the pump input floating while the board is powered. Wait about one second, then record +5 V, the negative rail and supply current. Stop if a rail is positive where it should be negative.</li>
+        <li>For ripple, capture at least 8 ms at ≥1 MS/s, with the DC rail visible. Use peak-to-peak measurements. The provisional screen is <strong>≤150 mVpp</strong>; this detects large faults, not microvolt noise performance.</li>
+        <li>Turn the Korad off, stop W1, wait for discharge, and move only scope 1+ to <strong>J3.4</strong> and scope 2+ to <strong>J3.6</strong>. Keep both minus leads on GND. Repeat the power-on sequence and measure the references.</li>
+        <li>Finish by switching the Korad off, stopping all AD3 outputs and checking that rails have discharged before disconnecting.</li>
+      </ol>
+      <div class="testing-table"><table><caption>Standalone power fixture — power board J3</caption><thead><tr><th>Lead</th><th>Connect to</th><th>Purpose</th></tr></thead><tbody>
+        <tr><td>Korad red; scope 1+</td><td data-probe="power:J3:2:+5V">J3.2 · +5V</td><td>Only external board supply</td></tr>
+        <tr><td>Korad black; AD3 GND; scope 1− and 2−</td><td data-probe="power:J3:1:GND">J3.1 · GND</td><td>Common reference</td></tr>
+        <tr><td>AD3 W1</td><td data-probe="power:J3:10:PUMP">J3.10 · PUMP</td><td>192 kHz, 0–5 V</td></tr>
+        <tr><td>Scope 2+</td><td data-probe="power:J3:16:-5V">J3.16 · −5V</td><td>Generated negative rail, never an AD3 supply connection</td></tr>
+        <tr><td>Scope 1+ in reference step</td><td data-probe="power:J3:4:VREF_P">J3.4 · VREF_P</td><td>Positive reference</td></tr>
+        <tr><td>Scope 2+ in reference step</td><td data-probe="power:J3:6:VREF_N">J3.6 · VREF_N</td><td>Negative reference</td></tr>
+      </tbody></table></div>
+      <div class="testing-table"><table><caption>Provisional power-board screening limits</caption><thead><tr><th>Measurement</th><th>Accept for initial screening</th></tr></thead><tbody>
+        <tr><td>+5 V</td><td>4.75–5.25 V</td></tr><tr><td>Negative rail</td><td>−5.25 to −3.50 V; observe the minus sign</td></tr><tr><td>VREF_P</td><td>+2.35 to +2.65 V</td></tr><tr><td>VREF_N</td><td>−2.65 to −2.35 V</td></tr><tr><td>Reference accuracy</td><td>Each reference within 3% of ±½ the measured +5 V</td></tr><tr><td>Gross ripple</td><td>≤150 mVpp on each rail/reference</td></tr>
+      </tbody></table></div>
+      <p>Passing unloaded measurements does not establish the pump’s current capacity for both channels. That is checked later under the actual load.</p>
+    </div>
+  </details>
+
+  <details id="test-digital">
+    <summary>4 · Digital board alone — AD3 replaces the missing oscillator</summary>
+    <div class="testing-body">
+      <p class="testing-callout"><strong>Use manual WaveForms for this external-clock procedure.</strong> The existing <code>digital</code>, <code>left</code> and <code>right</code> SDK tests expect the installed oscillator and can reset W1. Do not run them with this fixture. Keep the power board, channels and Pi disconnected.</p>
+      <ol>
+        <li>With all power off, move <strong>J1 to 2–3</strong> to select GPCLK0. Leave X1 empty. Tie <strong>QL (J4.12)</strong> and <strong>QR (J4.14)</strong> to board GND to prevent floating mux inputs.</li>
+        <li>Before attaching the board, check AD3 <strong>V+ set to +3.30 V</strong> with the scope or multimeter; then disable it. V− remains off. The Korad supplies +5 V; AD3 V+ supplies the separate +3.3 V rail. Do not connect V+ to +5 V or to another 3.3 V supply.</li>
+        <li>Change W1 to Square, <strong>6.144 MHz</strong>, 50% symmetry, <strong>amplitude 1.65 V, offset +1.65 V</strong> (3.3 Vpp, nominal 0–3.3 V). With no PCB attached, measure W1 using scope 1+ and a short ground return; use roughly 50 ns/div and 500 mV/div, with the waveform centred on screen. Run the scope at ≥50 MS/s.</li>
+        <li>Verify frequency and input swing: low below 0.8 V, high above 2.0 V, and the waveform staying approximately within 0–3.3 V (screen −0.3 to +3.8 V). Rounded edges are expected over flywires; confirm clean threshold crossings and the downstream clock at U4.10. Do not increase amplitude to compensate blindly. Stop W1 before connecting it to J2.7.</li>
+        <li>Wire the table below. Make sure all Pattern Generator / Static I/O outputs are disabled; DIO pins are observation inputs only. Connect the scope to +5 V and +3.3 V for the first rail check.</li>
+        <li>Enable AD3 V+ at 3.30 V, turn the Korad on at 5.00 V / 100 mA, and start W1 immediately once CV is established. Verify +5 V is 4.75–5.25 V and +3.3 V is 3.15–3.45 V. Record the +5 V current. Stop for persistent CC, heating or abnormal rails.</li>
+        <li>For each new probe location: <strong>Korad off → W1 stop → V+ off → wait for discharge → rewire</strong>. Restart V+, Korad, then W1. Capture the clocks below with the Logic instrument at ≥50 MS/s, about 200 µs total. Use an automatic capture initially so a missing clock does not just look like a trigger timeout.</li>
+      </ol>
+      <div class="testing-table"><table><caption>Digital external-clock fixture — digital board J2</caption><thead><tr><th>Lead</th><th>Connect to</th><th>Setting</th></tr></thead><tbody>
+        <tr><td>Korad red</td><td data-probe="digital:J2:1:+5V">J2.1 · +5V</td><td>5.00 V / 100 mA initial limit</td></tr>
+        <tr><td>Korad black; AD3 GND; scope 1− and 2−</td><td data-probe="digital:J2:2:GND">J2.2 · GND</td><td>Common reference</td></tr>
+        <tr><td>AD3 V+</td><td data-probe="digital:J2:3:+3V3">J2.3 · +3V3</td><td>+3.30 V; V− off</td></tr>
+        <tr><td>AD3 W1</td><td data-probe="digital:J2:7:GPCLK0">J2.7 · GPCLK0</td><td>6.144 MHz, nominal 0–3.3 V; J1 2–3</td></tr>
+      </tbody></table></div>
+      <div class="testing-table"><table><caption>Clock observations — all listed DIO pins remain inputs</caption><thead><tr><th>AD3 lead</th><th>Digital test point</th><th>Expected</th></tr></thead><tbody>
+        <tr><td>DIO0</td><td data-probe="digital:U4:10:CLK6M">U4.10 · CLK6M</td><td>6.144 MHz, 5 V logic</td></tr>
+        <tr><td>DIO1</td><td data-probe="digital:J4:8:MCLK">J4.8 · MCLK</td><td>1.536 MHz, 5 V logic</td></tr>
+        <tr><td>DIO2</td><td data-probe="digital:U4:9:BCLK">U4.9 · BCLK</td><td>3.072 MHz, 5 V logic</td></tr>
+        <tr><td>DIO3</td><td data-probe="digital:U4:4:LRCLK">U4.4 · LRCLK</td><td>48 kHz, 5 V logic</td></tr>
+        <tr><td>DIO4</td><td data-probe="digital:J2:4:PI_BCLK">J2.4 · PI_BCLK</td><td>3.072 MHz, 3.3 V logic</td></tr>
+        <tr><td>DIO5</td><td data-probe="digital:J2:5:PI_LRCLK">J2.5 · PI_LRCLK</td><td>48 kHz, 3.3 V logic</td></tr>
+        <tr><td>DIO10</td><td data-probe="digital:J4:10:PUMP">J4.10 · PUMP</td><td>192 kHz, 5 V logic</td></tr>
+      </tbody></table></div>
+      <p>Screen frequencies within ±2% and duty cycle within 35–65%. Also check that divider outputs track the measured CLK6M by ÷2, ÷4, ÷32 and ÷128 respectively. Use the scope to check voltage: 5 V logic low −0.3…0.45 V, high 4.0…5.3 V; Pi-facing logic low −0.3…0.45 V, high 2.7…3.6 V. A logic analyzer alone cannot establish safe output voltage.</p>
+      <p>Compare BCLK to PI_BCLK and LRCLK to PI_LRCLK with both scope channels: the paths should be non-inverting, with small propagation delay. At 50 MS/s, each sample is 20 ns; this is a gross polarity/timing check, not a precision jitter measurement.</p>
+    </div>
+  </details>
+
+  <details id="test-mux">
+    <summary>5 · Digital data paths — test all four left/right combinations</summary>
+    <div class="testing-body">
+      <p>Keep the standalone digital fixture and external clock. <strong>No channel boards may be attached while their Q bus inputs are tied to rails.</strong> Every tie change requires the full off/rewire/on sequence from step 4.</p>
+      <p>Keep DIO1 on MCLK. Add DIO6 and scope 1+ to <strong data-probe="digital:U6:4:DIN">U6.4 (DIN)</strong>, DIO7 to <strong data-probe="digital:J4:12:QL">J4.12 (QL)</strong>, DIO8 to <strong data-probe="digital:J4:14:QR">J4.14 (QR)</strong>, and DIO9 plus scope 2+ to <strong data-probe="digital:J2:6:PI_DIN">J2.6 (PI_DIN)</strong>. Both scope minus leads remain at GND. Input 0 means tie to board GND; input 1 means tie to board +5 V. Do not drive these 5 V HC inputs from 3.3 V AD3 DIO outputs.</p>
+      <div class="testing-table"><table><caption>MCLK low selects QR; MCLK high selects QL</caption><thead><tr><th>QL / QR ties</th><th>DIN and PI_DIN expected</th></tr></thead><tbody>
+        <tr><td>0 / 0</td><td>Constant low</td></tr><tr><td>1 / 0</td><td>Follow MCLK</td></tr><tr><td>0 / 1</td><td>Inverse of MCLK</td></tr><tr><td>1 / 1</td><td>Constant high</td></tr>
+      </tbody></table></div>
+      <p>Judge the centre of each MCLK half-cycle, after propagation delay. DIN is 5 V logic; PI_DIN must remain 3.3 V logic, using the voltage limits in step 4. Record actual QL/QR states as well as outputs. Save each capture with its case name. After finishing, power off and remove all four-case test ties before adding either channel.</p>
+    </div>
+  </details>
+
+  <details id="test-together">
+    <summary>6 · Power + digital — make the digital board drive the pump</summary>
+    <div class="testing-body">
+      <ol>
+        <li>Only continue after both standalone tests pass. Turn Korad and all AD3 outputs off and let the rails discharge. Remove the W1 wire from <strong>power J3.10</strong>. W1 will now drive <strong>digital J2.7 only</strong>.</li>
+        <li>Join the power J3 and digital J4 buses with the same numbered pins aligned, using the intended connectors. For a minimal flywire fixture, connect <strong>J4.1 to J3.1 (GND), J4.2 to J3.2 (+5V), and J4.10 to J3.10 (PUMP)</strong>. Check continuity and absence of shorts while unpowered. No other bus wires are needed for this two-board pump test.</li>
+        <li>Use one Korad feed: red to digital J2.1, black to J2.2. Retain AD3 V+ to digital J2.3 at 3.30 V; W1 to J2.7 at 6.144 MHz / 0–3.3 V; J1 at 2–3. Leave the absent QL/QR inputs tied low during this two-board-only test.</li>
+        <li>Probe PUMP at power J3.10 with DIO10 and the negative rail at J3.16 with scope 2+. Scope 1+ measures J3.2. Start V+, Korad, then W1. Confirm 192 kHz reaches the power board and repeat the step 3 rail measurements, then references after powering off to move probes.</li>
+        <li>Record supply current and voltages. This establishes that the digital divider can operate the pump. It does not prove loaded channel performance. Shut down Korad, W1 and V+ before disconnecting.</li>
+      </ol>
+      <p class="testing-callout">There must be <strong>one driver on PUMP</strong>: AD3 W1 for the standalone power test, or the digital board for the combined test. Never connect both outputs to that net.</p>
+    </div>
+  </details>
+
+  <details id="test-later">
+    <summary>7 · Channel and complete-system tests — after the missing parts arrive</summary>
+    <div class="testing-body">
+      <p><strong>Do not power either channel with its seven 100 nF decoupling capacitors missing.</strong> You can finish visual inspection and unpowered continuity checks now. Check all 20 required top-side pad connections on each channel against its assembly map; unplated holes do not join top and bottom copper automatically.</p>
+      <p>The following automated route additionally requires the correct <strong>6.144 MHz oscillator module</strong> installed at X1 and J1 set to <strong>1–2</strong>. A two-lead passive crystal is not that module. With the capacitor shortage resolved but X1 still absent, finish steps 1–6 and stop here; these scripts do not yet maintain an external W1 clock during channel tests.</p>
+      <ol>
+        <li>Fit the missing capacitors, inspect the channel soldering, and rerun digital screening with the installed oscillator. Close WaveForms before running SDK tests.</li>
+        <li>Test one channel at a time with the verified power and digital boards. Remove all QL/QR test ties before connecting a channel. Left J21 = 1–2; right J21 = 2–3. Follow the terminal fixture prompts. Start +5 V current limit at 0.20 A for power + digital + one channel; persistent CC remains a stop condition.</li>
+        <li>The scripts check loaded rails and references, grounded-input bit density, complementary feedback outputs and two 1 kHz signal levels: 0.10 and 0.25 V peak, zero offset. Keep the channel gain trimmer fixed. These are functional screens, not calibrated audio-quality measurements.</li>
+        <li>After each channel passes, power off and connect both channels with opposite J21 selections. Remove any remaining input ties. Recheck +5 V, negative rail, both references and supply current under full load before attempting capture. Do not assume the unloaded pump result proves sufficient current for the stereo stack.</li>
+        <li>Raspberry Pi capture and SNR/THD measurements are a later stage after electrical verification. No Pi connection is part of the procedures above.</li>
+      </ol>
+      <pre class="command"># Only after the oscillator is installed and channel decoupling is complete:
+python assembly/bench/run.py digital --ad3-3v3
+python assembly/bench/run.py left --ad3-3v3
+python assembly/bench/run.py right --ad3-3v3</pre>
+      <p>Follow the full fixture instructions in <a href="bench/README.md">the SDK test README</a> and the per-board “Board tests · AD3” stage below. A simulated PASS does not qualify a physical board.</p>
+    </div>
+  </details>
+
+  <details id="test-faults">
+    <summary>Troubleshooting and what to record</summary>
+    <div class="testing-body">
+      <div class="testing-table"><table><thead><tr><th>Observation</th><th>Next check, with power off before moving connections</th></tr></thead><tbody>
+        <tr><td>Korad in CC; voltage collapses</td><td>Check shorts, IC orientation, reversed electrolytics, wrong bus alignment and a ground lead on −5V. Do not increase the current limit to bypass the symptom.</td></tr>
+        <tr><td>+5 V good, negative rail near 0 V</td><td>Verify 192 kHz at J3.10; then U1 supply and enables, WL1, pump capacitor/diode orientation and solder joints. No negative rail is expected with the clock stopped.</td></tr>
+        <tr><td>“−5V” is positive</td><td>Stop. Verify probe polarity and D1/D2 orientation against KiCad. Do not attach a channel.</td></tr>
+        <tr><td>Negative rail good, reference wrong</td><td>Check U2 orientation and supplies, reference resistor values and joints. Do not diagnose the negative reference until the negative rail is established.</td></tr>
+        <tr><td>No digital clocks</td><td>Check W1 running, J1 2–3, clock at J2.7, 74HCT132 fitted, +5 V, U4.10 clock and U4.11 reset held low. A floating or wrong clock-select connection can look like a dead counter.</td></tr>
+        <tr><td>All digital frequencies wrong by the same factor</td><td>Check W1 frequency and units. CLK6M is 6.144 MHz; the bus MCLK is 1.536 MHz.</td></tr>
+        <tr><td>5 V clocks good, Pi outputs missing</td><td>Check the separate +3.3 V rail, U8 and the required bottom-only-board wire links.</td></tr>
+        <tr><td>Mux wrong or erratic</td><td>Verify QL/QR are actually tied to the intended rails, U6 enable is low, MCLK reaches U6.1, and both channel boards are disconnected.</td></tr>
+        <tr><td>Clock stops when a script opens</td><td>Only one application owns the AD3. The normal digital/channel scripts assume X1 and can reset W1. Use the manual external-clock route above.</td></tr>
+        <tr><td>SDK cannot load or find AD3</td><td>Close WaveForms, inspect <code>python assembly/bench/run.py devices</code>, and check <a href="downloads/README.md">the installer notes</a>. Device enumeration alone does not exercise hardware outputs.</td></tr>
+      </tbody></table></div>
+      <p>For each run record: board/revision, date, clock source and measured frequency, Korad current limit and measured current, rail means and ripple, clock frequencies/levels, mux case results and any heating or failed checks. Save WaveForms captures and the workspace separately; the assembly backup does not include WaveForms files. Do not mark skipped tests as passed.</p>
+      <p><strong>Stop sequence:</strong> Korad off → W1 stop → AD3 V+ off → verify discharge. If software freezes or USB disconnects, turn the Korad off yourself; software cannot guarantee shutdown after a lost connection.</p>
+      <p class="muted">Guide checked against the current PCB snapshot and existing provisional limits on 6 September 2026. No physical board measurements were made while writing it. References: <a href="https://www.koradtechnology.com/companyfile/4/">KORAD KD-series manuals</a>, <a href="https://attachments.content4us.com/datasheets/rnd_320_KD3000_eng_man.PDF">KD-series manufacturer manual, RND-branded copy</a>, <a href="https://files.digilent.com/datasheets/Analog-Discovery-3-Datasheet.pdf">AD3 electrical specifications</a>, <a href="https://files.digilent.com/manuals/WaveForms/3.24.3/wavegen.html">WaveForms Wavegen settings</a>, <a href="bench/limits.json">local screening limits</a> and <a href="bench/plans.json">validated probe plans</a>.</p>
+    </div>
+  </details>
+  </div></details>
+</section>
+<div id="assembly-workspace" class="testing-divider">Assembly checklist &amp; KiCad reference <a href="#testing-guide">Back to testing guide ↑</a></div>
+<div class="shell"><aside><p class="eyebrow">FOUR BOARDS · ONE BUILD</p><nav id="boards"></nav><p class="eyebrow">BUILD SEQUENCE</p><nav id="stages"></nav><div class="aside-note">Your progress stays in this browser.<br>Save a backup before clearing browser data.</div></aside><main><div id="intro"></div><div class="toolbar"><input id="search" placeholder="Find a part, value or net…" aria-label="Search components"><label><input type="checkbox" id="unfinished"> Unfinished only</label><label><input type="checkbox" id="toponly"> Top-side connections</label></div><div class="workspace"><section id="content"></section><section class="inspector"><div class="map-head"><h2>PCB reference</h2><select id="view" aria-label="Board view"><option value="top">Component side</option><option value="bottom">Underside · mirrored</option></select></div><div class="map-controls"><label><input id="traces" type="checkbox" checked> Traces</label><button id="zoomout" aria-label="Zoom out">−</button><button id="zoomin" aria-label="Zoom in">+</button><button id="fit">Fit board</button></div><div id="map"></div><p class="legend"><i></i> Selected <i class="amber"></i> Top connection · square = pin 1<br>Coordinates in mm, KiCad absolute origin. Copper fills and exact pad shapes omitted; verify in KiCad.</p><div id="detail"></div></section></div><footer id="source"></footer></main></div><div id="toast" role="status"></div><script src="resistors.js"></script><script src="bench-ui.js"></script><script src="app.js"></script></body></html>

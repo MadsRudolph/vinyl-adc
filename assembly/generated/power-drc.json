@@ -1,0 +1,83 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-09-06T00:56:41",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.0.5",
+    "schematic_parity": [],
+    "source": "vinyl_adc_power.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C1 on F.Silkscreen",
+                    "pos": {
+                        "x": 86.425,
+                        "y": 35.447323
+                    },
+                    "uuid": "0d8966f9-da1d-4b74-8a6c-d7335a3c65ed"
+                },
+                {
+                    "description": "Reference field of WL1A",
+                    "pos": {
+                        "x": 86.0,
+                        "y": 35.8
+                    },
+                    "uuid": "41e7be69-3f43-4d95-9b1d-7f9fc3d04920"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of C2",
+                    "pos": {
+                        "x": 94.5,
+                        "y": 31.0
+                    },
+                    "uuid": "2007a358-922b-43ee-b625-75c83be2a453"
+                },
+                {
+                    "description": "Circle of C1 on F.Silkscreen",
+                    "pos": {
+                        "x": 89.3,
+                        "y": 29.967677
+                    },
+                    "uuid": "8159322c-edf1-4a0d-8296-c58c0ff9b77c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

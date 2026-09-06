@@ -521,6 +521,7 @@
       "netlist": "",
       "plot": "../../../production/Power/",
       "specctra_dsn": "",
+      "step": "",
       "vrml": ""
     },
     "page_layout_descr_file": ""

@@ -2,3 +2,10 @@
 # Python
 __pycache__/
 *.pyc
+
+# KiCad editor locks and local undo/history snapshots
+~*.lck
+.history/
+
+# Rebuilt static assembly publication
+assembly/site-dist/

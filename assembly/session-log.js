@@ -1,0 +1,12 @@
+(() => {
+  const root=document.getElementById('bench-handoff');
+  const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const base='sessions/2026-09-06/';
+  fetch(base+'session.json').then(r=>{if(!r.ok)throw Error('Session log unavailable');return r.json()}).then(log=>{
+    root.innerHTML=`<p class="eyebrow">BENCH LOG · ${esc(log.date)} · MANUAL MEASUREMENTS</p><h2>Paused after mux 0/0 · Pi output LOW as expected</h2><p><strong>Next: ${esc(log.resume.title)}.</strong> Start with all outputs off and verify the full wiring diagram before powering up.</p><button data-vw-resume="digital-mux">Resume at mux 1/0 →</button> <a href="#session-details">Read today’s results and remaining checks</a><p class="handoff-pending">Still open: CLK6M LOW level, three clock pairs, remaining mux cases, ripple/current and the two-board test. Channels remain disconnected.</p>
+    <details id="session-details"><summary>6 September session: readings, screenshots, corrections and tomorrow’s checklist</summary><p>${esc(log.method)}</p><p>${esc(log.equipment)}</p><p><strong>Shutdown:</strong> ${esc(log.shutdown)}</p>
+    ${log.entries.map(x=>`<article class="session-entry"><h3>${esc(x.title)}</h3><span class="session-status">${esc(x.status)}</span><p class="muted">Evidence: ${esc(x.evidence)}</p><table><tbody>${x.readings.map(([a,b])=>`<tr><th scope="row">${esc(a)}</th><td>${esc(b)}</td></tr>`).join('')}</tbody></table><p>${esc(x.notes)}</p>${x.image?`<details><summary>Open the measurement screenshot</summary><a href="${base+x.image}" target="_blank" rel="noreferrer"><img loading="lazy" src="${base+x.image}" alt="WaveForms screenshot: ${esc(x.title)}" width="1920" height="1080"></a><p class="muted">Open the image for full resolution. Screenshot numbering predates some guide changes; use the signal names above.</p></details>`:''}</article>`).join('')}
+    <h3>Remaining work</h3><ol>${log.pending.map(x=>`<li>${esc(x)}</li>`).join('')}</ol><p><a href="${base}session.json">Download the structured session record</a> · <a href="${base}README.md">Text handoff</a></p></details>
+    <p class="handoff-hosting">This website displays instructions; it does not control the AD3. Browser checkboxes do not sync between localhost and the public site: use <strong>Save backup</strong> on localhost, then <strong>Restore</strong> on the hosted site.</p>`;
+  }).catch(err=>{root.textContent='Could not load the saved bench session. Reload the page.';console.error(err)});
+})();

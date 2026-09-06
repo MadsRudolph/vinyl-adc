@@ -1,0 +1,455 @@
+{
+  "format": "vinyl-adc-bench-plans-v1",
+  "common": [
+    "Close WaveForms before running a script; only one application can own the AD3.",
+    "Power off before changing wiring. AD3 GND, scope 1\u2212, scope 2\u2212 and bench supply negative all connect to board GND. Never connect a ground clip to the negative rail.",
+    "Use the AD3 flywire scope inputs directly (1\u00d7, DC). Use short ground returns. DIO0\u202615 remain INPUTS and can observe 0\u20135 V logic; never connect DIO to the negative rail.",
+    "Bench supply provides +5.00 V. Start with a 0.10 A current limit for standalone power/digital tests; 0.20 A for power + digital + one channel. These are conservative starting limits, not expected measured currents. If the supply remains in CC or a component heats, switch off and investigate; do not automatically raise the limit.",
+    "For digital and channel fixtures, provide +3.30 V at digital J2.3 from either a separate regulated bench channel OR AD3 V+ with --ad3-3v3. Never connect the two sources together. AD3 V\u2212 and W2 are unused. Never connect the Raspberry Pi during these tests.",
+    "Scripts pause for connection changes and rail readings. They do not control or turn off the bench supply. Ctrl+C shuts down AD3 outputs; you must turn off the bench supply immediately afterwards."
+  ],
+  "order": "Power standalone \u2192 digital standalone \u2192 left with tested power/digital \u2192 right with tested power/digital \u2192 recheck rails with the full stack.",
+  "boards": {
+    "power": {
+      "title": "Power board tests",
+      "command": "power",
+      "steps": [
+        {
+          "id": "pump-check",
+          "title": "Check AD3 pump stimulus before attaching it",
+          "instructions": "Keep W1 disconnected from the board. Connect scope 1+ to W1 and 1\u2212 to AD3 GND. The script generates 192 kHz, 0\u20135 V square wave on W1 and verifies it. W1 is then disabled before you attach the board.",
+          "connections": [],
+          "expect": "192 kHz \u00b12%; 35\u201365% duty; low \u22120.3\u20260.45 V; high 4.0\u20265.3 V."
+        },
+        {
+          "id": "rails",
+          "title": "Power board supply and negative rail",
+          "instructions": "Power board only; no other boards. Connect bench +5 V to J3.2, bench return to J3.1, and W1 to J3.10. No digital board may drive PUMP at the same time. Turn on the bench supply only at the prompt; the script then starts W1. Let the pump settle.",
+          "connections": [
+            {
+              "lead": "Scope 1+",
+              "ref": "J3",
+              "pin": "2",
+              "net": "+5V"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J3",
+              "pin": "16",
+              "net": "-5V"
+            },
+            {
+              "lead": "W1",
+              "ref": "J3",
+              "pin": "10",
+              "net": "PUMP"
+            }
+          ],
+          "expect": "+5 V: 4.75\u20265.25 V; negative rail: \u22125.25\u2026\u22123.50 V. Gross ripple screen \u2264150 mVpp over an 8 ms record, not a microvolt-noise measurement."
+        },
+        {
+          "id": "references",
+          "title": "Check both voltage references",
+          "instructions": "Keep the same supply and pump drive. Switch off the bench supply and let W1 stop at the prompt before moving the two scope leads.",
+          "connections": [
+            {
+              "lead": "Scope 1+",
+              "ref": "J3",
+              "pin": "4",
+              "net": "VREF_P"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J3",
+              "pin": "6",
+              "net": "VREF_N"
+            }
+          ],
+          "expect": "VREF_P: 2.35\u20262.65 V; VREF_N: \u22122.65\u2026\u22122.35 V; each within 3% of half the measured +5 V rail; ripple \u2264150 mVpp."
+        }
+      ]
+    },
+    "digital": {
+      "title": "Digital board tests",
+      "command": "digital",
+      "steps": [
+        {
+          "id": "rails",
+          "title": "Digital board rails",
+          "instructions": "Digital board only; no power or channel boards. J1 shunt 1\u20132 selects the oscillator. Bench +5 V \u2192 J2.1 and GND \u2192 J2.2. Supply +3.3 V \u2192 J2.3 using the selected source. With power OFF, tie QL (J4.12) and QR (J4.14) to GND so mux inputs do not float.",
+          "connections": [
+            {
+              "lead": "Scope 1+",
+              "ref": "J2",
+              "pin": "1",
+              "net": "+5V"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J2",
+              "pin": "3",
+              "net": "+3V3"
+            }
+          ],
+          "expect": "+5 V: 4.75\u20265.25 V; +3.3 V: 3.15\u20263.45 V."
+        },
+        {
+          "id": "clocks",
+          "title": "Clock tree and Pi clock levels",
+          "instructions": "Keep J1 at 1\u20132. Wire the DIO inputs once as below, then attach the scope inputs to the Pi clock outputs. Use grabbers or temporary test wires with power off; DIP pins are close together.",
+          "connections": [
+            {
+              "lead": "DIO0",
+              "ref": "U4",
+              "pin": "10",
+              "net": "CLK6M"
+            },
+            {
+              "lead": "DIO1",
+              "ref": "J4",
+              "pin": "8",
+              "net": "MCLK"
+            },
+            {
+              "lead": "DIO2",
+              "ref": "U4",
+              "pin": "9",
+              "net": "BCLK"
+            },
+            {
+              "lead": "DIO3",
+              "ref": "U4",
+              "pin": "4",
+              "net": "LRCLK"
+            },
+            {
+              "lead": "DIO4",
+              "ref": "J2",
+              "pin": "4",
+              "net": "PI_BCLK"
+            },
+            {
+              "lead": "DIO5",
+              "ref": "J2",
+              "pin": "5",
+              "net": "PI_LRCLK"
+            },
+            {
+              "lead": "DIO6",
+              "ref": "U6",
+              "pin": "4",
+              "net": "DIN"
+            },
+            {
+              "lead": "DIO7",
+              "ref": "J4",
+              "pin": "12",
+              "net": "QL"
+            },
+            {
+              "lead": "DIO8",
+              "ref": "J4",
+              "pin": "14",
+              "net": "QR"
+            },
+            {
+              "lead": "DIO9",
+              "ref": "J2",
+              "pin": "6",
+              "net": "PI_DIN"
+            },
+            {
+              "lead": "DIO10",
+              "ref": "J4",
+              "pin": "10",
+              "net": "PUMP"
+            },
+            {
+              "lead": "Scope 1+",
+              "ref": "J2",
+              "pin": "4",
+              "net": "PI_BCLK"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J2",
+              "pin": "5",
+              "net": "PI_LRCLK"
+            }
+          ],
+          "expect": "CLK6M 6.144 MHz; MCLK 1.536 MHz; BCLK/PI_BCLK 3.072 MHz; LRCLK/PI_LRCLK 48 kHz; PUMP 192 kHz. \u00b12%, 35\u201365% duty. Pi clock highs 2.7\u20263.6 V, lows \u22120.3\u20260.45 V. Non-inverting Pi clock paths: median rising-edge delay \u22121 sample\u2026120 ns (provisional, sample-limited check)."
+        },
+        {
+          "id": "mux",
+          "title": "Four mux cases and DIN level shifting",
+          "instructions": "Retain DIO wiring; move scope 1+ to DIN and 2+ to PI_DIN. The script prompts for all four QL/QR combinations: 0/0, 1/0, 0/1, 1/1. For 0 tie that bus input to GND; for 1 tie it to the board +5 V. Turn power OFF for every change. No channel boards may be attached. Do not use AD3 3.3 V digital outputs to drive 5 V HC inputs.",
+          "connections": [
+            {
+              "lead": "Scope 1+",
+              "ref": "U6",
+              "pin": "4",
+              "net": "DIN"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J2",
+              "pin": "6",
+              "net": "PI_DIN"
+            },
+            {
+              "lead": "Manual jumper QL",
+              "ref": "J4",
+              "pin": "12",
+              "net": "QL"
+            },
+            {
+              "lead": "Manual jumper QR",
+              "ref": "J4",
+              "pin": "14",
+              "net": "QR"
+            }
+          ],
+          "expect": "MCLK LOW selects QR, HIGH selects QL. At settled samples, DIN and PI_DIN must agree with the selected input (>99.5%). Scope verifies both the 5 V DIN and 3.3 V PI_DIN levels for every case."
+        }
+      ]
+    },
+    "left": {
+      "title": "Left channel tests",
+      "command": "left",
+      "steps": [
+        {
+          "id": "rails",
+          "title": "Check supplies under the channel load",
+          "instructions": "Connect ONLY the already-tested power and digital boards plus this one channel through correctly aligned bus connections. Bench +5 V goes to digital J2.1; +3.3 V to digital J2.3. Remove ALL temporary QL/QR-to-rail test jumpers left from the digital tests. Ground the unused channel bus input on DIGITAL ONLY if needed. The populated channel output must never be tied to a rail. W1 is disconnected for now.",
+          "connections": [
+            {
+              "lead": "Scope 1+",
+              "ref": "J7",
+              "pin": "2",
+              "net": "+5V"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J7",
+              "pin": "16",
+              "net": "-5V"
+            }
+          ],
+          "expect": "Same +5 V and negative-rail screening windows, now with a real channel load."
+        },
+        {
+          "id": "references",
+          "title": "Reference voltages at the channel",
+          "instructions": "Power off before moving scope leads; keep the fixture otherwise unchanged.",
+          "connections": [
+            {
+              "lead": "Scope 1+",
+              "ref": "J7",
+              "pin": "4",
+              "net": "VREF_P"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J7",
+              "pin": "6",
+              "net": "VREF_N"
+            }
+          ],
+          "expect": "Both references within their windows and within 3% of half +5 V."
+        },
+        {
+          "id": "quiet",
+          "title": "No-input modulator and feedback check",
+          "instructions": "With power off, short J20.1 to J20.2 (GND). Wire all DIO inputs below. RV20 must be fitted/wired; record its setting. Set J21 1\u20132 for left or 2\u20133 for right. DIO5 connects to J7.12 for left, or J7.14 for right to verify the selected bus output.",
+          "connections": [
+            {
+              "lead": "DIO0",
+              "ref": "U23",
+              "pin": "3",
+              "net": "MCLK"
+            },
+            {
+              "lead": "DIO1",
+              "ref": "U23",
+              "pin": "5",
+              "net": "Q_OUT"
+            },
+            {
+              "lead": "DIO2",
+              "ref": "U23",
+              "pin": "6",
+              "net": "QN_OUT"
+            },
+            {
+              "lead": "DIO3",
+              "ref": "U24",
+              "pin": "4",
+              "net": "DACP_L"
+            },
+            {
+              "lead": "DIO4",
+              "ref": "U24",
+              "pin": "2",
+              "net": "DACN_L"
+            },
+            {
+              "lead": "DIO5, left / right",
+              "ref": "J7",
+              "pin": "12",
+              "net": "QL"
+            }
+          ],
+          "expect": "MCLK 1.536 MHz \u00b12%; Q must toggle with density 35\u201365%. QN and DACN complement Q; DACP and selected bus output follow Q (>99.5% settled agreement). This is a smoke test, not a noise-floor measurement."
+        },
+        {
+          "id": "tone",
+          "title": "Two-level 1 kHz audio-response test",
+          "instructions": "Power off, remove the J20 input short, then connect W1 to J20.1 and AD3 GND to J20.2. Scope 1+ monitors J20.1; scope 2+ monitors J7.2. Keep DIO wiring. The script applies a zero-offset 1 kHz sine at 0.10 Vpeak, then 0.25 Vpeak; keep RV20 unchanged. It captures Q with MCLK, samples Q on falling clock edges, and averages groups of 256 bits.",
+          "connections": [
+            {
+              "lead": "W1 and Scope 1+",
+              "ref": "J20",
+              "pin": "1",
+              "net": "Net-(J20-Pin_1)"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J7",
+              "pin": "2",
+              "net": "+5V"
+            }
+          ],
+          "expect": "Measured input amplitude within 20% of setting, with clean 1 kHz fit. Recovered density must contain 1 kHz (fit R\u00b2 \u22650.25, density amplitude \u22650.003); larger input must produce 1.5\u20263.5\u00d7 the smaller output amplitude. Absolute gain, THD, SNR and 24-bit performance are not certified."
+        }
+      ]
+    },
+    "right": {
+      "title": "Right channel tests",
+      "command": "right",
+      "steps": [
+        {
+          "id": "rails",
+          "title": "Check supplies under the channel load",
+          "instructions": "Connect ONLY the already-tested power and digital boards plus this one channel through correctly aligned bus connections. Bench +5 V goes to digital J2.1; +3.3 V to digital J2.3. Remove ALL temporary QL/QR-to-rail test jumpers left from the digital tests. Ground the unused channel bus input on DIGITAL ONLY if needed. The populated channel output must never be tied to a rail. W1 is disconnected for now.",
+          "connections": [
+            {
+              "lead": "Scope 1+",
+              "ref": "J7",
+              "pin": "2",
+              "net": "+5V"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J7",
+              "pin": "16",
+              "net": "-5V"
+            }
+          ],
+          "expect": "Same +5 V and negative-rail screening windows, now with a real channel load."
+        },
+        {
+          "id": "references",
+          "title": "Reference voltages at the channel",
+          "instructions": "Power off before moving scope leads; keep the fixture otherwise unchanged.",
+          "connections": [
+            {
+              "lead": "Scope 1+",
+              "ref": "J7",
+              "pin": "4",
+              "net": "VREF_P"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J7",
+              "pin": "6",
+              "net": "VREF_N"
+            }
+          ],
+          "expect": "Both references within their windows and within 3% of half +5 V."
+        },
+        {
+          "id": "quiet",
+          "title": "No-input modulator and feedback check",
+          "instructions": "With power off, short J20.1 to J20.2 (GND). Wire all DIO inputs below. RV20 must be fitted/wired; record its setting. Set J21 1\u20132 for left or 2\u20133 for right. DIO5 connects to J7.12 for left, or J7.14 for right to verify the selected bus output.",
+          "connections": [
+            {
+              "lead": "DIO0",
+              "ref": "U23",
+              "pin": "3",
+              "net": "MCLK"
+            },
+            {
+              "lead": "DIO1",
+              "ref": "U23",
+              "pin": "5",
+              "net": "Q_OUT"
+            },
+            {
+              "lead": "DIO2",
+              "ref": "U23",
+              "pin": "6",
+              "net": "QN_OUT"
+            },
+            {
+              "lead": "DIO3",
+              "ref": "U24",
+              "pin": "4",
+              "net": "DACP_L"
+            },
+            {
+              "lead": "DIO4",
+              "ref": "U24",
+              "pin": "2",
+              "net": "DACN_L"
+            },
+            {
+              "lead": "DIO5, left / right",
+              "ref": "J7",
+              "pin": "14",
+              "net": "QR"
+            }
+          ],
+          "expect": "MCLK 1.536 MHz \u00b12%; Q must toggle with density 35\u201365%. QN and DACN complement Q; DACP and selected bus output follow Q (>99.5% settled agreement). This is a smoke test, not a noise-floor measurement."
+        },
+        {
+          "id": "tone",
+          "title": "Two-level 1 kHz audio-response test",
+          "instructions": "Power off, remove the J20 input short, then connect W1 to J20.1 and AD3 GND to J20.2. Scope 1+ monitors J20.1; scope 2+ monitors J7.2. Keep DIO wiring. The script applies a zero-offset 1 kHz sine at 0.10 Vpeak, then 0.25 Vpeak; keep RV20 unchanged. It captures Q with MCLK, samples Q on falling clock edges, and averages groups of 256 bits.",
+          "connections": [
+            {
+              "lead": "W1 and Scope 1+",
+              "ref": "J20",
+              "pin": "1",
+              "net": "Net-(J20-Pin_1)"
+            },
+            {
+              "lead": "Scope 2+",
+              "ref": "J7",
+              "pin": "2",
+              "net": "+5V"
+            }
+          ],
+          "expect": "Measured input amplitude within 20% of setting, with clean 1 kHz fit. Recovered density must contain 1 kHz (fit R\u00b2 \u22650.25, density amplitude \u22650.003); larger input must produce 1.5\u20263.5\u00d7 the smaller output amplitude. Absolute gain, THD, SNR and 24-bit performance are not certified."
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "title": "Digilent WaveForms downloads",
+      "url": "https://digilent.com/reference/software/waveforms/waveforms-3/previous-versions"
+    },
+    {
+      "title": "Analog Discovery 3 electrical specifications",
+      "url": "https://files.digilent.com/datasheets/Analog-Discovery-3-Datasheet.pdf"
+    },
+    {
+      "title": "Official SDK examples",
+      "url": "https://github.com/Digilent/WaveForms-SDK-Getting-Started-PY"
+    },
+    {
+      "title": "Installed SDK: manual and examples",
+      "url": "../downloads/README.md"
+    }
+  ]
+}

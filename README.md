@@ -1,5 +1,9 @@
 # Vinyl ADC
 
+[Assembly guide & bench log](https://vinyl-adc.madsrudolph.dev/) · [6 September test handoff](assembly/sessions/2026-09-06/README.md)
+
+Initial bench tests have reached the digital mux **0/0 Pi-output case**. Power rails were reported working after correcting the W1 offset and BNC jumper; the CLK6M low-level check and remaining digital, loaded-power and channel tests are still open. Resume instructions, screenshots, visual wiring and the exact recorded readings are in the assembly guide. Both channel boards still need their decoupling capacitors. No complete-system audio performance is claimed by these assembly tests.
+
 <p align="center">
   <a href="https://madsrudolph.github.io/vinyl-adc/"><img src="https://img.shields.io/badge/🚀_Interactive_3D-Live_Web_Viewer-38bdf8?style=for-the-badge&logo=webgl&logoColor=white" alt="Live 3D Web Viewer"></a>
   <a href="https://github.com/MadsRudolph/srm-cam"><img src="https://img.shields.io/badge/CNC_Milled_With-SRM--CAM-10b981?style=for-the-badge&logo=cmake&logoColor=white" alt="Milled with SRM-CAM"></a>

@@ -1,0 +1,100 @@
+# Bench handoff — 6 September 2026
+
+Manual WaveForms with AD3 BNC adapter, two scope probes and W1 coax. This is a conversation/screenshot record, not an automated SDK report.
+
+## Resume tomorrow
+
+Mux 1/0 — Pi data (3.3 V)
+
+With Korad, W1 and V+ off and rails discharged, use the complete visual fixture. Change QL from GND to +5 V; QR stays at GND. Scope 1 stays on MCLK (J4.8), Scope 2 on PI_DIN (J2.6). Expected: PI_DIN follows MCLK at approximately 1.536 MHz, with 3.3 V output levels.
+
+Korad POWER off → stop W1 → disable AD3 V+ → verify rails have discharged. Shutdown was requested, not remotely verified.
+
+## Power board: initial negative-rail failure
+
+**Corrected setup** — Screenshot, before correction
+
+- +5 V average: **+4.8988 V**
+- Negative rail average: **−1.84680 V**
+- W1 settings: **192 kHz; 2.5 V amplitude; offset mistakenly 50 mV**
+
+The initial W1 request was −2.45 to +2.55 V instead of 0–5 V. The user also found the BNC W1 jumper at 50 ohms. The offset was corrected to +2.5 V and the jumper fitted at 0 ohms before repeating. This screenshot is not a passing result.
+
+[Measurement screenshot](power-before-clock-fix.png)
+
+## Power board: corrected supply readings
+
+**Within range · user reported** — User reported; no corrected screenshot or raw capture supplied
+
+- +5 V: **Approximately +5 V**
+- Generated negative rail: **Approximately −4.3 V**
+
+Both reported values fall within the provisional unloaded rail windows. This does not establish ripple, current consumption or full-stereo load capacity.
+
+## Power board: positive and negative references
+
+**Works · user reported** — User confirmation only
+
+- Exact reference voltages: **Not recorded**
+
+After moving probe tips to J3.4 and J3.6, the user reported that the reference test works. Do not replace this with invented ±2.500 V measurements. Re-record exact values when convenient.
+
+## External clock and 3.3 V precheck · visual step 5
+
+**Initial screen acceptable** — Screenshot; no PCB connected per procedure
+
+- C1 frequency: **6.1351 MHz**
+- C1 average / peak-to-peak: **1.6375 V / 2.7911 Vpp**
+- C2 average: **+3.2538 V**
+- W1 request: **6.144 MHz; amplitude 1.65 V; offset +1.65 V; 50% symmetry**
+
+The displayed clock is rounded but crosses the HCT input thresholds visually. Exact min/max were not recorded in this screenshot; no precision jitter or duty-cycle result is claimed.
+
+[Measurement screenshot](external-clock-precheck.png)
+
+## Digital-board supplies · visual step 6
+
+**Voltage means within range** — Screenshot
+
+- C1 +5 V average: **+4.9197 V**
+- C2 +3.3 V average: **+3.2538 V**
+- Displayed C1 peak-to-peak: **19.117 mV; not a qualified ripple test**
+
+The display was at 1 ns/div. The screenshot establishes the reported mean voltages, not the specified long-record ripple screen. Korad current was not recorded.
+
+[Measurement screenshot](digital-rails.png)
+
+## CLK6M / MCLK · visual step 7, first pair
+
+**Frequency ratio good · level pending** — Latest screenshot; supersedes the earlier coarse view
+
+- C1 CLK6M frequency: **6.1228 MHz**
+- C1 minimum / maximum: **0.51370 V / 4.6717 V**
+- C2 MCLK frequency: **1.5310 MHz**
+- C2 minimum / maximum: **0.22317 V / 4.4919 V**
+
+Frequency readings are within ±2% and show divide-by-four operation. C1 minimum exceeds the provisional 0.45 V LOW screen. That concern was deliberately left unresolved when moving on. Recheck probe attenuation, compensation, ground connection and the waveform before declaring this pair fully passed. Duty cycle and delay were not measured.
+
+[Measurement screenshot](clock-divider.png)
+
+## Mux QL/QR = 0/0, Pi data · visual step 8
+
+**Expected LOW observed** — Screenshot plus user confirmation of 0/0 and Pi data selection
+
+- C1 MCLK frequency: **1.5350 MHz**
+- C1 minimum / maximum: **0.37988 V / 4.4678 V**
+- C2 PI_DIN average: **31.940 mV**
+- C2 minimum / maximum: **−31.353 mV / 96.072 mV**
+
+This is the mux 0/0 Pi-output test, not BCLK/PI_BCLK. Its near-zero output is expected. It is only a functional check of this static LOW case, not a pass for all mux cases or the complete digital board.
+
+[Measurement screenshot](mux-00-pi.png)
+
+## Remaining work
+
+- Resume mux 1/0 with Pi data selected, then 0/1 and 1/1. Test all four cases on raw DIN too.
+- Return to visual step 7: BCLK/Pi BCLK, LRCLK/Pi LRCLK, and clock input/PUMP have not been checked.
+- Resolve CLK6M LOW minimum of 0.51370 V and check duty cycles, output levels and clock-path polarity/delay.
+- Record exact reference voltages, Korad current and meaningful long-record ripple measurements.
+- Power + digital combined fixture has not been tested; do it after the standalone checks.
+- Both channels still need seven 100 nF decoupling capacitors each. X1 is still missing. No channel, full-stack or audio-performance test has passed.
