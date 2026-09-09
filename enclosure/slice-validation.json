@@ -1,0 +1,18 @@
+{
+  "tool": "PrusaSlicer-2.9.6+arch5 based on Slic3r (with GUI support)",
+  "model_sha256": "d8db5c4fff0c48a1c046c472037ff31453036bf6cacba4cab8a516363af0ac3a",
+  "settings_sha256": "15faa66ecaeefd157a9874c8c761d0c12c97b9bc3961c82b92eff242cbd667e8",
+  "settings_file": "print-settings.ini",
+  "nozzle_diameter_mm": 0.4,
+  "orientation": "upright, floor on bed",
+  "organic_supports": true,
+  "supports_on_model_allowed": true,
+  "exported_gcode": true,
+  "warnings": [],
+  "reference_slice_only": true,
+  "reference_slice_statistics": {
+    "filament used [cm3]": "228.77",
+    "estimated printing time (normal mode)": "1d 10h 38m 12s"
+  },
+  "physical_print_tested": false
+}

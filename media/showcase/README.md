@@ -1,47 +1,24 @@
-# Vinyl ADC showcase animations
+# Vinyl ADC lattice enclosure GIFs
 
-Three seamless six-second loops, rendered from `enclosure/vinyl_adc_enclosure.blend`:
+Three seamless six-second loops show the revised 105 mm tall enclosure:
 
-| Clip | View |
+| GIF | View |
 | --- | --- |
-| `orbit` | Full 360° product orbit with the enclosure assembled |
-| `assembly` | Explode and reassemble the original PCB stack and lid |
-| `electronics` | Isolated four-board stack with a gently moving camera |
+| [orbit.gif](orbit.gif) | Full 360° product orbit with the assembly closed |
+| [assembly.gif](assembly.gif) | Explode and reassemble the PCB stack and acrylic lid |
+| [electronics.gif](electronics.gif) | Isolated four-board stack with a gently moving camera |
 
-Each clip includes a 960 × 720, 24 fps H.264 MP4, a 560 × 420, 10 fps looping GIF, and a PNG poster. MP4 files have fast-start metadata and no audio. Use MP4 for the portfolio and GIF for GitHub README images. Exact sizes are in `manifest.json`.
+GIFs are 720 × 540 at 12 fps. Each also has a 960 × 720 PNG poster and a 12 fps H.264 MP4 fallback. The gallery and portfolio display the GIFs, with a still-image toggle and reduced-motion handling. Sizes are recorded in [manifest.json](manifest.json).
 
-Open `index.html` to preview all three clips. The gallery includes playback controls and respects reduced-motion preferences.
+[Print files and instructions](../../enclosure/README.md) · [Interactive 3D model](https://madsrudolph.github.io/vinyl-adc/)
 
-## GitHub README
+These are CAD visualizations, not photographs of a finished print. The taller stack uses illustrative 23 mm inter-board spacers. The electronics view hides the enclosure and wiring for clarity.
 
-```markdown
-![Vinyl ADC exploded assembly](media/showcase/assembly.gif)
-```
-
-## Portfolio
-
-Copy the chosen MP4 and poster to the website's public assets directory, then adjust these paths to match:
-
-```html
-<video controls muted loop playsinline preload="metadata"
-       poster="/media/vinyl-adc/orbit-poster.png"
-       aria-label="Vinyl ADC enclosure rotating through a full turn"
-       style="width:100%;height:auto">
-  <source src="/media/vinyl-adc/orbit.mp4" type="video/mp4">
-</video>
-```
-
-For automatic playback, use the gallery's reduced-motion-aware script. Keep controls available so visitors can pause movement. Assets are prepared locally; this does not publish changes to madsrudolph.dev.
-
-## Reproduce or edit
-
-From the repository root, using Blender 5.2 and FFmpeg:
+## Reproduce
 
 ```sh
-blender -b enclosure/vinyl_adc_enclosure.blend --python enclosure/animation/render_showcase.py
+blender --factory-startup -b enclosure/vinyl_adc_enclosure.blend -noaudio --gpu-backend opengl --python enclosure/animation/render_showcase.py
 python enclosure/animation/encode_showcase.py
 ```
 
-Pass `-- --preview` for two preview frames per clip or `-- --clip orbit` to render one clip. The render script generates editable `orbit.blend`, `assembly.blend`, and `electronics.blend` files under `enclosure/animation/`. Frame 145 matches frame 1; exports stop at frame 144 to avoid a duplicated loop endpoint. Generated blend files and intermediate PNG sequences are ignored by Git; the source scripts and final exports are tracked.
-
-The original CAD file is preserved. The showcase copies use studio lighting, a slate floor, and a simplified transparent acrylic shader. The electronics shot hides enclosure and wiring for visibility; it is an illustrative exploded view, not an assembly instruction.
+Use `-- --preview` for frames 1 and 37 of each clip, or `-- --clip orbit` for one clip. Editable animation scenes are generated under `enclosure/animation/`; intermediate frames and scenes are ignored by Git. Frame 73 matches frame 1; export stops at frame 72 to avoid a duplicate endpoint. The encoder verifies the source scene hash, frame count, GIF dimensions and duration so mixed or stale frame sequences cannot be published accidentally.

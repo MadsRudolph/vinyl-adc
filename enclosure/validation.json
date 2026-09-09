@@ -1,0 +1,85 @@
+{
+  "dimensions_mm": [
+    144,
+    144,
+    105
+  ],
+  "nominal_rib_diameter_mm": 5.4,
+  "sampled_minimum_rib_width_mm": 4.609166383743286,
+  "rib_width_samples": 4105,
+  "corner_support_diameter_mm": 6.8,
+  "lid_insert_boss_diameter_mm": 12,
+  "supports_required": true,
+  "height_increase_mm": 40,
+  "lid_underside_mm": 102,
+  "inter_board_standoff_mm": 23,
+  "board_bounds_mm": {
+    "Real_PCB_1_Power_Root": {
+      "bottom": 8.295000076293945,
+      "top": 21.594999313354492
+    },
+    "Real_PCB_2_Channel_R_Root": {
+      "bottom": 32.89500045776367,
+      "top": 46.19499969482422
+    },
+    "Real_PCB_3_Channel_L_Root": {
+      "bottom": 57.49500274658203,
+      "top": 70.79499816894531
+    },
+    "Real_PCB_4_Digital_Root": {
+      "bottom": 82.09500122070312,
+      "top": 93.93500518798828
+    }
+  },
+  "lid_clearance_mm": 8.064994812011719,
+  "mesh_components": 1,
+  "watertight": true,
+  "triangles": 245864,
+  "volume_mm3": 212195.33158404744,
+  "lid_insert_pilot_diameter_mm": 4.2,
+  "lid_insert_centres_mm": [
+    [
+      -64,
+      -64
+    ],
+    [
+      -64,
+      64
+    ],
+    [
+      64,
+      -64
+    ],
+    [
+      64,
+      64
+    ]
+  ],
+  "connector_lands": {
+    "right": [
+      [
+        0,
+        50,
+        16,
+        48
+      ]
+    ],
+    "front": [
+      [
+        -36,
+        -14,
+        21,
+        43
+      ]
+    ],
+    "back": [
+      [
+        -43,
+        23,
+        44,
+        66
+      ]
+    ],
+    "left": []
+  }
+}

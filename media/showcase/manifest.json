@@ -4,26 +4,32 @@
     "seconds": 6,
     "width": 960,
     "height": 720,
-    "fps": 24,
-    "mp4_bytes": 829295,
-    "gif_bytes": 4510172
+    "fps": 12,
+    "mp4_bytes": 1534691,
+    "gif_width": 720,
+    "gif_height": 540,
+    "gif_bytes": 13790181
   },
   {
     "name": "assembly",
     "seconds": 6,
     "width": 960,
     "height": 720,
-    "fps": 24,
-    "mp4_bytes": 613119,
-    "gif_bytes": 4204144
+    "fps": 12,
+    "mp4_bytes": 779702,
+    "gif_width": 720,
+    "gif_height": 540,
+    "gif_bytes": 12044740
   },
   {
     "name": "electronics",
     "seconds": 6,
     "width": 960,
     "height": 720,
-    "fps": 24,
-    "mp4_bytes": 860572,
-    "gif_bytes": 4620821
+    "fps": 12,
+    "mp4_bytes": 727032,
+    "gif_width": 720,
+    "gif_height": 540,
+    "gif_bytes": 10142876
   }
 ]

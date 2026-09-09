@@ -24,7 +24,7 @@ Initial bench tests have reached the digital mux **0/0 Pi-output case**. Power r
 </p>
 
 <p align="center">
-  <a href="media/showcase/README.md">Download MP4 videos &amp; website embeds</a>
+  <a href="media/showcase/README.md">Download GIF animations &amp; print files</a>
 </p>
 
 <details>
@@ -59,9 +59,15 @@ Initial bench tests have reached the digital mux **0/0 Pi-output case**. Power r
 | **Analog Inputs** | Gold RCA Phono Jacks &amp; 5.08 mm Screw Terminals | Switchable input gain via front-panel multi-turn trim potentiometer |
 | **Analog Grounding** | Star-ground topology with tonearm binding post | Eliminates 50 Hz turntable motor hum and ground-loop switching transients |
 | **PCB Manufacturing** | Isolation-milled single-sided copper FR4 | Toolpaths generated via [**SRM-CAM**](https://github.com/MadsRudolph/srm-cam) on a **Roland SRM-20** mill |
-| **Enclosure Dimensions** | $144.0\text{ mm} \times 144.0\text{ mm} \times 65.0\text{ mm}$ | 3D-printed PETG base with recessed laser-engraved $3.0\text{ mm}$ acrylic lid |
+| **Enclosure Dimensions** | $144.0\text{ mm} \times 144.0\text{ mm} \times 105.0\text{ mm}$ | Open organic lattice, reinforced connector islands and M3 lid inserts; recessed $3.0\text{ mm}$ acrylic lid |
 
 ---
+
+## Printable enclosure
+
+The enclosure has an open, rounded lattice on all four sides and 40 mm more height for the PCB stack and cable routing. Solid connector islands and reinforced lid-insert bosses carry the mounting loads. **Print upright with supports**; the revised mesh and supported slice pass validation, but physical print/fit testing is still pending.
+
+[STL, 3MF, insert-fit coupon and printing instructions](enclosure/README.md) · [Three looping GIFs](media/showcase/README.md)
 
 ## Signal Processing Flow
 
@@ -190,7 +196,7 @@ graph TD
 │   └── design-notes.md            # Circuit design decisions and SPICE findings
 ├── enclosure/                      # 3D print and laser cutting files
 │   ├── vinyl_adc_enclosure.blend  # Complete Blender 3D CAD scene
-│   ├── vinyl_adc_enclosure_base.3mf # PrusaSlicer print file
+│   ├── vinyl_adc_enclosure_base.3mf # Millimetre print mesh
 │   ├── vinyl_adc_enclosure_base.stl # Watertight binary STL
 │   ├── vinyl_adc_plexiglass_top.svg # 1:1 Spirit laser cutter SVG
 │   ├── vinyl_adc_plexiglass_top.dxf # 1:1 AutoCAD R12 DXF
