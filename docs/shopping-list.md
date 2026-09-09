@@ -75,6 +75,7 @@ Measure the shop's part; if it differs the footprint changes, not the part.
 | TL072 | Linear | DIP-8 | 5 | 6 | power U2 (reference), channel U20, U22 (integrators) |
 | LM311 | Linear | DIP-8 | 2 | 3 | channel U21 (comparator) |
 | 74HC04 | 74HC CMOS Logic | DIP-14 | 2 | 3 | channel U24 (1-bit DAC gates) |
+| 27p ceramic | Capacitor Ceramic | disc | 2 | 4 | digital C16, C17 (crystal load caps; 22p/33p also usable) |
 | 74HC74 | 74HC CMOS Logic | DIP-14 | 2 | 3 | channel U23 (retiming flip-flop) |
 | 74HCT132 | 74HCT Logic | DIP-14 | 1 | 2 | digital U3 (clock input buffer) - **HCT, not HC** |
 | 74HC157 | 74HC CMOS Logic | DIP-16 | 1 | 2 | digital U6 (L/R interleave mux) |
@@ -88,12 +89,12 @@ do. The shop stocks both, so read the label.
 
 ## DIP sockets - shelf "IC Socket"
 
-Every IC is socketed, and so is the oscillator can.
+Every IC is socketed. The 6.144 MHz crystal (Y1) solders in directly.
 
 | Shop code | Need | Grab | For |
 |---|---:|---:|---|
-| DIP8 Socket | 8 | 9 | 5 x TL072, 2 x LM311, 1 x oscillator can |
-| DIP14 Socket | 5 | 6 | 2 x 74HC04, 2 x 74HC74, 74HCT132 |
+| DIP8 Socket | 7 | 8 | 5 x TL072, 2 x LM311 |
+| DIP14 Socket | 6 | 7 | 2 x 74HC04, 2 x 74HC74, 74HCT132, 74HCU04 |
 | DIP16 Socket | 3 | 4 | 74HC157, 74HC4040, 74HC4049 |
 | DIP20 Socket | 1 | 1 | 74HC244 |
 
@@ -114,7 +115,8 @@ The shop's list has none of the following. They go on one order together.
 
 | Item | Qty | Notes |
 |---|---:|---|
-| **6.144 MHz crystal oscillator can**, DIP-8 footprint, 5 V or 3.3 V | 1 (+1 spare) | X1. The one part the whole design depends on: the Pi's GPCLK0 as a substitute costs about 3 dB of SNR. Full-size or half-size can both drop into the DIP-8 socket. |
+| **74HCU04** unbuffered hex inverter, DIP-14 | 1 (+1 spare) | U9, the Pierce oscillator gate around the 6.144 MHz crystal already in hand. Must be the UNBUFFERED part -- a buffered 74HC04 can take off at ~30 MHz through the crystal's holder capacitance (design-notes §5). Pin-identical to 74HC04. |
+| ~~6.144 MHz crystal oscillator can~~ | 0 | Superseded: a bare 6.144 MHz crystal was found and the clock is now an on-board Pierce (rev B) or the plug-in module in `hardware/kicad/osc_module/` (rev A). A can still drops straight into rev A's X1 socket if one ever surfaces. |
 | **2x8 stacking headers, 2.54 mm** | 4 sets | The board-to-board bus (J3, J4, J7 x2). One plain female socket for the top board, one long-pin male for the bottom, two pass-through stacking headers for the middle. The shop's "Double Male" and "Female Header" strips can stand in for top and bottom, but nothing it stocks does the pass-through middle pair. |
 | **M3 x 11 mm standoffs** | 16 | Four per board gap and mount. Confirm the length against the stacking header you actually order. |
 | **M3 screws and nuts** | 16 + 16 | For the standoffs. |

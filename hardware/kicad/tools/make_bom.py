@@ -26,13 +26,16 @@ import re
 import sys
 import paths
 
-sys.path.insert(0, r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts")
+sys.path.insert(0, next(q for q in (r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts", os.path.expanduser("~/.claude/skills/kicad-schematic/scripts")) if os.path.isdir(q)))
 import schlib  # noqa: E402
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-SHOP = (r"C:\Users\Mads2\KiCad\DTU-EKB-components\Components\parts"
-        r"\dtu_component_shop.csv")
+SHOP = next(q for q in (
+    r"C:\Users\Mads2\KiCad\DTU-EKB-components\Components\parts"
+    r"\dtu_component_shop.csv",
+    os.path.expanduser("~/Downloads/dtu_component_shop.csv"),
+) if os.path.exists(q))
 
 # value -> (category hint, what to look for in the shop list)
 IC_ALIASES = {"74HCT132": "74HCT132", "74HC157": "74HC157",
@@ -196,10 +199,10 @@ def main():
     print()
     print("## Sockets")
     print()
-    print("Use DIP sockets for every IC (all stocked): 8-pin for the TL072s,")
-    print("the LM311s and the oscillator can, 14-pin for the 74HC04 / 74HC74 /")
+    print("Use DIP sockets for every IC (all stocked): 8-pin for the TL072s")
+    print("and the LM311s, 14-pin for the 74HC04 / 74HCU04 / 74HC74 /")
     print("74HCT132, 16-pin for the 74HC157 / 74HC4040 / 74HC4049, 20-pin for")
-    print("the 74HC244.")
+    print("the 74HC244. The crystal Y1 solders in directly.")
     print()
     print("## The stacking bus")
     print()
@@ -224,7 +227,7 @@ def main():
     print("bottom one, and a pass-through stacking header on the two in the")
     print("middle. All three are the same sixteen pads. You need 4 sets plus")
     print("16 x 11 mm M3 standoffs and the M3 screws; the shop carries none of")
-    print("them, so they go on the same order as the oscillator can.")
+    print("them, so they go on the same order as the 74HCU04.")
     print()
     print("## Which channel is which")
     print()

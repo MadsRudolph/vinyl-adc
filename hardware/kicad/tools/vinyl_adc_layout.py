@@ -20,7 +20,10 @@ Sheet plan (A2, four bands, signal left to right in each):
 import sys
 import os
 
-SKILL = r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts"
+SKILL = next(p for p in (
+    r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts",
+    os.path.expanduser("~/.claude/skills/kicad-schematic/scripts"),
+) if os.path.isdir(p))
 sys.path.insert(0, SKILL)
 
 from schdraw import Sheet                     # noqa: E402
@@ -533,34 +536,105 @@ def clock_divider(sh, dx, y, clk_label="CLK6M", out_labels=True,
 # clocked goes on the digital one.  Calling one function from all three sheets
 # is the only thing that keeps the halves equal to the whole.
 
+def blk_pierce(sh, ox, y, refs=("Y1", "U9", "R10", "R11", "C16", "C17"),
+               spares=True):
+    """Pierce oscillator around a 74HC04: the 2-pin crystal replaces the can.
+
+    Textbook shape: the gate on the signal line, R_f looped over it, the
+    crystal bridging input to output underneath, a load cap hanging off each
+    crystal leg onto one ground rail, and R_s standing between the gate's
+    output and the crystal so the pi network filters the edge and the crystal
+    is not overdriven.  A second gate squares the output up; the oscillator
+    node itself never leaves the block.
+
+    R_s = 2k2 damps the crystal drive AND, with C2, is what stops the gate
+    oscillating through the crystal's own 5 pF holder capacitance instead of
+    its motional branch -- sim_i_pierce showed 1k lets that parasitic win.
+    The gate must be the UNBUFFERED 74HCU04 (pin-identical to 74HC04): a
+    buffered gate's three-stage gain sustains the same parasitic at any R_s
+    the crystal mode survives.  27 p per side assumes
+    the usual CL ~ 18 pF and a few pF of stray -- the exact value only pulls
+    the frequency by tens of ppm, which is inaudible.  R_f ~ 1M biases the
+    gate into its linear region.  Returns the buffer's output pin.
+    """
+    yr, yu, yo = refs[0], refs[1], refs[2:]
+    y0 = y + G(8)                       # signal row, same as the can's
+    g1 = sh.place("74xx:74HC04", yu, at=(ox + G(10), y0), unit=1,
+                  value="74HCU04")
+    xa, xo = g1.pin(1).x, g1.pin(2).x   # gate input / output columns
+    yf = y0 - G(8)                      # feedback row, over the gate --
+                                        # G(6) buries R_f's text in U9A's
+    yx = y0 + G(6)                      # crystal row
+    yc = yx + G(6)                      # load-cap row
+    # R_f over the top, a clean rectangular loop
+    rf = sh.place(R_LIB, yo[0], at=(ox + G(10), yf), rot=90, value="1M")
+    fl, fr = sorted(rf.pins, key=lambda q: q.x)
+    sh.seg(g1.pin(1), (xa, yf))
+    sh.seg((xa, yf), fl)
+    sh.seg(fr, (xo, yf))
+    sh.seg((xo, yf), g1.pin(2))
+    # R_s drops from the gate output down into the crystal's right leg
+    rs = sh.place(R_LIB, yo[1], at=(xo, y0 + G(3)), rot=0, value="2k2")
+    st, sb = sorted(rs.pins, key=lambda q: q.y)
+    sh.seg(g1.pin(2), st)
+    sh.seg(sb, (xo, yx))
+    # the crystal bridges the two columns underneath the gate
+    x1 = sh.place("Device:Crystal", yr, at=(ox + G(10), yx), value="6.144MHz")
+    cl, cr = sorted(x1.pins, key=lambda q: q.x)
+    sh.seg(g1.pin(1), (xa, yx))
+    sh.seg((xa, yx), cl)
+    sh.seg(cr, (xo, yx))
+    # one load cap per leg, both onto one rail with a single ground
+    yg = yc + G(4)
+    for x_, cref in ((xa, yo[2]), (xo, yo[3])):
+        c = sh.place(C_LIB, cref, at=(x_, yc), rot=0, value="27p")
+        ct, cb = sorted(c.pins, key=lambda q: q.y)
+        sh.seg((x_, yx), ct)
+        sh.seg(cb, (x_, yg))
+    sh.seg((xa, yg), (xo, yg))
+    sh.gnd((round((xa + xo) / 2 / 1.27) * 1.27, yg))
+    # the buffer: same package, taps the gate output, squares it up
+    g2 = sh.place("74xx:74HC04", yu, at=(ox + G(24), y0), unit=2,
+                  value="74HCU04")
+    sh.seg(g1.pin(2), g2.pin(3))
+    if spares:
+        # G(18) pitch, exactly like U3's spares: at G(14) the next gate's
+        # tie-low bus runs straight through the previous gate's output pin
+        # and grounds it
+        for i, un in enumerate((3, 4, 5, 6)):
+            gx_ = ox + i * G(18)
+            g = sh.place("74xx:74HC04", yu, at=(gx_, y + G(40)),
+                         unit=un, value="74HCU04")
+            li, ri = gate_pins(g, gx_)
+            tie_low(sh, *li)
+            sh.nc(*ri)
+        # low and to the right, between the two spare strips: the selected
+        # clock crosses this block at y+G(24), and ic_supply's ground symbol
+        # hangs 2.54 below its rail -- put the supply unit any higher and
+        # that pin lands exactly ON the clock wire, where the emitter will
+        # dutifully junction it
+        u9p = sh.place("74xx:74HC04", yu, at=(ox + G(66), y + G(44)),
+                       unit=7, value="74HCU04")
+        ic_supply(sh, u9p, 14, 7, "C9", u9p.pin(14).x + G(8))
+    return g2.pin(4)
+
+
 def blk_oscillator(sh, ox, y):
-    """The 6.144 MHz can, and the jumper selecting it or the Pi's GPCLK0.
+    """The 6.144 MHz Pierce oscillator, and the jumper selecting it or GPCLK0.
 
     Returns the point at which the selected clock leaves the jumper, so the
     buffer downstream can wire to it rather than name it.
     """
-    x1 = sh.place("Oscillator:CXO_DIP8", "X1", at=(ox, y + G(8)),
-                  value="6.144MHz")
-    sh.seg(x1.pin(1), (x1.pin(1).x - STUB, x1.pin(1).y))
-    sh.rail((x1.pin(1).x - STUB, x1.pin(1).y), net="+5V", rise=STUB)
-    sh.seg(x1.pin(8), (x1.pin(8).x, x1.pin(8).y - STUB))
-    sh.rail((x1.pin(8).x, x1.pin(8).y - STUB), net="+5V", rise=STUB)
-    sh.seg(x1.pin(4), (x1.pin(4).x, x1.pin(4).y + STUB))
-    sh.gnd((x1.pin(4).x, x1.pin(4).y + STUB))
-    c9 = sh.place(C_LIB, "C9", at=(ox + G(12), y + G(8)), rot=0, value="100n")
-    sh.seg(x1.pin(8), (ox + G(12), x1.pin(8).y))
-    sh.seg((ox + G(12), x1.pin(8).y), c9.pin(1))
-    sh.seg(c9.pin(2), (ox + G(12), x1.pin(4).y))
-    sh.seg(x1.pin(4), (ox + G(12), x1.pin(4).y))
+    out = blk_pierce(sh, ox, y)
 
-    # J1 sits below the can so the oscillator's output run clears its pins,
-    # and every approach is horizontal: a vertical down a header's pin column
+    # J1 sits below the oscillator so its output run clears the pins, and
+    # every approach is horizontal: a vertical down a header's pin column
     # shorts every pin it passes.
     j1 = sh.place("Connector_Generic:Conn_01x03", "J1",
-                  at=(ox + G(30), y + G(16)), mirror="y", value="CLK SEL")
+                  at=(ox + G(44), y + G(16)), mirror="y", value="CLK SEL")
     far = j1.pin(1).x + G(10)
-    sh.seg(x1.pin(5), (far, x1.pin(5).y))
-    sh.seg((far, x1.pin(5).y), (far, j1.pin(1).y))
+    sh.seg(out, (far, out.y))
+    sh.seg((far, out.y), (far, j1.pin(1).y))
     sh.seg((far, j1.pin(1).y), j1.pin(1))
     # G(8), not G(2): the jumper's "CLK SEL" value text is drawn just right
     # of its pins and a nearer label sits underneath it
@@ -569,9 +643,9 @@ def blk_oscillator(sh, ox, y):
     sh.seg(j1.pin(2), (j1.pin(2).x + G(5), j1.pin(2).y))
     sh.seg((j1.pin(2).x + G(5), j1.pin(2).y), (j1.pin(2).x + G(5), y + G(24)))
     note_block(sh, (ox - G(2), y + G(30)),
-            "Jumper 1-2 = on-board can (crystal jitter 20 ps -> 102 dB floor).\n"
-            "Jumper 2-3 = Pi GPCLK0 fallback: ~1 ns jitter -> 68 dB floor,\n"
-            "which would become the dominant noise source.  Bring-up only.",
+            "Jumper 1-2 = crystal Pierce (ps jitter -> ~100 dB floor).\n"
+            "Jumper 2-3 = Pi GPCLK0: ~1 ns -> 68 dB floor, the dominant\n"
+            "noise source if left there.  Bring-up only.",
             size=1.27)
     return (j1.pin(2).x + G(5), y + G(24))
 
@@ -1024,13 +1098,13 @@ def band_digital(sh, y):
             "CLOCK AND DIGITAL  (6.144 MHz -> /2 BCLK 3.072M, /4 MCLK 1.536M, "
             "/128 LRCLK 48k;  L and R interleaved onto one DIN)", size=2.0)
     sel = blk_oscillator(sh, G(18), y)
-    # G(74) is far enough right that the buffer's input riser clears every
-    # stub on the clock-select jumper
-    blk_clock_buffer(sh, G(74), y, sel)
-    clock_divider(sh, G(126), y)
-    blk_mux(sh, G(184), y)
-    blk_levelshift(sh, G(240), y)
-    blk_pi_header(sh, G(310), y)
+    # G(104) is far enough right that the buffer's input riser clears every
+    # stub on the clock-select jumper and the Pierce's supply unit
+    blk_clock_buffer(sh, G(104), y, sel)
+    clock_divider(sh, G(156), y)
+    blk_mux(sh, G(214), y)
+    blk_levelshift(sh, G(270), y)
+    blk_pi_header(sh, G(340), y)
 
 
 # ====================================================== BANDS C/D: MODULATORS
@@ -1312,8 +1386,12 @@ FOOTPRINTS = {
     "Amplifier_Operational:TL074": FP_DIP.format(14),
     # a DIP-8 SOCKET footprint, not Oscillator:Oscillator_DIP-8: the can is
     # socketed like every other IC here, and a socket wants all eight pads
-    # even though the oscillator only uses 1/4/5/8
+    # even though the oscillator only uses 1/4/5/8.  Kept for the plug-in
+    # oscillator module, which fills exactly that socket.
     "Oscillator:CXO_DIP8": FP_DIP.format(8),
+    # 0.8 mm drill matches the shop's bits; the 4.88 mm pin gap clears the
+    # end mill with 3 mm to spare
+    "Device:Crystal": "Crystal:Crystal_HC49-U_Vertical",
     "74xx:74HC04": FP_DIP.format(14),
     "74xx:74HC74": FP_DIP.format(14),
     "74xx:74LS132": FP_DIP.format(14),      # fitted as 74HCT132
@@ -1585,11 +1663,11 @@ def board_digital(sh):
             "CLOCK  (6.144 MHz -> /2 BCLK 3.072M, /4 MCLK 1.536M, "
             "/32 PUMP 192k, /128 LRCLK 48k)", size=2.0)
     sel = blk_oscillator(sh, G(18), y1)
-    clk6m = blk_clock_buffer(sh, G(74), y1, sel)
-    div = clock_divider(sh, G(126), y1)
-    blk_pi_header(sh, G(206), y1)
+    clk6m = blk_clock_buffer(sh, G(104), y1, sel)
+    div = clock_divider(sh, G(156), y1)
+    blk_pi_header(sh, G(236), y1)
     # this half is powered entirely through J2, so its flags belong beside it
-    power_flags(sh, G(186), y1 - G(12), ("+5V", "+3V3", "GND"))
+    power_flags(sh, G(216), y1 - G(12), ("+5V", "+3V3", "GND"))
 
     note_block(sh, (G(16), y2 - G(16)),
             "INTERLEAVE AND LEVEL SHIFT  (L and R onto one DIN at 3.072 Mbps, "

@@ -27,7 +27,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-SKILL = Path(r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts")
+SKILL = next(p for p in (
+    Path(r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts"),
+    Path.home() / ".claude/skills/kicad-schematic/scripts",
+) if p.is_dir())
 sys.path.insert(0, str(SKILL))
 
 HERE = Path(__file__).resolve().parent
@@ -68,6 +71,7 @@ SIM_HC04 = subckt(MODELS, "INV_74HC", "1=in 2=out 3=vcc 4=vss",
                   tpd="9n", ron="50")
 SIM_HC4049 = subckt(MODELS, "INV_74HC", "1=in 2=out 3=vcc 4=vss",
                     tpd="25n", ron="100")
+SIM_HCU04 = subckt(MODELS, "INV_74HCU", "1=in 2=out 3=vcc 4=vss")
 SIM_HCT132 = subckt(MODELS, "NAND2_74HCT132", "1=a 2=b 3=y 14=vcc 7=vss")
 SIM_DFF = subckt(MODELS, "DFF_74HC74",
                  "2=d 3=clk 4=sn 1=rn 5=q 6=qn 14=vcc 7=vss")
@@ -120,6 +124,8 @@ WORKBOOK = {
                         ["V(/PI_DIN)", "V(/PI_BCLK)", "V(/PI_LRCLK)"]),
     "sim_h_loop": (".tran 10n 3m uic",
                    ["V(/INT1)", "V(/INT3)", "V(/QL)", "V(/WIPER)"]),
+    "sim_i_pierce": (".tran 2n 400u uic",
+                     ["V(/OSCA)", "V(/CLKOUT)"]),
 }
 
 BENCHES = []
@@ -1032,10 +1038,103 @@ def build_h(sh):
 
 
 # ===========================================================================
+# I  the Pierce oscillator that replaced the can
+# ===========================================================================
+@bench("sim_i_pierce", "I - 6.144 MHz Pierce oscillator, 74HC04 + crystal",
+       "b1000000-0000-4000-8000-000000000009")
+def build_i(sh):
+    sim = {}
+    note_block(sh, (G(10), G(8)),
+               "I  Pierce oscillator  (74HCU04 + 6.144 MHz crystal -- the "
+               "2-pin part that replaced the unobtainable can)", size=2.0)
+
+    dc_supply(sh, sim, "V1", G(14), G(26), 5, "+5V")
+
+    # the amplifier gate and the buffer, one row, wired like the board
+    g1 = gate(sh, sim, "U9A", G(60), G(30), SIM_HCU04, "74HCU04")
+    g2 = gate(sh, sim, "U9B", G(120), G(30), SIM_HCU04, "74HCU04")
+    ina, outa = g1.pin("A"), g1.pin("Y")
+
+    # node A column: gate input, Rf's left end, the crystal's left leg, C1
+    xa, xb = G(36), G(84)
+    sh.seg(ina, (xa, ina.y))
+    sh.label((xa, ina.y), "OSCA", kind="global")
+    sh.seg((xa, ina.y), (xa, G(52)))
+    # the amplifier output runs straight through to the buffer; Rf and Rs
+    # tap it on the way
+    sh.seg(outa, g2.pin("A"))
+    # Rf across the gate: output column G(76) down, across, up into node A
+    rf = sh.place(R_LIB, "R10", at=(G(56), G(46)), rot=90, value="1M")
+    fl, fr = sorted(rf.pins, key=lambda q: q.x)
+    sh.seg((xa, G(46)), fl)
+    sh.seg(fr, (G(76), G(46)))
+    sh.seg((G(76), G(46)), (G(76), outa.y))
+    # Rs drops from the output run into the crystal's far leg
+    rs = sh.place(R_LIB, "R11", at=(xb, G(37)), rot=0, value="2k2")
+    st, sb = sorted(rs.pins, key=lambda q: q.y)
+    sh.seg((xb, outa.y), st)
+    sh.seg(sb, (xb, G(52)))
+    # the crystal: ONE symbol, the model carries Rm/Lm/Cm/Co
+    y1 = sh.place("Device:Crystal", "Y1", at=(G(46), G(52)),
+                  value="6.144MHz")
+    sim["Y1"] = subckt(MODELS, "XTAL_6M144", "1=a 2=b")
+    cl, cr = sorted(y1.pins, key=lambda q: q.x)
+    sh.seg((xa, G(52)), cl)
+    sh.seg(cr, (xb, G(52)))
+    # load caps onto one rail, one ground
+    for x_, cref in ((xa, "C16"), (xb, "C17")):
+        c = sh.place(C_LIB, cref, at=(x_, G(58)), rot=0, value="27p")
+        ct, cb = sorted(c.pins, key=lambda q: q.y)
+        sh.seg((x_, G(52)), ct)
+        sh.seg(cb, (x_, G(64)))
+    sh.seg((xa, G(64)), (xb, G(64)))
+    sh.gnd((G(60), G(64)))
+
+    # the kick: uic starts every node at zero and the bias then creeps up
+    # through 1M -- a single edge through 10 p rings the crystal instead of
+    # waiting three time constants for numeric noise to find it
+    ck = sh.place(C_LIB, "C18", at=(G(92), G(52)), rot=90, value="10p")
+    kl, kr = sorted(ck.pins, key=lambda q: q.x)
+    sh.seg((xb, G(52)), kl)
+    v2 = source(sh, sim, VPULSE, "V2", G(102), G(58),
+                ("PULSE", "y1=0 y2=5 td=1u tr=5n tf=5n tw=100n per=1"),
+                value="5V kick @ 1us")
+    sh.seg(kr, (v2.pin(1).x, G(52)))
+    sh.seg((v2.pin(1).x, G(52)), v2.pin(1))
+
+    # the buffer output, loaded and named: this is what J1 pin 1 gets
+    outb = g2.pin("Y")
+    sh.seg(outb, (G(140), outb.y))
+    sh.label((G(134), outb.y), "CLKOUT", kind="global")
+    rt = sh.place(R_LIB, "RT1", at=(G(140), G(38)), rot=0, value="1M0")
+    tt, tb = sorted(rt.pins, key=lambda q: q.y)
+    sh.seg((G(140), outb.y), tt)
+    sh.gnd(tb, drop=STUB)
+
+    note_block(sh, (G(10), G(74)),
+               "The board's exact topology: Rf 1M biases the gate linear,\n"
+               "Rs 2k2 + C17 damp the crystal drive -- and kill the\n"
+               "~30 MHz parasitic through Co that Rs=1k lets a gate\n"
+               "sustain.  UNBUFFERED 74HCU04 only: a buffered 74HC04's\n"
+               "three-stage gain re-lights that parasitic at any Rs.  And\n"
+               "the second gate squares the raw node up for the jumper.\n"
+               "The crystal model resonates SERIES at exactly 6.144 MHz;\n"
+               "parallel-mode operation pulls +Cm/2(CL+Co) ~ +0.05 %, so\n"
+               "the frequency check brackets that, not fs itself.\n"
+               "Startup rides a 5 V kick through 10 p at t=1u; what is\n"
+               "asserted is that the loop SUSTAINS it at full swing long\n"
+               "after the kick is gone.",
+               size=1.27)
+    cmd_note(sh, "sim_i_pierce", (G(10), G(100)))
+    return sim
+
+
+# ===========================================================================
 BACKLINK_Y = {"sim_a_pump": G(116), "sim_b_reference": G(106),
               "sim_c_clock": G(110), "sim_d_integrator": G(126),
               "sim_e_quantiser": G(136), "sim_f_dac": G(150),
-              "sim_g_interface": G(144), "sim_h_loop": G(184)}
+              "sim_g_interface": G(144), "sim_h_loop": G(184),
+              "sim_i_pierce": G(108)}
 
 
 def main(wanted=None):

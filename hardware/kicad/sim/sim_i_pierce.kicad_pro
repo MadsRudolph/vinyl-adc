@@ -12,7 +12,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "vinyl_adc_channel_r.kicad_pro",
+    "filename": "sim_i_pierce.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -50,7 +50,7 @@
   },
   "sheets": [
     [
-      "e38ea856-a6af-4f32-8fdd-1450de973a10",
+      "b1000000-0000-4000-8000-000000000009",
       "Root"
     ]
   ],

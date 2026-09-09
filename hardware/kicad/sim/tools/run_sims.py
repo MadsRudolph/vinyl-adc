@@ -22,7 +22,8 @@ from pathlib import Path
 import numpy as np
 from PySpice.Spice.NgSpice.Shared import NgSpiceShared
 
-KICAD_CLI = r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe"
+KICAD_CLI = next(p for p in (r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe",
+                             "/usr/bin/kicad-cli") if Path(p).exists())
 SIM = Path(__file__).resolve().parent.parent
 NG = NgSpiceShared.new_instance(verbose=False)
 RESULTS = []
@@ -444,10 +445,35 @@ def bench_h():
           1.0, " V")
 
 
+def bench_i():
+    """The Pierce: does the 2-pin crystal actually make the clock?"""
+    w = simulate(netlist("sim_i_pierce"))
+    t = w["time"]
+    late = t > 300e-6
+    tt = t[late]
+    f = freq(tt, w["clkout"][late])
+    # series resonance is exactly 6.144 MHz; parallel-mode pulls ~+0.05 %
+    check("CLKOUT frequency (kHz)", f / 1e3 if f else None,
+          6.144e3 * 0.999, 6.144e3 * 1.0015, " kHz")
+    check("CLKOUT swings the rail (Vpp)",
+          float(w["clkout"][late].max() - w["clkout"][late].min()), 4.9, 5.05,
+          " Vpp")
+    check("CLKOUT duty (%)", duty(tt, w["clkout"][late]), 40, 60, " %")
+    # the kick dies at ~1 us; sustained full-swing 300 us later means the
+    # loop, not the stimulus, is doing the work
+    mid = window(t, 100e-6, 150e-6)
+    a_mid = detrended_pp(t[mid], w["osca"][mid])
+    a_end = detrended_pp(tt, w["osca"][late])
+    report("oscillator node swing at 100-150 us (Vpp)", a_mid, " Vpp")
+    check("oscillation sustained, not a decaying kick (Vpp)", a_end,
+          max(1.0, 0.8 * a_mid), 7, " Vpp")
+
+
 BENCHES = {"a": ("sim_a_pump", bench_a), "b": ("sim_b_reference", bench_b),
            "c": ("sim_c_clock", bench_c), "d": ("sim_d_integrator", bench_d),
            "e": ("sim_e_quantiser", bench_e), "f": ("sim_f_dac", bench_f),
-           "g": ("sim_g_interface", bench_g), "h": ("sim_h_loop", bench_h)}
+           "g": ("sim_g_interface", bench_g), "h": ("sim_h_loop", bench_h),
+           "i": ("sim_i_pierce", bench_i)}
 
 wanted = [a.lower()[0] for a in sys.argv[1:]] or list(BENCHES)
 for key in wanted:

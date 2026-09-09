@@ -35,8 +35,9 @@ comparator.
 
 **Must be ordered** (flagged per the handoff's instruction):
 
-- 6.144 MHz oscillator can — the only genuinely unavailable part, and §5 shows
-  it is worth ordering rather than substituting.
+- ~~6.144 MHz oscillator can~~ — proved genuinely unobtainable; replaced by a
+  Pierce oscillator around a found 2-pin 6.144 MHz crystal plus one 74HCU04
+  (order that instead — §5).
 - RCA phono sockets — the shop has screw terminals and Molex only.
 
 ---
@@ -193,18 +194,49 @@ margin**, textbook I2S source behaviour, with no retiming flip-flop needed.
 
 ---
 
-## 5. Why the oscillator can is worth ordering
+## 5. The clock source: a crystal Pierce, because the can never turned up
 
 `sim/components.py` computes the NRZ-DAC jitter floor:
 
 | clock source | jitter | jitter noise floor |
 |---|---|---|
-| crystal oscillator can | 20 ps | **102 dB** |
+| crystal oscillator (can or Pierce) | ~20 ps | **~102 dB** |
 | Pi GPCLK0 (fractional divider) | ~1 ns | **68 dB** |
 
 GPCLK0 would become the dominant noise source and drag the total to ~65 dB —
-it would eat the entire margin the third integrator was added to buy. Order the
-can.
+it would eat the entire margin the third integrator was added to buy.
+
+The design originally specified a 6.144 MHz oscillator **can** (X1, DIP-8),
+which proved unobtainable; a bare 2-pin 6.144 MHz **crystal** did turn up, so
+the clock is now a **Pierce oscillator built from it**: an unbuffered
+**74HCU04** gate biased linear by R_f 1 MΩ, the crystal from gate input to
+gate output through R_s 2k2, one 27 pF load cap per crystal leg, and a second
+gate of the same package squaring the node up for the jumper.  Electrically
+that is exactly what lives inside a can.  Two values are load-bearing, both
+found by `sim/sim_i_pierce`:
+
+- **R_s = 2k2, not the textbook 1/(2πfC) ≈ 1k.**  At 1k the loop oscillates
+  at ~30 MHz *through the crystal's own 5 pF holder capacitance* instead of
+  its motional branch; 2k2 kills that parasitic and still starts the crystal
+  across the whole modelled gate envelope (gain 10–30, tpd 5–12 ns).
+- **The gate must be the UNBUFFERED 74HCU04** (pin-identical to 74HC04): a
+  buffered gate's three-stage gain (~×800) sustains the same Co parasitic at
+  any R_s the crystal mode survives.  If a buffered 74HC04 is fitted in a
+  pinch, verify the output is 6.144 MHz and not tens of MHz before trusting
+  anything downstream.
+
+The 27 pF loads assume the usual CL ≈ 18 pF crystal; the exact value only
+pulls the frequency by tens of ppm (the bench measures +0.05 %), which is far
+below audibility.  Two deliverables carry the circuit:
+
+- **The digital board rev B** bakes it in where X1's socket used to be.
+- **A plug-in module** (`hardware/kicad/osc_module/`) carries the identical
+  circuit — the same `blk_pierce` function draws both, so they cannot drift —
+  on a small single-sided board with four pins at the can's corner positions
+  (1 = unused, 4 = GND, 5 = OUT, 8 = +5 V).  It fills the X1 socket of the
+  **already-built** rev A digital board, and unplugs the day a real can turns
+  up.  Fit the plug's pad 1 over the socket's pin 1; the module body extends
+  east and south over the board's empty quarter.
 
 A 3-pin header lets GPIO4 be strapped in as a bring-up fallback. The clock input
 is buffered by a **74HCT** gate (VIH 2.0 V) so it accepts a 3.3 V oscillator or

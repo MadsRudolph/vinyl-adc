@@ -387,3 +387,41 @@ Ro   nb z {ron}
 * largest single term in its output droop) and 0.40 V at 1 A.
 * --------------------------------------------------------------------------
 .model D1N5817 D(Is=2e-6 Rs=0.06 N=1.0 Cjo=110p Vj=0.4 M=0.5 Bv=20 Ibv=1m)
+
+* --------------------------------------------------------------------------
+* 6.144 MHz quartz crystal, HC-49, fundamental -- the motional branch plus
+* the holder capacitance.  Lm is computed from Cm so the SERIES resonance is
+* exactly 6.144 MHz: fs = 1/(2*pi*sqrt(Lm*Cm)).  In the Pierce the crystal
+* runs parallel-mode, pulled above fs by Cm/(2*(CL+Co)) -- about +0.05 % with
+* the board's 27 p load caps, which is the number bench I asserts around.
+* Rm 30 ohm and Cm 20 fF are the middle of the HC-49 fundamental range;
+* Q = w*Lm/Rm ~ 43000, so expect a real startup envelope, not an instant one.
+* --------------------------------------------------------------------------
+.subckt XTAL_6M144 a b params: rm=30 cm=20f co=5p
+Rm a n1 {rm}
+Lm n1 n2 {1.0/(pow(2*3.14159265358979*6.144e6,2)*cm)}
+Cm n2 b {cm}
+Co a b {co}
+.ends XTAL_6M144
+
+* --------------------------------------------------------------------------
+* 74HCU04 -- the UNBUFFERED inverter, in its linear region.  One stage, so
+* the voltage gain around threshold is tens, not the ~800 the buffered
+* INV_74HC model carries -- and that difference is the whole reason the
+* Pierce uses this part: bench I shows the buffered gate's gain sustains a
+* ~30 MHz oscillation THROUGH the crystal's 5 pF holder capacitance at any
+* series resistor the crystal mode survives.  g=20 puts the small-signal
+* gain at -50 (0.5*g*Vdd), the middle of the datasheet transfer-curve
+* slope; tpd 9n and ron 150 are the 5 V typicals.  Bench I passes across
+* g=10..30, tpd 5..12n, ron 100..200 -- checked while choosing Rs = 2k2.
+* --------------------------------------------------------------------------
+.subckt INV_74HCU in out vcc vss params: g=20 tpd=9n ron=150
+Bi   ni 0 V = 0.5*(1 - tanh({g}*(V(in)-V(vss)-0.5*(V(vcc)-V(vss)))/(V(vcc)-V(vss))*5))
+Td   ni 0 nd 0 Z0=1k TD={tpd}
+Rt   nd 0 1k
+* clamp to the rails: 0.5*(|x|-|x-1|+1) is min(max(x,0),1), identity between
+* 0 and 1 so the linear gain is untouched -- without it the T-line's source
+* end reflects and the "gate" swings past its own supply
+Bo   nb 0 V = V(vss) + (V(vcc)-V(vss))*0.5*(abs(V(nd))-abs(V(nd)-1)+1)
+Ro   nb out {ron}
+.ends INV_74HCU

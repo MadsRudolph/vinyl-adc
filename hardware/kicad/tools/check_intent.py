@@ -18,10 +18,11 @@ import subprocess
 import sys
 import paths
 
-sys.path.insert(0, r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts")
+import os
+sys.path.insert(0, next(p for p in (r"C:\Users\Mads2\.claude\skills\kicad-schematic\scripts", os.path.expanduser("~/.claude/skills/kicad-schematic/scripts")) if os.path.isdir(p)))
 import sexpdata  # noqa: E402
 
-KICAD = r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe"
+KICAD = next(p for p in (r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe", "/usr/bin/kicad-cli") if os.path.exists(p))
 
 
 def load(netpath, schpath):
@@ -212,7 +213,23 @@ def main():
     # pin column would, and did
     distinct(nets, "clock jumper does not short its three pins",
              ("J1", "1"), ("J1", "2"), ("J1", "3"))
-    same(nets, "oscillator drives jumper pin 1", ("X1", "5"), ("J1", "1"))
+    # Pierce oscillator: crystal from gate input to the far side of R_s,
+    # R_f directly across the gate, one load cap per crystal leg, and the
+    # second gate buffering the raw oscillator node out to the jumper.
+    same(nets, "Pierce input node", ("U9", "1"), ("Y1", "1"), ("R10", "1"),
+         ("C16", "1"))
+    same(nets, "Pierce gate output feeds Rf, Rs and the buffer",
+         ("U9", "2"), ("R10", "2"), ("R11", "1"), ("U9", "3"))
+    same(nets, "crystal's far leg hangs off Rs", ("R11", "2"), ("Y1", "2"),
+         ("C17", "1"))
+    distinct(nets, "Rf is not shorted by the crystal path",
+             ("U9", "1"), ("U9", "2"))
+    if netof(nets, "C16", "2") != "GND":
+        FAILURES.append("C16.2 should be GND")
+    if netof(nets, "C17", "2") != "GND":
+        FAILURES.append("C17.2 should be GND")
+    same(nets, "oscillator buffer drives jumper pin 1", ("U9", "4"),
+         ("J1", "1"))
     # charge pump: every 74HC244 buffer really is in parallel
     same(nets, "pump drive input", ("U4", "3"),
          *[("U1", n) for n in ("2", "4", "6", "8", "17", "15", "13", "11")])
