@@ -28,7 +28,7 @@ from simulate import SimulatedAD3
 
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
 PLANS=json.loads((HERE/'plans.json').read_text());LIMITS=json.loads((HERE/'limits.json').read_text())
-STEP_ORDER={'power':['pump-check','rails','references'],'digital':['rails','pi-clocks','bus-clocks'],'stack':['rails','references','pi-clocks','pi-data'],
+STEP_ORDER={'power':['pump-check','rails','references'],'digital':['rails','pi-clocks','bus-clocks'],'stack':['rails-left','q-left','rails','q-right','references','pi-clocks','pi-data'],
             'left':['rails','references','quiet','tone-0.1','tone-0.25','gain-response'],'right':['rails','references','quiet','tone-0.1','tone-0.25','gain-response']}
 class ScreenFailure(RuntimeError):pass
 
@@ -159,9 +159,9 @@ class Run:
         if case!=0:self.window(name+' HIGH',stats['high_v'],'logic_high_'+rail)
         # Scope sample maxima expose overvoltage that a digital threshold would hide.
         self.measure(name+' observed maximum',np.max(x),None,5.5 if rail=='5v' else 3.8,'V')
-    def rails(self):
-        if self.carried('rails'):self.rail=self.carried_value('rails','+5 V');return
-        self.begin('rails');self.setup('rails',pump=self.board=='power')
+    def rails(self,key='rails'):
+        if self.carried(key):self.rail=self.carried_value(key,'+5 V');return
+        self.begin(key);self.setup(key,pump=self.board=='power')
         kind='digital' if self.board=='digital' else 'power' if self.board=='power' else 'channel'
         samples,_=self.scope('rails-'+kind)
         self.rail=self.window('+5 V',np.mean(samples[0]),'rail_5v')
@@ -196,8 +196,20 @@ class Run:
     def digital(self):
         self.rails();self.pi_clocks()
         self.clock_pair('bus-clocks','MCLK',1536000,'5v','PUMP',192000,'5v')
+    def channel_output(self,key,name,pin):
+        # One channel's modulator output on the shared bus, input shorted: must toggle at MCLK rate around 50 % density.
+        if self.carried(key):return
+        self.begin(key);self.setup(key);samples,rate=self.scope(key,50e6,32768)
+        self.clock('MCLK',digitize(samples[1]),rate,1536000)
+        q=(samples[0]>2.5).astype(np.uint8)
+        self.measure(name+' transitions',np.count_nonzero(np.diff(q)),100,None,'edges')
+        self.window(name+' one-density (input shorted)',np.mean(q),'quiet_density','fraction')
+        self.levels(name,samples[0],'5v');self.end()
     def stack(self):
-        self.rails();self.references();self.pi_clocks()
+        # Boards are added one at a time so a faulty channel is caught before the second one is on the bus.
+        self.rails('rails-left');self.channel_output('q-left','QL (left channel)','J4.12')
+        self.rails();self.channel_output('q-right','QR (right channel)','J4.14')
+        self.references();self.pi_clocks()
         if self.carried('pi-data'):return
         self.begin('pi-data');self.setup('pi-data');samples,rate=self.scope('pi-data',50e6,32768)
         data=(samples[0]>1.65).astype(np.uint8);self.clock('PI_BCLK during data check',digitize(samples[1]),rate,3072000)  # fixed 3.3 V midpoint so a stuck line fails on edges, not on thresholding

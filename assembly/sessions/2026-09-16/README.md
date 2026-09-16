@@ -43,7 +43,7 @@ Digital only: Korad red → J2.1, black → J2.2, V+ → J2.3, J1 1–2. Limit 0
 python assembly/bench/run.py stack --ad3-3v3 --probe 10,1
 ```
 
-Power + digital + both channels on the bus, J21 = 1–2 left and 2–3 right, nothing on the channel inputs, W1 disconnected, V+ → J2.3, limit 0.30 A. Rails (power J3.2 / J3.16) and references (J3.4 / J3.6) under full load, then PI_BCLK / PI_LRCLK (J2.4 / J2.5), then PI_DIN / PI_BCLK (J2.6 / J2.4): PI_DIN must toggle at 3.3 V logic.
+One channel at a time. Power + digital + LEFT channel (J21 = 1–2, input J20 shorted), V+ → J2.3, W1 off, limit 0.20 A: rails at power J3.2 / J3.16, then QL at digital J4.12 with MCLK at J4.8 (must toggle, 35–65 % density, 5 V logic). Add the RIGHT channel (J21 = 2–3, input shorted), limit 0.30 A: rails again, QR at J4.14. Then references (J3.4 / J3.6), PI_BCLK / PI_LRCLK (J2.4 / J2.5) and PI_DIN / PI_BCLK (J2.6 / J2.4): PI_DIN must toggle at 3.3 V logic.
 
 ### 4. Connect the Raspberry Pi
 

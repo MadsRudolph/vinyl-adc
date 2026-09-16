@@ -356,13 +356,57 @@
    ]
   },
   "stack": {
-   "title": "Full stack without the Pi",
+   "title": "Full stack, one channel at a time, without the Pi",
    "command": "stack",
    "steps": [
     {
+     "id": "rails-left",
+     "title": "Rails with the left channel only",
+     "instructions": "Power, digital and ONLY the left channel board on the bus, aligned pin for pin; J21 = 1–2 on it; short its input J20.1 to J20.2 (GND) with a jumper. Bench +5 V → digital J2.1, GND → J2.2, +3.3 V → J2.3 from the selected source. W1 disconnected. Start the current limit at 0.20 A.",
+     "connections": [
+      {
+       "board": "power",
+       "lead": "Scope 1+",
+       "ref": "J3",
+       "pin": "2",
+       "net": "+5V"
+      },
+      {
+       "board": "power",
+       "lead": "Scope 2+",
+       "ref": "J3",
+       "pin": "16",
+       "net": "-5V"
+      }
+     ],
+     "expect": "+5 V: 4.75…5.25 V; negative rail −5.25…−3.50 V with one channel loading it; gross ripple ≤150 mVpp. Persistent CC or heating: the channel board has a short; stop."
+    },
+    {
+     "id": "q-left",
+     "title": "Left modulator output on the bus",
+     "instructions": "Power off; move the two probe tips to the digital board's bus header. QL is the left channel's 1-bit output as the mux sees it.",
+     "connections": [
+      {
+       "board": "digital",
+       "lead": "Scope 1+",
+       "ref": "J4",
+       "pin": "12",
+       "net": "QL"
+      },
+      {
+       "board": "digital",
+       "lead": "Scope 2+",
+       "ref": "J4",
+       "pin": "8",
+       "net": "MCLK"
+      }
+     ],
+     "expect": "MCLK 1.536 MHz. QL toggles (≥100 edges in the record) with a one-density of 35–65 % for a shorted input, at 5 V logic. Constant QL: the modulator is not running (check the channel's clock, ±5 V, references, flip-flop). Density far from 50 %: the input is not shorted or the integrator is stuck."
+    },
+    {
      "id": "rails",
-     "title": "Rails under full load",
-     "instructions": "Power, digital and BOTH channel boards on the bus, aligned pin for pin; J21 = 1–2 on the left board and 2–3 on the right board; nothing on the channel inputs. Bench +5 V → digital J2.1, GND → J2.2, +3.3 V → J2.3 from the selected source. W1 disconnected. Start the current limit at 0.30 A.",
+     "title": "Rails with both channels",
+     "instructions": "Power off. Add the RIGHT channel board to the bus (J21 = 2–3 on it), aligned pin for pin, input shorted J20.1–J20.2. Keep the probes where they are. Same supplies; limit 0.30 A.",
      "connections": [
       {
        "board": "power",
@@ -382,9 +426,31 @@
      "expect": "+5 V: 4.75…5.25 V; negative rail −5.25…−3.50 V under the full load; gross ripple ≤150 mVpp."
     },
     {
+     "id": "q-right",
+     "title": "Right modulator output on the bus",
+     "instructions": "Power off; move only scope 1+ to QR. Scope 2+ stays on MCLK.",
+     "connections": [
+      {
+       "board": "digital",
+       "lead": "Scope 1+",
+       "ref": "J4",
+       "pin": "14",
+       "net": "QR"
+      },
+      {
+       "board": "digital",
+       "lead": "Scope 2+",
+       "ref": "J4",
+       "pin": "8",
+       "net": "MCLK"
+      }
+     ],
+     "expect": "Same as the left channel: toggling at 5 V logic, density 35–65 %."
+    },
+    {
      "id": "references",
      "title": "References under full load",
-     "instructions": "Power off before moving the two probe tips; keep the stack and supplies unchanged.",
+     "instructions": "Power off; move the two probe tips to the power board's reference pins. Both channels stay on the bus.",
      "connections": [
       {
        "board": "power",

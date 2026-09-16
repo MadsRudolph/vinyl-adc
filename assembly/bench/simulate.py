@@ -19,6 +19,9 @@ class SimulatedAD3:
         elif kind=='references':a,b=np.full(count,2.5),np.full(count,-2.5)
         elif kind=='pi-clocks':a,b=square(3072000/(2 if self.fault=='wrong-clock' else 1),3.3),square(48000,3.3)
         elif kind=='bus-clocks':a,b=square(1536000/(2 if self.fault=='wrong-clock' else 1),5),square(192000,5)
+        elif kind in ('q-left','q-right'):
+            bits=np.repeat(rng.integers(0,2,count//32+1),32)[:count]
+            a,b=(np.zeros(count) if self.fault=='stuck-channel' else 5.*bits),square(1536000,5)
         elif kind=='pi-data':
             bits=rng.integers(0,2,count);bits=np.repeat(bits[:count//16],16)[:count] if count>=16 else bits
             a,b=(np.zeros(count) if self.fault=='stuck-channel' else 3.3*bits),square(3072000,3.3)
