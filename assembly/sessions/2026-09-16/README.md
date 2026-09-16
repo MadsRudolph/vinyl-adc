@@ -79,4 +79,23 @@ Every divider output was 10.35× too fast and drifting, so the Pierce stage was 
 
 Note for later: U9 is a buffered **74HC04N** (marking D6683PS), not the unbuffered 74HCU04 the design specifies. It locks to the crystal now that the crystal is connected, but a buffered gate in a Pierce is marginal (design-notes §5), so the HCU04 stays on the order list and should replace it when it arrives.
 
-**Next:** rerun `digital` continuing from the 22:05 run (rails carried), then `stack`, then the Pi.
+**Digital board — PASS** (`20260916T203340Z-digital-897c4fcc`, rails carried from the 22:05 run):
+
+| Step | Measurement | Value |
+|---|---|---|
+| pi-clocks | PI_BCLK frequency | 3.073e+06 Hz |
+| pi-clocks | PI_BCLK LOW | -0.031 V |
+| pi-clocks | PI_BCLK HIGH | 3.365 V |
+| pi-clocks | PI_LRCLK frequency | 4.801e+04 Hz |
+| pi-clocks | PI_LRCLK LOW | -0.006472 V |
+| pi-clocks | PI_LRCLK HIGH | 3.345 V |
+| bus-clocks | MCLK frequency | 1.536e+06 Hz |
+| bus-clocks | MCLK LOW | -0.07402 V |
+| bus-clocks | MCLK HIGH | 5.009 V |
+| bus-clocks | PUMP frequency | 1.92e+05 Hz |
+| bus-clocks | PUMP LOW | -0.01012 V |
+| bus-clocks | PUMP HIGH | 5.045 V |
+
+Both probe checks passed at the first attempt after the crystal repair; PI-side highs are 3.3 V logic, bus clocks 5 V logic.
+
+**Next:** `stack` with both channels, then the Pi.
