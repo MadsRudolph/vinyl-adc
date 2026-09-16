@@ -1,3 +1,7 @@
 System Time     Process     Thread        ERC     ERC String                  Message
 2879729920      3878124     2348766912    3075    ercControlTransferFailed    USBC:FGetPDID
 2879729920      3878124     2348766912    3075    ercControlTransferFailed    USBC:FGetProdName
+2883534195      4043040     1792353984    3075    ercControlTransferFailed    USBC:FGetPDID
+2883534195      4043040     1792353984    3075    ercControlTransferFailed    USBC:FGetProdName
+2883585143      4045352     4294133440    3075    ercControlTransferFailed    USBC:FGetPDID
+2883585143      4045352     4294133440    3075    ercControlTransferFailed    USBC:FGetProdName

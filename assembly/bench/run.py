@@ -123,8 +123,7 @@ class Run:
                 time.sleep(.3);v,i=self.device.supply_status()
                 self.current_samples[-1]['ad3_vplus_v']=v;self.current_samples[-1]['ad3_vplus_ma']=i*1000
                 self.say(f'  AD3 V+ as reported by the instrument: {v:.3f} V, {i*1000:.1f} mA')
-                if v<LIMITS['rail_3v3'][0]:self.say('  AD3 V+ has not reached 3.3 V at the instrument: the +3.3 V wire is probably shorted on the board (V+ folds back) or V+ is not enabled.')
-                elif i*1000<0.5:self.say('  AD3 V+ is at 3.3 V but sourcing almost no current: check that the V+ flywire actually lands on digital J2.3 and that the +3V3 wire link WL5a–WL5b is fitted.')
+                if v<LIMITS['rail_3v3'][0]:self.say('  AD3 V+ has not reached 3.3 V at the instrument: the +3.3 V wire is probably shorted on the board (V+ folds back) or V+ is not enabled. (A reading near 0 mA is normal: the 3.3 V side is one CMOS buffer.)')
         if pump:self.device.wave('square',192000,2.5,2.5)
         if wave is not None:self.device.wave('sine',1000,wave,0)
         if not self.args.simulate:time.sleep(.25)
@@ -188,6 +187,8 @@ class Run:
     def clock_pair(self,key,name_a,hz_a,rail_a,name_b,hz_b,rail_b,rate=50e6):
         if self.carried(key):return
         self.begin(key);self.setup(key);samples,rate=self.scope(key,rate,32768)
+        for name,x in [(name_a,samples[0]),(name_b,samples[1])]:
+            st=summary(x);self.measure(name+' logic swing',st['high_v']-st['low_v'],1.0,None,'V')  # a stuck line fails here with its level visible in the log
         a=digitize(samples[0]);b=digitize(samples[1])
         self.clock(name_a,a,rate,hz_a);self.levels(name_a,samples[0],rail_a)
         self.clock(name_b,b,rate,hz_b);self.levels(name_b,samples[1],rail_b);self.end()
