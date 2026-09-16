@@ -98,4 +98,16 @@ Note for later: U9 is a buffered **74HC04N** (marking D6683PS), not the unbuffer
 
 Both probe checks passed at the first attempt after the crystal repair; PI-side highs are 3.3 V logic, bus clocks 5 V logic.
 
-**Next:** `stack` with both channels, then the Pi.
+**Stack, one channel at a time** (`20260916T215925Z-stack-1fd8c0ff`, rails-left carried from the 22:43 run):
+
+| Step | Result |
+|---|---|
+| rails, left only | +5 V 4.867 V, negative rail −4.036 V, 67 mA |
+| QL (left output) | 1.5363 MHz MCLK, QL toggling, density 0.497, 0–5 V |
+| rails, both channels | +5 V 4.867 V, negative rail −3.788 V, 83 mA |
+| QR (right output) | toggling, density 0.532, 0–5 V |
+| references | VREF_P +2.466 V PASS, **VREF_N −1.767 V FAIL** (window −2.65…−2.35 V) |
+
+Two bench faults on the way: the left board first pulled MCLK's low to 2.06 V and left QL floating (cured by reseating the board and the U23 socket; keep an eye on U23's ground pin), and the right board's J21 shunt had to be on pins 1–2, the pair farthest from the bus, not the pair nearest it.
+
+The VREF_N failure is a design margin, not a build fault: with both channels loading the charge pump the rail is −3.79 V and the TL072 reference inverter U2B cannot swing below about −1.8 V. **Fix: swap power-board U2 for an LM358** (same pinout; see design-notes §10b′), then rerun `stack` from the references step. Pi-side clocks and data were not screened in this run.

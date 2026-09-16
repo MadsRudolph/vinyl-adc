@@ -417,6 +417,25 @@ not there, and a part at its guaranteed limit would phase-invert. Anything
 that lightens the negative rail — the LM311s are already on a single supply
 for this reason — buys margin directly.
 
+### 10b′. Bench, 16 September 2026: the reference inverter runs out of rail first
+
+Measured on the built stack with the AD3 (power board alone → + left channel
+→ + both channels): the pump rail went **−4.43 → −4.04 → −3.79 V**, and
+VREF_N, which U2B (TL072) makes by inverting VREF_P, went **−2.49 → ? →
+−1.77 V** while VREF_P stayed at +2.47 V. A TL07x output stops ~2 V above its
+negative supply, so on −3.79 V it cannot reach −2.5 V. §10b priced the weak
+pump against the integrators' common-mode range and missed this: the
+reference is the first thing to fail, and it fails silently (the modulators
+keep toggling at ~50 % with a skewed DAC).
+
+Fix: **U2 → LM358**, same DIP-8 pinout, output sinks to within a few hundred
+millivolts of V− at the ~1.3 mA both channels draw from VREF_N (14k7 ∥ 13k0
+∥ 8k25 per channel into virtual earths). Of the shop's list it is the only
+drop-in: the MCP6002 is rail-to-rail but limited to 6 V total supply, and
+everything else swings no better than the TL072. Its noise is irrelevant on a
+DC reference behind the board decoupling. Left/right screening results:
+`assembly/sessions/2026-09-16/README.md`.
+
 ### 10c. The loop survives the click, and the clamp is not knife-edge
 
 40 µs at three times full scale at t = 1.5 ms. By 2.2 ms all three
