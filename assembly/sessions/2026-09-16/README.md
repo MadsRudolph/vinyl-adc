@@ -53,6 +53,28 @@ Power off. Remove AD3 V+ and all probes. Pi I²S header → J2 pin for pin; the 
 
 Korad current at each ON prompt (the script asks), the report id, and anything the script did not measure: heating, CC events, wrong-looking waveforms. Screenshots only if you go the manual WaveForms route.
 
-## Results
+## Results (evening session, SDK reports in `assembly/bench/results/`)
 
-*(empty — nothing measured yet on the rev B digital board or the channels)*
+**Power board — PASS** (`20260916T193608Z-power-95a4ffad`, pump-check and rails carried from the 21:16 run):
+
+| Measurement | Value | Window |
+|---|---|---|
+| W1 pump stimulus | 192.00 kHz, duty 0.497, 0.014 / 4.92 V | 188–196 kHz, 35–65 %, ≤0.45 / 4.0–5.3 V |
+| +5 V | 4.901 V, 28 mVpp | 4.75–5.25 V, ≤150 mVpp |
+| Negative rail | −4.425 V, 20 mVpp | −5.25…−3.50 V |
+| Korad current, power board alone | 0 mA shown (below display resolution) | |
+
+References passed in the same run; exact values are in the report.
+
+**Digital board — rails PASS, clocks FAIL** (`20260916T193845Z` failed because the V+ wire was not on J2.3; `20260916T200514Z` rails PASS: +5 V 4.888 V, +3.3 V 3.318 V, 32 mA; `20260916T201434Z` clocks):
+
+| Pin | Expected | Measured |
+|---|---|---|
+| J2.4 PI_BCLK | 3.072 MHz | stuck at 3.25 V |
+| J2.5 PI_LRCLK | 48 kHz | 500.9 kHz, later 491 kHz (drifting) |
+| J4.8 MCLK | 1.536 MHz | 15.90 MHz |
+| J4.10 PUMP | 192 kHz | 1.987 MHz |
+
+Every divider output is 10.35× too fast and drifts, so the Pierce stage is free-running at about 63.6 MHz instead of locking to the crystal. **Cause found: U9 is a buffered 74HC04N (marking D6683PS), not the unbuffered 74HCU04** the oscillator needs. Divider, level shifter and rails are otherwise healthy: the 74HC4049 simply cannot pass a 31 MHz BCLK at 3.3 V, hence the stuck PI_BCLK.
+
+**Next:** fit a 74HCU04 in U9's socket and rerun `digital` (continue from the 22:05 run to carry rails). Until it arrives, the board can be clocked from the Raspberry Pi's GPCLK0 with J1 on 2–3 and 6.144 MHz on J2.7; the 74HCT132 buffer accepts the 3.3 V clock.
