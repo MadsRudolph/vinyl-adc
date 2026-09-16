@@ -78,9 +78,10 @@ class SDK:
         return {'sdk':version.value.decode(),'devices':devices}
 
 class AD3:
-    def __init__(self,serial=None,probe=1):
-        if probe not in (1,10):raise ValueError('probe attenuation must be 1 or 10')
-        self.sdk=SDK();self.handle=I();self.serial=serial;self.probe=probe;self.info=None;self.cleanup_errors=[];self.range_v=None
+    def __init__(self,serial=None,probe=(1,1)):
+        probe=tuple(probe) if isinstance(probe,(tuple,list)) else (probe,probe)
+        if len(probe)!=2 or any(x not in (1,10) for x in probe):raise ValueError('probe attenuation must be 1 or 10 per scope channel')
+        self.sdk=SDK();self.handle=I();self.serial=serial;self.probe=probe;self.info=None;self.cleanup_errors=[];self.range_v=[None,None]
     def call(self,name,*args): return self.sdk.call(name,self.handle,*args)
     def __enter__(self):
         listing=self.sdk.devices();devices=[d for d in listing['devices'] if d['id']==10 and (not self.serial or d['serial']==self.serial)]
@@ -126,10 +127,10 @@ class AD3:
         for channel in (0,1):
             self.call('AnalogInChannelEnableSet',channel,1)
             # Attenuation tells the SDK the probe ratio: range and returned samples are then probe-tip volts.
-            self.call('AnalogInChannelAttenuationSet',channel,float(self.probe))
+            self.call('AnalogInChannelAttenuationSet',channel,float(self.probe[channel]))
             self.call('AnalogInChannelRangeSet',channel,20.)
             self.call('AnalogInChannelOffsetSet',channel,0.)
-            actual_range=D();self.call('AnalogInChannelRangeGet',channel,C.byref(actual_range));self.range_v=actual_range.value
+            actual_range=D();self.call('AnalogInChannelRangeGet',channel,C.byref(actual_range));self.range_v[channel]=actual_range.value
         lo,hi=I(),I();self.call('AnalogInBufferSizeInfo',C.byref(lo),C.byref(hi))
         self.call('AnalogInBufferSizeSet',min(count,hi.value));actual_count=I();self.call('AnalogInBufferSizeGet',C.byref(actual_count))
         self.call('AnalogInFrequencySet',float(rate));actual_rate=D();self.call('AnalogInFrequencyGet',C.byref(actual_rate))

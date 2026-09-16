@@ -6,13 +6,13 @@ From the project root:
 
 ```sh
 python assembly/bench/run.py devices
-python assembly/bench/run.py power --probe 10
-python assembly/bench/run.py digital --ad3-3v3 --probe 10
-python assembly/bench/run.py left --ad3-3v3 --probe 10
-python assembly/bench/run.py right --ad3-3v3 --probe 10
+python assembly/bench/run.py power --probe 10,1
+python assembly/bench/run.py digital --ad3-3v3 --probe 10,1
+python assembly/bench/run.py left --ad3-3v3 --probe 10,1
+python assembly/bench/run.py right --ad3-3v3 --probe 10,1
 ```
 
-`--probe 10` declares the BNC adapter with two 10× probes on scope 1 and 2 (both physical probe switches at 10×). Omit it for direct 1× flywires. The SDK scales the range and the returned samples, so every limit is still checked in probe-tip volts, and the report records the setting under `scope_inputs`. The DIO flywires and V+ remain available on the BNC adapter's pass-through header.
+`--probe` declares the probe attenuation per scope channel: `10,1` is the current BNC fixture (scope 1 with a 10× probe, scope 2 with a 1× probe), `10` means both at 10×, and omitting it means direct 1× flywires. Each physical probe switch must match its channel. The SDK scales the range and the returned samples, so every limit is still checked in probe-tip volts, and the report records the setting under `scope_inputs`. The DIO flywires and V+ remain available on the BNC adapter's pass-through header.
 
 `--ad3-3v3` explicitly supplies **3.3 V from AD3 V+ to digital J2.3**. Omit it if a separate regulated bench output provides 3.3 V. **Never parallel these sources.** The bench supply always provides +5 V. Power alone does not use 3.3 V.
 
@@ -34,7 +34,7 @@ CLK6M is **6.144 MHz**; the net called MCLK is **1.536 MHz**. BCLK is 3.072 MHz,
 ## Connections and operation
 
 - Common reference: AD3 GND, 1−, 2−, board GND, and bench negative. A negative-rail measurement uses **2+ on the negative rail**, never a ground clip on that rail. Confirm any earth-referenced bench connections before adding the USB-connected instrument.
-- Scope inputs are either direct 1× AD3 flywires (default) or the BNC adapter with two 10× probes declared by `--probe 10`; both DC coupled, with short grounds. The driver requests a 20 V probe-tip range, reads back the actual range, and measures actual sample rates. Never change probes or the `--probe` setting within a run.
+- Scope inputs are either direct 1× AD3 flywires (default) or the BNC adapter with probes declared per channel by `--probe` (currently `10,1`); both DC coupled, with short grounds. The driver requests a 20 V probe-tip range, reads back the actual range, and measures actual sample rates. Never change probes or the `--probe` setting within a run.
 - DIO pins are always inputs, with internal pulls and pattern outputs disabled. They observe 0–5 V logic only. AD3 outputs are 3.3 V logic, which is why they are not used to drive 5 V HC test inputs. AD3 W1 is used for the pump stimulus and audio sine; W2 and V− are disabled and unused.
 - Bench starting point: +5.00 V, 0.10 A current limit for a standalone power/digital board; 0.20 A for power + digital + one channel. These are starting protection settings, not expected current consumption. Persistent CC, abnormal current or heating requires stopping and diagnosis, not automatically raising the limit. The script records your manual +5 V current readings.
 - AD3 V+ (when selected) is 3.30 V. It is disabled between rewiring steps and at shutdown. Its default instrument protection is not a substitute for the bench +5 V current limit.

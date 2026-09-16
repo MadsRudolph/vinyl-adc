@@ -3,7 +3,7 @@
   "common": [
     "Close WaveForms before running a script; only one application can own the AD3.",
     "Power off before changing wiring. AD3 GND, scope 1\u2212, scope 2\u2212 and bench supply negative all connect to board GND. Never connect a ground clip to the negative rail.",
-    "Scope inputs: either direct 1\u00d7 flywires (default) or the BNC adapter with two 10\u00d7 probes and --probe 10, DC coupled, short ground returns. Never mix the two without changing --probe. DIO0\u202615 remain INPUTS and can observe 0\u20135 V logic; never connect DIO to the negative rail.",
+    "Scope inputs: direct 1\u00d7 flywires (default) or the BNC adapter with probes declared per channel by --probe, e.g. --probe 10,1 for a 10\u00d7 probe on scope 1 and a 1\u00d7 probe on scope 2; DC coupled, short ground returns. Each probe switch must match its channel setting. DIO0\u202615 remain INPUTS and can observe 0\u20135 V logic; never connect DIO to the negative rail.",
     "Bench supply provides +5.00 V. Start with a 0.10 A current limit for standalone power/digital tests; 0.20 A for power + digital + one channel. These are conservative starting limits, not expected measured currents. If the supply remains in CC or a component heats, switch off and investigate; do not automatically raise the limit.",
     "For digital and channel fixtures, provide +3.30 V at digital J2.3 from either a separate regulated bench channel OR AD3 V+ with --ad3-3v3. Never connect the two sources together. AD3 V\u2212 and W2 are unused. Never connect the Raspberry Pi during these tests.",
     "Scripts pause for connection changes and rail readings. They do not control or turn off the bench supply. Ctrl+C shuts down AD3 outputs; you must turn off the bench supply immediately afterwards."

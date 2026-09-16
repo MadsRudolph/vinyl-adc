@@ -6,12 +6,12 @@ This is a plan, not a record. No measurement has been taken on the rev B digital
 
 - The digital board is now **rev B**: U9 (74HCU04) + Y1 form a 6.144 MHz Pierce oscillator on the board itself. The X1 socket is gone. **J1 goes across pins 1–2** (crystal); J2.7 stays open. W1 is never connected to the digital board.
 - Both channel boards have their seven 100 nF decoupling capacitors and can be powered.
-- The SDK scripts now accept the BNC fixture: add `--probe 10` when both scope inputs are the 10× probes on the BNC adapter. The DIO flywires and V+ still come off the adapter's pass-through header.
+- The SDK scripts now accept the BNC fixture: add `--probe 10,1` for the current probes (scope 1 at 10×, scope 2 at 1×). The DIO flywires and V+ still come off the adapter's pass-through header.
 - The PCB snapshot behind the guide and the scripts was regenerated for the current boards (`python assembly/verify.py` passes), so reports will not be marked stale.
 
 ## Fixture that stays the same
 
-Korad KD3005D at +5.00 V. AD3 with BNC adapter: both coupling jumpers DC, W1 jumper 0 Ω, both probes and both WaveForms/SDK channels at 10×. AD3 GND, both probe clips and Korad black all on board GND; never a clip on the −5 V rail. AD3 V+ at 3.30 V is the only +3.3 V source (`--ad3-3v3`). Every wiring change: Korad off → script stops AD3 outputs → rewire → script prompts the power-on.
+Korad KD3005D at +5.00 V. AD3 with BNC adapter: both coupling jumpers DC, W1 jumper 0 Ω, scope 1 probe at 10× and scope 2 probe at 1×, declared to the scripts as `--probe 10,1`. AD3 GND, both probe clips and Korad black all on board GND; never a clip on the −5 V rail. AD3 V+ at 3.30 V is the only +3.3 V source (`--ad3-3v3`). Every wiring change: Korad off → script stops AD3 outputs → rewire → script prompts the power-on.
 
 Close WaveForms before any script; only one application may own the AD3.
 
@@ -22,7 +22,7 @@ Type READY / ON / OFF only after doing what the prompt says. Each run writes `as
 ### 1. Power board again, this time with a saved report
 
 ```sh
-python assembly/bench/run.py power --probe 10
+python assembly/bench/run.py power --probe 10,1
 ```
 
 Standalone power board. W1 → J3.10 (192 kHz, 0–5 V, the script sets it), Korad red → J3.2, black → J3.1. Limit 0.10 A. The script checks the W1 stimulus with nothing attached first, then +5 V, the negative rail, both references and gross ripple. This replaces the "approximately −4.3 V / references work" notes from 6 September with exact numbers.
@@ -30,7 +30,7 @@ Standalone power board. W1 → J3.10 (192 kHz, 0–5 V, the script sets it), Kor
 ### 2. Rev B digital board standalone
 
 ```sh
-python assembly/bench/run.py digital --ad3-3v3 --probe 10
+python assembly/bench/run.py digital --ad3-3v3 --probe 10,1
 ```
 
 Remove W1 from the power board. Digital only: Korad red → J2.1, black → J2.2, V+ → J2.3, J1 1–2, QL (J4.12) and QR (J4.14) tied to GND for the rails and clocks steps. Limit 0.10 A.
@@ -44,7 +44,7 @@ The four mux cases each need a power-off change of the QL/QR ties (0 = GND, 1 = 
 ### 3. Left channel with the tested power and digital boards
 
 ```sh
-python assembly/bench/run.py left --ad3-3v3 --probe 10
+python assembly/bench/run.py left --ad3-3v3 --probe 10,1
 ```
 
 Power + digital + left channel on the bus, correctly aligned pin for pin. J21 = 1–2 on this board. Korad red → digital J2.1, black → J2.2, V+ → J2.3. Limit 0.20 A. W1 is disconnected for the rails, references and quiet steps; J20.1 is shorted to J20.2 for the quiet step. Then W1 → J20.1 (with scope 1 on it) for the two 1 kHz tone levels, 0.10 and 0.25 Vpeak, RV20 unchanged.
@@ -54,7 +54,7 @@ DIO for the channel steps: DIO0 U23.3 MCLK, DIO1 U23.5 Q_OUT, DIO2 U23.6 QN_OUT,
 ### 4. Right channel
 
 ```sh
-python assembly/bench/run.py right --ad3-3v3 --probe 10
+python assembly/bench/run.py right --ad3-3v3 --probe 10,1
 ```
 
 Same as the left run with the right board only, J21 = 2–3, DIO5 → J7.14 (QR).

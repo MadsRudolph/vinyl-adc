@@ -43,9 +43,9 @@
   const steps = [
     {id:'probe-check', phase:'Power',title:'Connect and compensate your two BNC probes', boards:[],
       brief:'Connect probes to Scope 1 and Scope 2, and the coax to Wavegen W1. No PCB connected. Use the proper breakout at the free coax end.',
-      settings:[['BNC adapter','Both scope coupling jumpers = DC'],['W1 adapter jumper','0 Ω source impedance · no 50 Ω terminator'],['Probe switches + software','Both physical probes 10×; WaveForms CH1 and CH2 attenuation 10×'],['W1','Square · 1 kHz · amplitude 0.5 V · offset +0.5 V']],
+      settings:[['BNC adapter','Both scope coupling jumpers = DC'],['W1 adapter jumper','0 Ω source impedance · no 50 Ω terminator'],['Probe switches + software','CH1 probe 10× with WaveForms CH1 attenuation 10×; CH2 probe 1× with CH2 attenuation 1×'],['W1','Square · 1 kHz · amplitude 0.5 V · offset +0.5 V']],
       on:'Korad off and disconnected. W1 RUN; both Scope channels DC, roughly 0.2 V/div and 200 µs/div. V+ and V− off. If a probe has compensation adjustment, tune for a flat square-wave top using its instructions.',
-      expected:'Both channels read about 0–1 V at 1 kHz. Rounded or peaked tops indicate compensation to adjust. A reading wrong by 10× usually means the physical probe and software attenuation disagree. Stop W1 before the next step.',
+      expected:'Both channels read about 0–1 V at 1 kHz. Rounded or peaked tops indicate compensation to adjust. A reading wrong by 10× on one channel means that probe’s switch and its software attenuation disagree. Stop W1 before the next step.',
       wires:()=>[W('c1',leads.w1),W('c1n',leads.ground),W('c2',leads.w1),W('c2n',leads.ground)],help:'bnc-setup'},
 
     {id:'pump-check', phase:'Power',title:'Check the Wavegen coax output', boards:[],
@@ -133,7 +133,7 @@
       <div class="vw-bottom"><button id="vw-prev-wire" ${active===0?'disabled':''}>← Previous wire</button><strong>Wire ${active+1} / ${wires.length}</strong><button id="vw-next-wire" ${active===wires.length-1?'disabled':''}>Next wire →</button></div>
       <div class="vw-instructions"><div><h3>Set WaveForms and the Korad</h3><dl>${s.settings.map(([a,b])=>`<dt>${e(a)}</dt><dd>${e(b)}</dd>`).join('')}</dl></div><div><h3>Once every connection is checked</h3><p>${e(s.on)}</p><h3>What you should see</h3><p class="vw-expect">${e(typeof s.expected==='function'?s.expected():s.expected)}</p><p class="muted">Screening limits are provisional. “Next test” does not record a hardware PASS.</p></div></div>
       <div class="vw-testnav"><button id="vw-prev" ${step===0?'disabled':''}>← Previous test</button><a href="#${s.help}">Measurement limits</a><button id="vw-next" ${step===steps.length-1?'disabled':''}>Next test →</button></div>
-      <p class="vw-footnote">Use <strong>WaveForms manually</strong> with this guide. Do not run the Step 10 SDK tests at the same time; for the rev B digital board those scripts are the preferred route (add --probe 10 for these probes). Orange = Scope 1, blue = Scope 2 in this drawing (not necessarily your probe body colours). Dashed lines are probe ground clips. Yellow = coax centre conductor. Grey = coax shield or Korad return. All clips/shields go to circuit GND, never to −5 V.</p>`;
+      <p class="vw-footnote">Use <strong>WaveForms manually</strong> with this guide. Do not run the Step 10 SDK tests at the same time; for the rev B digital board those scripts are the preferred route (add --probe 10,1 for these probes). Orange = Scope 1, blue = Scope 2 in this drawing (not necessarily your probe body colours). Dashed lines are probe ground clips. Yellow = coax centre conductor. Grey = coax shield or Korad return. All clips/shields go to circuit GND, never to −5 V.</p>`;
     draw(wires);
   }
   function boardSVG(name, x,y,size, wires) {
@@ -191,7 +191,7 @@
       let picture, note;
       if(tip){
         picture=`<path d="M10 104 H70" stroke="#69766e" stroke-width="9"/><rect x="65" y="80" width="126" height="46" rx="17" fill="#34443b" stroke="#9dad9f" stroke-width="2"/><rect x="81" y="80" width="8" height="46" fill="${color}"/><path d="M191 88 L245 98 L245 108 L191 118 Z" fill="#687c6e"/><path d="M245 103 H283" stroke="#d5d9c1" stroke-width="4"/><path d="M280 103 v-14 h-8" fill="none" stroke="${color}" stroke-width="3"/><text x="78" y="109" class="vw-svg-label">10× PROBE</text><path d="M135 126 C140 155 200 148 210 170" fill="none" stroke="#829084" stroke-width="3"/><text x="17" y="44" class="vw-svg-title">HOOK / TIP = SIGNAL</text><path d="M275 58 V80" stroke="${color}" stroke-width="2"/><text x="100" y="197" class="vw-svg-note">Ground clip is a separate connection.</text>`;
-        note='The hook/tip contacts the highlighted pad or component lead. The short ground clip stays on the separately shown GND pad. Use the 10× setting on the probe and in WaveForms.';
+        note='The hook/tip contacts the highlighted pad or component lead. The short ground clip stays on the separately shown GND pad. Set the probe switch and its WaveForms channel attenuation to the same value (CH1 10×, CH2 1×).';
       }else if(clip){
         picture=`<path d="M15 100 H110" stroke="#84978a" stroke-width="5"/><rect x="105" y="85" width="85" height="32" rx="6" fill="#35473b" stroke="#91a58f"/><path d="M190 87 L271 101 L190 101 Z M190 118 L271 108 L190 105 Z" fill="#b9c5b4"/><path d="M227 105 L236 111 L245 105 L254 111" fill="none" stroke="#536654" stroke-width="2"/><circle cx="149" cy="101" r="6" fill="${color}"/><text x="20" y="44" class="vw-svg-title">GROUND CLIP = GND ONLY</text>`;
         note='This is the short alligator clip attached to the probe body. It is internally connected to AD3/BNC ground. Never clip it to the negative rail or a clock output.';

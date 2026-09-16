@@ -25,6 +25,12 @@ PLANS=json.loads((HERE/'plans.json').read_text());LIMITS=json.loads((HERE/'limit
 class ScreenFailure(RuntimeError):pass
 
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+def probe_setting(text):
+    try:values=tuple(int(x) for x in text.split(','))
+    except ValueError:raise argparse.ArgumentTypeError('use 1, 10 or two comma-separated values such as 10,1')
+    if len(values)==1:values=values*2
+    if len(values)!=2 or any(v not in (1,10) for v in values):raise argparse.ArgumentTypeError('each scope channel must be 1 or 10')
+    return values
 def prompt(message,word):
     answer=input(f'\n{message}\nType {word} to continue, or q to stop: ').strip()
     if answer!=word:raise KeyboardInterrupt
@@ -37,7 +43,7 @@ class Run:
         self.folder=args.output/self.run_id;self.folder.mkdir(parents=True,exist_ok=False)
         snapshot=json.loads((HERE.parent/'generated/boards.json').read_text())['boards']
         relevant=['power'] if args.board=='power' else ['digital'] if args.board=='digital' else ['power','digital','channel_l']
-        self.report={'format':'vinyl-adc-bench-report-v1','id':self.run_id,'board':args.board,'started':dt.datetime.now(dt.timezone.utc).isoformat(),'simulated':args.simulate,'status':'RUNNING','scope':'Assembly functional screening only; not production qualification, SNR, THD or 24-bit validation.','limits':LIMITS,'limits_sha256':sha(HERE/'limits.json'),'sources':{k:snapshot[k]['sha256'] for k in relevant},'steps':[],'supply':{'control':'manual','3v3_source':'AD3 V+' if args.ad3_3v3 else 'external regulated source','current_readings_ma':self.current_samples},'scope_inputs':{'probe_attenuation':args.probe,'fixture':'BNC adapter with 10x probes' if args.probe==10 else 'direct 1x flywires'}}
+        self.report={'format':'vinyl-adc-bench-report-v1','id':self.run_id,'board':args.board,'started':dt.datetime.now(dt.timezone.utc).isoformat(),'simulated':args.simulate,'status':'RUNNING','scope':'Assembly functional screening only; not production qualification, SNR, THD or 24-bit validation.','limits':LIMITS,'limits_sha256':sha(HERE/'limits.json'),'sources':{k:snapshot[k]['sha256'] for k in relevant},'steps':[],'supply':{'control':'manual','3v3_source':'AD3 V+' if args.ad3_3v3 else 'external regulated source','current_readings_ma':self.current_samples},'scope_inputs':{'probe_attenuation':{'scope_1':args.probe[0],'scope_2':args.probe[1]},'fixture':'direct 1x flywires' if args.probe==(1,1) else f'BNC adapter: scope 1 probe {args.probe[0]}x, scope 2 probe {args.probe[1]}x'}}
         for k in relevant:
             if sha(ROOT/snapshot[k]['source'])!=snapshot[k]['sha256']:raise RuntimeError('PCB snapshot is stale. Regenerate it and review changed probe locations before testing.')
     def pause_off(self):
@@ -173,7 +179,7 @@ class Run:
         try:
             if not self.args.simulate:
                 print('\n'.join(PLANS['common']))
-                print(f"\nScope inputs for this run: {self.args.probe}x ({self.report['scope_inputs']['fixture']}). Both physical probes must match this setting.")
+                print(f"\nScope inputs for this run: scope 1 = {self.args.probe[0]}x, scope 2 = {self.args.probe[1]}x ({self.report['scope_inputs']['fixture']}). Each physical probe switch must match its channel.")
                 prompt('Disconnect AD3 W1/W2/V+/V− from the boards; bench supply OFF. Close WaveForms. The script will take exclusive AD3 control and initially disable all its outputs.', 'READY')
             with device as self.device:
                 self.report['device']=device.info
@@ -214,7 +220,7 @@ def main(argv=None):
     p.add_argument('board',choices=['devices','power','digital','left','right'])
     p.add_argument('--serial',help='AD3 serial number from devices')
     p.add_argument('--ad3-3v3',action='store_true',help='Explicitly use AD3 V+ at 3.3 V for digital J2.3; never in parallel with another supply')
-    p.add_argument('--probe',type=int,choices=[1,10],default=1,help='Scope probe attenuation: 1 for direct flywires (default), 10 for the BNC adapter with two 10x probes; both channels must match')
+    p.add_argument('--probe',type=probe_setting,default=(1,1),help='Scope probe attenuation per channel: 1 (default, direct flywires), 10 (both 10x probes), or two values such as 10,1 for scope 1 at 10x and scope 2 at 1x')
     p.add_argument('--plan',action='store_true',help='Print fixture plan without opening any device')
     p.add_argument('--simulate',action='store_true',help='Use synthetic data only; report can never be a hardware PASS')
     p.add_argument('--simulate-fault',choices=['wrong-clock','bad-rail','swapped-mux','stuck-channel','missing-tone'])
