@@ -215,7 +215,7 @@ class Run:
         data=(samples[0]>1.65).astype(np.uint8);self.clock('PI_BCLK during data check',digitize(samples[1]),rate,3072000)  # fixed 3.3 V midpoint so a stuck line fails on edges, not on thresholding
         self.measure('PI_DIN transitions',np.count_nonzero(np.diff(data)),100,None,'edges')
         self.measure('PI_DIN one-density',np.mean(data),.1,.9,'fraction')
-        self.levels('PI_DIN',samples[0],'3v3');self.levels('PI_BCLK',samples[1],'3v3');self.end()
+        self.levels('PI_DIN',samples[0],'3v3');self.end()  # PI_BCLK levels were screened in pi-clocks with the 10x probe; here it is only the timing reference on the 1x probe, which loads it
     def channel(self):
         self.rails();self.references()
         chosen=12 if self.board=='left' else 14;unused=14 if self.board=='left' else 12

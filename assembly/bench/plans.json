@@ -511,7 +511,7 @@
        "net": "PI_BCLK"
       }
      ],
-     "expect": "PI_DIN toggles (≥100 edges in the record) with a one-density between 10% and 90% and 3.3 V logic levels; PI_BCLK 3.072 MHz. A constant PI_DIN means a stuck modulator, a wrong J21 selection or a dead bus line. This is a smoke test, not an audio measurement."
+     "expect": "PI_DIN toggles (≥100 edges in the record) with a one-density between 10% and 90% and 3.3 V logic levels; PI_BCLK 3.072 MHz (its levels were already screened in the previous step; the 1× probe loads it here). A constant PI_DIN means a stuck modulator, a wrong J21 selection or a dead bus line. This is a smoke test, not an audio measurement."
     }
    ]
   }

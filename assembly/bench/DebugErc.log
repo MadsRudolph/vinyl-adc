@@ -15,3 +15,7 @@ System Time     Process     Thread        ERC     ERC String                  Me
 2885983253      4166356     3839194816    3075    ercControlTransferFailed    USBC:FGetProdName
 2887485330      43908       3453966016    3075    ercControlTransferFailed    USBC:FGetPDID
 2887485331      43908       3453966016    3075    ercControlTransferFailed    USBC:FGetProdName
+2890169949      170054      3326039744    3075    ercControlTransferFailed    USBC:FGetPDID
+2890169949      170054      3326039744    3075    ercControlTransferFailed    USBC:FGetProdName
+2890225051      172476      2519516864    3075    ercControlTransferFailed    USBC:FGetPDID
+2890225052      172476      2519516864    3075    ercControlTransferFailed    USBC:FGetProdName
