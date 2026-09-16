@@ -75,6 +75,8 @@ References passed in the same run; exact values are in the report.
 | J4.8 MCLK | 1.536 MHz | 15.90 MHz |
 | J4.10 PUMP | 192 kHz | 1.987 MHz |
 
-Every divider output is 10.35× too fast and drifts, so the Pierce stage is free-running at about 63.6 MHz instead of locking to the crystal. **Cause found: U9 is a buffered 74HC04N (marking D6683PS), not the unbuffered 74HCU04** the oscillator needs. Divider, level shifter and rails are otherwise healthy: the 74HC4049 simply cannot pass a 31 MHz BCLK at 3.3 V, hence the stuck PI_BCLK.
+Every divider output was 10.35× too fast and drifting, so the Pierce stage was free-running at about 63.6 MHz instead of locking to the crystal. **Cause: one leg of Y1 was not soldered**, leaving the inverter with only its 1 M feedback path. After resoldering it, three consecutive captures on the bus header gave MCLK 1536.30 kHz (duty 0.51) and PUMP 192.04 kHz (duty 0.50), stable to the last digit and within the AD3's own timebase tolerance. The divider, the 74HCT132 buffer, the 74HC4049 shifter and the rails were healthy throughout; the stuck PI_BCLK was just the 4049 unable to pass a 31 MHz BCLK at 3.3 V.
 
-**Next:** fit a 74HCU04 in U9's socket and rerun `digital` (continue from the 22:05 run to carry rails). Until it arrives, the board can be clocked from the Raspberry Pi's GPCLK0 with J1 on 2–3 and 6.144 MHz on J2.7; the 74HCT132 buffer accepts the 3.3 V clock.
+Note for later: U9 is a buffered **74HC04N** (marking D6683PS), not the unbuffered 74HCU04 the design specifies. It locks to the crystal now that the crystal is connected, but a buffered gate in a Pierce is marginal (design-notes §5), so the HCU04 stays on the order list and should replace it when it arrives.
+
+**Next:** rerun `digital` continuing from the 22:05 run (rails carried), then `stack`, then the Pi.
