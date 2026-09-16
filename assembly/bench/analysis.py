@@ -63,3 +63,32 @@ def clock_delay_ns(source,output,rate):
     period=float(np.median(np.diff(a)));delta=(b-a[idx]).astype(float)
     delta[delta>period/2]-=period
     return float(np.median(delta)/rate*1e9)
+
+# Scope-only digital checks: two analog channels instead of a DIO harness.
+def digitize(x,min_swing=1.0):
+    """Threshold an analog logic capture at the midpoint of its settled low/high levels."""
+    s=summary(x)
+    if s['high_v']-s['low_v']<min_swing:raise ValueError(f"No logic swing on this channel ({s['low_v']:.2f}…{s['high_v']:.2f} V): missing clock, wrong probe point or unpowered stage")
+    return (np.asarray(x,dtype=float)>(s['low_v']+s['high_v'])/2).astype(np.uint8)
+
+def transition_mask(streams,guard):
+    n=len(streams[0]);mask=np.ones(n,dtype=bool)
+    for s in streams:
+        t=np.flatnonzero(np.diff(s))+1
+        for delta in range(-guard,guard+1):mask[np.clip(t+delta,0,n-1)]=False
+    mask[:guard+1]=False;mask[-guard-1:]=False
+    return mask
+
+def follow_error(source,output,rate,settle_s=120e-9,invert=False):
+    """Fraction of settled samples where output does not equal (or, if invert, complement) source."""
+    mask=transition_mask([source],max(1,int(np.ceil(rate*settle_s))))
+    if np.count_nonzero(mask)<100:raise ValueError('Too few settled samples')
+    expected=1-source if invert else source
+    return float(np.mean(output[mask]!=expected[mask]))
+
+def mux_case_error(mclk,output,ql,qr,rate):
+    """MCLK high selects QL, low selects QR; compare the captured output against that at settled samples."""
+    mask=transition_mask([mclk],max(1,int(np.ceil(rate*120e-9))))
+    if np.count_nonzero(mask)<100:raise ValueError('Too few settled mux samples')
+    expected=np.where(mclk.astype(bool),ql,qr).astype(np.uint8)
+    return float(np.mean(output[mask]!=expected[mask]))

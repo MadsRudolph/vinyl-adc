@@ -29,41 +29,25 @@ python assembly/bench/run.py power --probe 10,1
 
 Standalone power board. W1 → J3.10 (192 kHz, 0–5 V, the script sets it), Korad red → J3.2, black → J3.1. Limit 0.10 A. The script checks the W1 stimulus with nothing attached first, then +5 V, the negative rail, both references and gross ripple. This replaces the "approximately −4.3 V / references work" notes from 6 September with exact numbers.
 
-### 2. Rev B digital board standalone
+### 2. Rev B digital board standalone (two probe checks)
 
 ```sh
 python assembly/bench/run.py digital --ad3-3v3 --probe 10,1
 ```
 
-Remove W1 from the power board. Digital only: Korad red → J2.1, black → J2.2, V+ → J2.3, J1 1–2, QL (J4.12) and QR (J4.14) tied to GND for the rails and clocks steps. Limit 0.10 A.
+Digital only: Korad red → J2.1, black → J2.2, V+ → J2.3, J1 1–2. Limit 0.10 A. After the rails step, two probe moves on header pins, no DIO wires, no ties: scope 1 → J2.4 PI_BCLK with scope 2 → J2.5 PI_LRCLK (3.3 V logic, 3.072 MHz / 48 kHz), then scope 1 → J4.8 MCLK with scope 2 → J4.10 PUMP (5 V logic, 1.536 MHz / 192 kHz). If nothing runs, probe J1.1 (raw Pierce output, 6.144 MHz) and U4.10.
 
-Before trusting the divider: if the clocks step fails with no CLK6M, put a probe on **J1.1**. That is the raw Pierce output (U9.4). 6.144 MHz there but nothing at U4.10 is a J1/U3 problem; nothing at J1.1 is the oscillator itself (U9 must be the unbuffered 74HCU04; R11 = 2k2; C16/C17 = 27 pF). An oscillator running at tens of MHz means a buffered 74HC04 was fitted.
-
-DIO wiring for the clocks step (all inputs): DIO0 U4.10 CLK6M, DIO1 J4.8 MCLK, DIO2 U4.9 BCLK, DIO3 U4.4 LRCLK, DIO4 J2.4 PI_BCLK, DIO5 J2.5 PI_LRCLK, DIO6 U6.4 DIN, DIO7 J4.12 QL, DIO8 J4.14 QR, DIO9 J2.6 PI_DIN, DIO10 J4.10 PUMP. Scope 1 → J2.4, scope 2 → J2.5 for the Pi levels; the mux step moves them to U6.4 and J2.6.
-
-The four mux cases each need a power-off change of the QL/QR ties (0 = GND, 1 = board +5 V, never a 3.3 V DIO output). After the run, power off and **remove both ties** before any channel goes on the bus.
-
-### 3. Left channel with the tested power and digital boards
+### 3. Full stack without the Pi
 
 ```sh
-python assembly/bench/run.py left --ad3-3v3 --probe 10,1
+python assembly/bench/run.py stack --ad3-3v3 --probe 10,1
 ```
 
-Power + digital + left channel on the bus, correctly aligned pin for pin. J21 = 1–2 on this board. Korad red → digital J2.1, black → J2.2, V+ → J2.3. Limit 0.20 A. W1 is disconnected for the rails, references and quiet steps; J20.1 is shorted to J20.2 for the quiet step. Then W1 → J20.1 (with scope 1 on it) for the two 1 kHz tone levels, 0.10 and 0.25 Vpeak, RV20 unchanged.
+Power + digital + both channels on the bus, J21 = 1–2 left and 2–3 right, nothing on the channel inputs, W1 disconnected, V+ → J2.3, limit 0.30 A. Rails (power J3.2 / J3.16) and references (J3.4 / J3.6) under full load, then PI_BCLK / PI_LRCLK (J2.4 / J2.5), then PI_DIN / PI_BCLK (J2.6 / J2.4): PI_DIN must toggle at 3.3 V logic.
 
-DIO for the channel steps: DIO0 U23.3 MCLK, DIO1 U23.5 Q_OUT, DIO2 U23.6 QN_OUT, DIO3 U24.4 DACP_L, DIO4 U24.2 DACN_L, DIO5 J7.12 QL (left). Scope 2 → J7.2 (+5 V) during the tone steps.
+### 4. Connect the Raspberry Pi
 
-### 4. Right channel
-
-```sh
-python assembly/bench/run.py right --ad3-3v3 --probe 10,1
-```
-
-Same as the left run with the right board only, J21 = 2–3, DIO5 → J7.14 (QR).
-
-### 5. Full stack rail check
-
-Power off, remove every remaining tie and the J20 short, fit both channels with opposite J21 settings, then repeat the rails and references readings under full load (the `left` run's first two steps with both channels on the bus, or manually with the visual guide's power steps). Record the Korad current. Only then close the enclosure.
+Power off. Remove AD3 V+ and all probes. Pi I²S header → J2 pin for pin; the Pi supplies +3.3 V from then on. Korad on first, then boot the Pi and capture. The per-channel `left` / `right` scripts stay available for debugging a channel.
 
 ## What to record for each run
 

@@ -17,7 +17,11 @@ class SimulatedAD3:
         elif kind=='rails-power' or kind=='rails-channel':a,b=np.full(count,5.),np.full(count,-4.1)
         elif kind=='rails-digital':a,b=np.full(count,5.),np.full(count,3.3)
         elif kind=='references':a,b=np.full(count,2.5),np.full(count,-2.5)
-        elif kind=='clocks':a,b=square(3072000,3.3),square(48000,3.3)
+        elif kind=='pi-clocks':a,b=square(3072000/(2 if self.fault=='wrong-clock' else 1),3.3),square(48000,3.3)
+        elif kind=='bus-clocks':a,b=square(1536000/(2 if self.fault=='wrong-clock' else 1),5),square(192000,5)
+        elif kind=='pi-data':
+            bits=rng.integers(0,2,count);bits=np.repeat(bits[:count//16],16)[:count] if count>=16 else bits
+            a,b=(np.zeros(count) if self.fault=='stuck-channel' else 3.3*bits),square(3072000,3.3)
         elif kind.startswith('mux-'):
             ql,qr=map(int,kind[-2:]);bits=np.where((t*1536000)%1<.5,ql,qr);a,b=5.*bits,3.3*bits
         elif kind.startswith('tone-'):a,b=sine(float(kind[5:])),np.full(count,5.)

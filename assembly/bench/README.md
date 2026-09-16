@@ -8,6 +8,8 @@ From the project root:
 python assembly/bench/run.py devices
 python assembly/bench/run.py power --probe 10,1
 python assembly/bench/run.py digital --ad3-3v3 --probe 10,1
+python assembly/bench/run.py stack --ad3-3v3 --probe 10,1
+# optional per-channel debugging:
 python assembly/bench/run.py left --ad3-3v3 --probe 10,1
 python assembly/bench/run.py right --ad3-3v3 --probe 10,1
 ```
@@ -32,10 +34,12 @@ The scripts refuse other instrument models. `devices` only enumerates devices, w
 
 ## Test order and scope
 
+The minimum route before the Raspberry Pi is connected is `power` → `digital` → `stack`; each of those uses only the two scope probes on header pins. The `left`/`right` tests are the detailed per-channel screens (DIO harness, tone injection) for debugging a channel that misbehaves.
+
 1. **Power standalone:** W1 loopback verifies the generated 192 kHz, 0–5 V pump clock before attaching it to J3.10. The power board receives bench +5 V at J3.2/GND at J3.1. The script checks +5 V, the generated negative rail, both references, ratiometric reference accuracy, and gross ripple. No digital board is attached to compete with W1.
-2. **Digital standalone (rev B):** bench +5 V at J2.1, +3.3 V at J2.3, GND at J2.2. J1 shunt 1–2 selects the on-board 6.144 MHz Pierce oscillator (U9 74HCU04 + Y1); W1 never connects to the digital board. The raw oscillator output is at J1.1 if the divider shows nothing. Measure the divider outputs, level-shifted clocks (including a sample-limited non-inversion/delay screen) and all four QL/QR mux truth-table cases. Temporary QL/QR ties are to board GND or +5 V, never to 3.3 V DIO outputs. The script checks actual input states before judging the outputs.
-3. **Each channel:** use the tested power/digital boards and one channel at a time. Remove the digital-test input ties from the selected channel output. Check loaded supplies/references, quiet input density and switching, complementary flip-flop/DAC outputs, the selected bus output, and the response to two levels of 1 kHz input. Set J21 1–2 for left or 2–3 for right; physical reference numbers are identical on both copies.
-4. **Complete stack:** with power off, remove all remaining test ties, connect both tested channels, and recheck the power rails/references under full load before enclosing the stack. Individual board results do not prove the full-stack power margin.
+2. **Digital standalone (rev B):** bench +5 V at J2.1, +3.3 V at J2.3, GND at J2.2. J1 shunt 1–2 selects the on-board 6.144 MHz Pierce oscillator (U9 74HCU04 + Y1); W1 never connects to the digital board. Two probe checks on header pins: PI_BCLK/PI_LRCLK at J2.4/J2.5 (frequency, duty and 3.3 V levels, which is what protects the Pi) and MCLK/PUMP at J4.8/J4.10 (5 V bus clocks). Together they prove the crystal, buffer and the whole divider chain. The raw oscillator output is at J1.1 if nothing shows up. The mux truth table is not screened separately; the stack test checks that interleaved data reaches the Pi header.
+3. **Full stack (`stack`):** power, digital and both channels on the bus, no Pi, +3.3 V still from AD3 V+. Rails and references under full load at power J3, then PI_BCLK/PI_LRCLK and finally PI_DIN/PI_BCLK at the Pi header: PI_DIN must toggle continuously at 3.3 V logic. A pass here is the gate for connecting the Pi, which then supplies the 3.3 V (remove AD3 V+ first). Individual board results do not prove the full-stack power margin.
+4. **Each channel (optional, `left`/`right`):** detailed screen with DIO inputs and a 1 kHz tone; use it when a channel misbehaves in the stack.
 
 CLK6M is **6.144 MHz**; the net called MCLK is **1.536 MHz**. BCLK is 3.072 MHz, LRCLK is 48 kHz, and PUMP is 192 kHz. These values come from `clock_divider()` in `hardware/kicad/tools/vinyl_adc_layout.py`, with pin/net names checked against the PCB snapshot. The older README and design notes contain superseded architecture details.
 

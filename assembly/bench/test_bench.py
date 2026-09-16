@@ -30,9 +30,10 @@ class AnalysisTests(unittest.TestCase):
         plans=json.loads((root/'bench/plans.json').read_text())['boards']
         boards=json.loads((root/'generated/boards.json').read_text())['boards']
         for name,plan in plans.items():
-            b=boards['channel_l' if name in ['left','right'] else name]
+            default='channel_l' if name in ['left','right'] else name
             for step in plan['steps']:
                 for c in step['connections']:
+                    b=boards[c.get('board',default)]
                     part=next(p for p in b['parts'] if p['ref']==c['ref'])
                     pad=next(p for p in part['pads'] if p['pin']==c['pin'])
                     self.assertEqual(pad['net'],c['net'],(name,step['id'],c))
@@ -50,13 +51,13 @@ class RunnerTests(unittest.TestCase):
             self.assertTrue(report['sources']);self.assertTrue(report['limits_sha256'])
             return code,report
     def test_healthy_sequences(self):
-        for board in ['power','digital','left','right']:
+        for board in ['power','digital','stack','left','right']:
             with self.subTest(board=board):
                 code,r=self.run_fixture(board)
                 self.assertEqual(code,0);self.assertEqual(r['simulation_outcome'],'PASS')
                 self.assertTrue(all(s['status']=='PASS' for s in r['steps']))
     def test_faults_fail_and_stop(self):
-        for board,fault in [('power','bad-rail'),('digital','wrong-clock'),('digital','swapped-mux'),('left','stuck-channel'),('right','missing-tone')]:
+        for board,fault in [('power','bad-rail'),('digital','wrong-clock'),('stack','stuck-channel'),('left','stuck-channel'),('right','missing-tone')]:
             with self.subTest(board=board,fault=fault):
                 code,r=self.run_fixture(board,fault)
                 self.assertEqual(code,1);self.assertEqual(r['simulation_outcome'],'FAIL')

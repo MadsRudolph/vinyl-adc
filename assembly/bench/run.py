@@ -22,13 +22,13 @@ if __name__=='__main__' and sys.platform.startswith('linux') and Path('/usr/lib/
 import time
 import uuid
 import numpy as np
-from analysis import bit,frequency,summary,sine_fit,mux_errors,channel_stream,dac_errors,stable_mask,clock_delay_ns
+from analysis import bit,frequency,summary,sine_fit,mux_errors,channel_stream,dac_errors,stable_mask,clock_delay_ns,digitize,follow_error,mux_case_error
 from dwf_device import AD3,SDK,InstrumentError
 from simulate import SimulatedAD3
 
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
 PLANS=json.loads((HERE/'plans.json').read_text());LIMITS=json.loads((HERE/'limits.json').read_text())
-STEP_ORDER={'power':['pump-check','rails','references'],'digital':['rails','clocks','mux-00','mux-10','mux-01','mux-11'],
+STEP_ORDER={'power':['pump-check','rails','references'],'digital':['rails','pi-clocks','bus-clocks'],'stack':['rails','references','pi-clocks','pi-data'],
             'left':['rails','references','quiet','tone-0.1','tone-0.25','gain-response'],'right':['rails','references','quiet','tone-0.1','tone-0.25','gain-response']}
 class ScreenFailure(RuntimeError):pass
 
@@ -70,7 +70,7 @@ class Run:
         self.run_id=f'{stamp}-{args.board}-{uuid.uuid4().hex[:8]}'
         self.folder=args.output/self.run_id;self.folder.mkdir(parents=True,exist_ok=False)
         snapshot=json.loads((HERE.parent/'generated/boards.json').read_text())['boards']
-        relevant=['power'] if args.board=='power' else ['digital'] if args.board=='digital' else ['power','digital','channel_l']
+        relevant=['power'] if args.board=='power' else ['digital'] if args.board=='digital' else ['power','digital','channel_l']  # stack and channels need all three
         self.report={'format':'vinyl-adc-bench-report-v1','id':self.run_id,'board':args.board,'started':dt.datetime.now(dt.timezone.utc).isoformat(),'simulated':args.simulate,'status':'RUNNING','scope':'Assembly functional screening only; not production qualification, SNR, THD or 24-bit validation.','limits':LIMITS,'limits_sha256':sha(HERE/'limits.json'),'sources':{k:snapshot[k]['sha256'] for k in relevant},'steps':[],'supply':{'control':'manual','3v3_source':'AD3 V+' if args.ad3_3v3 else 'external regulated source','current_readings_ma':self.current_samples},'scope_inputs':{'probe_attenuation':{'scope_1':args.probe[0],'scope_2':args.probe[1]},'fixture':'direct 1x flywires' if tuple(args.probe)==(1,1) else f'BNC adapter: scope 1 probe {args.probe[0]}x, scope 2 probe {args.probe[1]}x'}}
         for k in relevant:
             if sha(ROOT/snapshot[k]['source'])!=snapshot[k]['sha256']:raise RuntimeError('PCB snapshot is stale. Regenerate it and review changed probe locations before testing.')
@@ -142,8 +142,8 @@ class Run:
     def capture(self,name,values,rate):
         filename=f'{len(self.report["steps"]):02d}-{name}.npz';np.savez_compressed(self.folder/filename,samples=values,sample_rate_hz=rate)
         self.step['captures'].append({'file':filename,'sample_rate_hz':rate,'samples':values.shape[-1]})
-    def scope(self,kind,rate=1e6):
-        samples,rate=self.device.scope_fixture(kind,rate,8192) if self.args.simulate else self.device.scope(rate=rate)
+    def scope(self,kind,rate=1e6,count=8192):
+        samples,rate=self.device.scope_fixture(kind,rate,count) if self.args.simulate else self.device.scope(rate=rate,count=count)
         self.capture('scope-'+kind,samples,rate);return samples,rate
     def logic(self,kind,record=False):
         rate=4e6 if record else 50e6;duration=.12 if record else None
@@ -184,28 +184,25 @@ class Run:
             self.device.wave('square',192000,2.5,2.5);samples,rate=self.scope('pump-check',10e6)
             self.clock('pump stimulus',samples[0]>2.5,rate,192000);self.levels('pump stimulus',samples[0],'5v');self.device.wave_off();self.end()
         self.rails();self.references()
+    # Two scope probes on header pins only; each step is one power-off probe move. No DIO harness, no rail ties.
+    def clock_pair(self,key,name_a,hz_a,rail_a,name_b,hz_b,rail_b,rate=50e6):
+        if self.carried(key):return
+        self.begin(key);self.setup(key);samples,rate=self.scope(key,rate,32768)
+        a=digitize(samples[0]);b=digitize(samples[1])
+        self.clock(name_a,a,rate,hz_a);self.levels(name_a,samples[0],rail_a)
+        self.clock(name_b,b,rate,hz_b);self.levels(name_b,samples[1],rail_b);self.end()
+    def pi_clocks(self):self.clock_pair('pi-clocks','PI_BCLK',3072000,'3v3','PI_LRCLK',48000,'3v3')
     def digital(self):
-        self.rails()
-        if not self.carried('clocks'):
-            self.begin('clocks');self.setup('clocks')
-            words,rate=self.logic('clocks')
-            for channel,name,hz in [(0,'CLK6M',6144000),(1,'MCLK',1536000),(2,'BCLK',3072000),(3,'LRCLK',48000),(4,'PI_BCLK',3072000),(5,'PI_LRCLK',48000),(10,'PUMP',192000)]:self.clock(name,bit(words,channel),rate,hz)
-            for src,dst,label in [(2,4,'PI_BCLK'),(3,5,'PI_LRCLK')]:
-                self.measure(label+' rising-edge delay / polarity',clock_delay_ns(bit(words,src),bit(words,dst),rate),-1e9/rate,120,'ns')
-            samples,_=self.scope('clocks',50e6)
-            self.levels('PI_BCLK',samples[0],'3v3');self.levels('PI_LRCLK',samples[1],'3v3');self.end()
-        for ql,qr in [(0,0),(1,0),(0,1),(1,1)]:
-            case=f'mux-{ql}{qr}'
-            if self.carried(case):continue
-            self.begin(case)
-            self.setup('mux',f'THIS CASE: QL (J4.12) → {"+5 V" if ql else "GND"}; QR (J4.14) → {"+5 V" if qr else "GND"}.')
-            words,rate=self.logic(case)
-            self.clock('MCLK during mux test',bit(words,1),rate,1536000)
-            for channel,label,expected in [(7,'QL',ql),(8,'QR',qr)]:self.measure(label+' input mismatch',np.mean(bit(words,channel)!=expected),0,.001,'fraction')
-            for name,value in mux_errors(words,rate).items():self.measure(name,value,0,LIMITS['logic_error_fraction_max'],'fraction')
-            samples,_=self.scope(case,50e6)
-            self.levels('DIN',samples[0],'5v',ql if ql==qr else None);self.levels('PI_DIN',samples[1],'3v3',ql if ql==qr else None)
-            self.end()
+        self.rails();self.pi_clocks()
+        self.clock_pair('bus-clocks','MCLK',1536000,'5v','PUMP',192000,'5v')
+    def stack(self):
+        self.rails();self.references();self.pi_clocks()
+        if self.carried('pi-data'):return
+        self.begin('pi-data');self.setup('pi-data');samples,rate=self.scope('pi-data',50e6,32768)
+        data=(samples[0]>1.65).astype(np.uint8);self.clock('PI_BCLK during data check',digitize(samples[1]),rate,3072000)  # fixed 3.3 V midpoint so a stuck line fails on edges, not on thresholding
+        self.measure('PI_DIN transitions',np.count_nonzero(np.diff(data)),100,None,'edges')
+        self.measure('PI_DIN one-density',np.mean(data),.1,.9,'fraction')
+        self.levels('PI_DIN',samples[0],'3v3');self.levels('PI_BCLK',samples[1],'3v3');self.end()
     def channel(self):
         self.rails();self.references()
         chosen=12 if self.board=='left' else 14;unused=14 if self.board=='left' else 12
@@ -253,6 +250,7 @@ class Run:
                 self.report['device']=device.info
                 if self.board=='power':self.power()
                 elif self.board=='digital':self.digital()
+                elif self.board=='stack':self.stack()
                 else:self.channel()
                 self.pause_off()
             if device.cleanup_errors:raise InstrumentError('AD3 shutdown could not be verified: '+'; '.join(device.cleanup_errors))
@@ -268,7 +266,6 @@ class Run:
             self.write_report()
             self.say('\n'+self.report['status']+': '+self.report.get('error','Finished screening sequence.'))
             self.say('TURN OFF THE BENCH SUPPLY. AD3 outputs have been shut down unless a cleanup error is reported. A disabled W1 is not guaranteed to be high impedance; disconnect it before other use.')
-            if self.board=='digital':self.say('With power OFF, remove the temporary QL/QR test jumpers before connecting either channel board.')
             self.say('Report: '+str(self.folder/'report.json'))
             self.op.finished(self.report)
         outcome=self.report.get('simulation_outcome',self.report['status'])
@@ -290,7 +287,7 @@ def write_index(output):
 
 def build_parser():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('board',choices=['devices','power','digital','left','right'])
+    p.add_argument('board',choices=['devices','power','digital','left','right','stack'])
     p.add_argument('--serial',help='AD3 serial number from devices')
     p.add_argument('--ad3-3v3',action='store_true',help='Explicitly use AD3 V+ at 3.3 V for digital J2.3; never in parallel with another supply')
     p.add_argument('--probe',type=probe_setting,default=(1,1),help='Scope probe attenuation per channel: 1 (default, direct flywires), 10 (both 10x probes), or two values such as 10,1 for scope 1 at 10x and scope 2 at 1x')

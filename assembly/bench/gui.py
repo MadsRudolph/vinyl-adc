@@ -143,7 +143,7 @@ header{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;padding:16px 22
 main{display:grid;gap:18px;padding:18px 22px;max-width:1300px;margin:0 auto;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}@media(max-width:900px){main{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}.card h2{margin:0 0 10px;font-size:17px}.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:0 0 6px}
 label{display:block;margin:10px 0 4px}select,input[type=text],input[type=number]{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:#0b1510;color:var(--text);font-size:16px}
-.radios{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.radios label{margin:0;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;cursor:pointer}.radios input{display:none}.radios input:checked+span{color:var(--accent);font-weight:700}.radios label:has(input:checked){border-color:var(--accent);background:#17311f}
+.radios{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.radios label{margin:0;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;cursor:pointer}.radios input{display:none}.radios input:checked+span{color:var(--accent);font-weight:700}.radios label:has(input:checked){border-color:var(--accent);background:#17311f}
 button{font:inherit;border:0;border-radius:10px;padding:12px 18px;cursor:pointer;background:#27503a;color:var(--text)}button.primary{background:var(--accent);color:#0d1711;font-weight:700}button.big{font-size:28px;padding:22px;width:100%;letter-spacing:.06em}button.danger{background:#5a2323;color:#ffd9d6}button:disabled{opacity:.45;cursor:not-allowed}
 .muted{color:var(--muted)}.warn{border-left:4px solid var(--warn);padding:10px 12px;background:#20240f;border-radius:8px;margin:10px 0}.prompt{border:2px solid var(--accent);border-radius:12px;padding:16px;margin-top:10px}.prompt p{font-size:18px;margin:0 0 14px}
 table{width:100%;border-collapse:collapse;margin:8px 0}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);font-size:15px}th{color:var(--muted);font-weight:600}
@@ -175,7 +175,7 @@ table{width:100%;border-collapse:collapse;margin:8px 0}td,th{text-align:left;pad
 </main>
 <script>
 const $=s=>document.querySelector(s);const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const BOARDS=[['power','Power'],['digital','Digital'],['left','Left channel'],['right','Right channel']];
+const BOARDS=[['power','Power'],['digital','Digital'],['stack','Full stack'],['left','Left channel'],['right','Right channel']];
 $('#boards').innerHTML=BOARDS.map(([v,l],i)=>`<label><input type="radio" name="board" value="${v}" ${i===0?'checked':''}><span>${l}</span></label>`).join('');
 const board=()=>document.querySelector('input[name=board]:checked').value;
 let since=0,lastStep=null,running=false;

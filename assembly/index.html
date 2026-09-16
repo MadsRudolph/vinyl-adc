@@ -114,6 +114,41 @@ python assembly/bench/run.py power</pre>
       <pre class="command">cd /home/mads/Projects/vinyl-adc
 python assembly/bench/run.py digital --ad3-3v3 --probe 10,1   # BNC adapter: CH1 10x probe, CH2 1x probe
 python assembly/bench/run.py digital --ad3-3v3                # direct 1x scope flywires</pre>
+      <p>The script prompts for the rails wiring and then two probe checks on header pins only: PI_BCLK/PI_LRCLK at J2.4/J2.5 (3.3 V levels and frequencies, the Pi-safety check) and MCLK/PUMP at J4.8/J4.10 (5 V bus clocks). No DIO harness and no QL/QR ties. Omit <code>--ad3-3v3</code> only if a separate regulated +3.3 V supply feeds J2.3.</p>
+      <h3>Option B: manual WaveForms test</h3>
+      <ol>
+        <li>Open WaveForms with no test script running. In <strong>Wavegen → W1</strong>, select Square, <strong>192 kHz</strong>, 50% symmetry, <strong>amplitude 2.5 V, offset +2.5 V</strong>. That means <strong>5 Vpp, 0–5 V</strong>, not ±5 V. Keep it stopped while wiring.</li>
+        <li>With the PCB disconnected, connect scope <strong>1+ to W1</strong>, <strong>1− to AD3 GND</strong>. Set DC coupling/direct 1× flywires, about 1 V/div and 2 µs/div; trigger on channel 1 rising at about 2.5 V. Run W1 and Scope. Confirm approximately 192 kHz, 0 V low and 5 V high, with no substantial overshoot. Stop W1.</li>
+        <li>Switch the Korad off, then connect the fixture in the table below. Scope 1 now measures +5 V; scope 2 measures the negative rail. Set both scope channels DC coupled, about 1 V/div, with offsets that show their respective rails. Use Auto trigger.</li>
+        <li>Turn the Korad on at 5.00 V / 100 mA. If it settles in CV, start W1 immediately. Do not leave the pump input floating while the board is powered. Wait about one second, then record +5 V, the negative rail and supply current. Stop if a rail is positive where it should be negative.</li>
+        <li>For ripple, capture at least 8 ms at ≥1 MS/s, with the DC rail visible. Use peak-to-peak measurements. The provisional screen is <strong>≤150 mVpp</strong>; this detects large faults, not microvolt noise performance.</li>
+        <li>Turn the Korad off, stop W1, wait for discharge, and move only scope 1+ to <strong>J3.4</strong> and scope 2+ to <strong>J3.6</strong>. Keep both minus leads on GND. Repeat the power-on sequence and measure the references.</li>
+        <li>Finish by switching the Korad off, stopping all AD3 outputs and checking that rails have discharged before disconnecting.</li>
+      </ol>
+      <div class="testing-table"><table><caption>Standalone power fixture — power board J3</caption><thead><tr><th>Lead</th><th>Connect to</th><th>Purpose</th></tr></thead><tbody>
+        <tr><td>Korad red; scope 1+</td><td data-probe="power:J3:2:+5V">J3.2 · +5V</td><td>Only external board supply</td></tr>
+        <tr><td>Korad black; AD3 GND; scope 1− and 2−</td><td data-probe="power:J3:1:GND">J3.1 · GND</td><td>Common reference</td></tr>
+        <tr><td>AD3 W1</td><td data-probe="power:J3:10:PUMP">J3.10 · PUMP</td><td>192 kHz, 0–5 V</td></tr>
+        <tr><td>Scope 2+</td><td data-probe="power:J3:16:-5V">J3.16 · −5V</td><td>Generated negative rail, never an AD3 supply connection</td></tr>
+        <tr><td>Scope 1+ in reference step</td><td data-probe="power:J3:4:VREF_P">J3.4 · VREF_P</td><td>Positive reference</td></tr>
+        <tr><td>Scope 2+ in reference step</td><td data-probe="power:J3:6:VREF_N">J3.6 · VREF_N</td><td>Negative reference</td></tr>
+      </tbody></table></div>
+      <div class="testing-table"><table><caption>Provisional power-board screening limits</caption><thead><tr><th>Measurement</th><th>Accept for initial screening</th></tr></thead><tbody>
+        <tr><td>+5 V</td><td>4.75–5.25 V</td></tr><tr><td>Negative rail</td><td>−5.25 to −3.50 V; observe the minus sign</td></tr><tr><td>VREF_P</td><td>+2.35 to +2.65 V</td></tr><tr><td>VREF_N</td><td>−2.65 to −2.35 V</td></tr><tr><td>Reference accuracy</td><td>Each reference within 3% of ±½ the measured +5 V</td></tr><tr><td>Gross ripple</td><td>≤150 mVpp on each rail/reference</td></tr>
+      </tbody></table></div>
+      <p>Passing unloaded measurements does not establish the pump’s current capacity for both channels. That is checked later under the actual load.</p>
+    </div>
+  </details>
+
+  <details id="test-digital">
+    <summary>4 · Digital board alone — rev B with the on-board crystal oscillator</summary>
+    <div class="testing-body">
+      <p class="testing-callout"><strong>The rev B digital board clocks itself.</strong> U9 (74HCU04) and Y1 form a 6.144 MHz Pierce oscillator whose output reaches J1 pin 1; the J1 shunt across <strong>pins 1–2</strong> feeds it to the 74HCT132 buffer. W1 is not connected to the digital board for any test. Keep the power board, channels and Pi disconnected for the standalone test.</p>
+      <h3>Option A: guided SDK test with saved captures</h3>
+      <p>Easiest at the bench: start the local browser front end with <code>python assembly/bench/gui.py</code> and open <a href="http://127.0.0.1:8090" rel="noreferrer">http://127.0.0.1:8090</a>. It shows each step’s wiring, one big READY / ON / OFF button and the current field, and can continue an earlier aborted run without repeating its passed steps. Or, in a terminal, close WaveForms and run one of these, depending on the scope fixture:</p>
+      <pre class="command">cd /home/mads/Projects/vinyl-adc
+python assembly/bench/run.py digital --ad3-3v3 --probe 10,1   # BNC adapter: CH1 10x probe, CH2 1x probe
+python assembly/bench/run.py digital --ad3-3v3                # direct 1x scope flywires</pre>
       <p>The script prompts for the rails wiring, the DIO clock wiring and the four QL/QR mux cases, and records frequencies, duty cycles, Pi-side levels, the non-inversion delay screen and the mux truth table. Omit <code>--ad3-3v3</code> only if a separate regulated +3.3 V supply feeds J2.3. The DIO flywires stay available on the BNC adapter’s pass-through header.</p>
       <h3>Option B: manual WaveForms test</h3>
       <ol>
@@ -130,15 +165,10 @@ python assembly/bench/run.py digital --ad3-3v3                # direct 1x scope 
         <tr><td>AD3 V+</td><td data-probe="digital:J2:3:+3V3">J2.3 · +3V3</td><td>+3.30 V; V− off</td></tr>
         <tr><td>J1 shunt</td><td data-probe="digital:J1:1:Net-(J1-Pin_1)">J1.1 → J1.2</td><td>On-board crystal selected; J2.7 (GPCLK0) left open</td></tr>
       </tbody></table></div>
-      <div class="testing-table"><table><caption>Clock observations — all listed DIO pins remain inputs</caption><thead><tr><th>AD3 lead</th><th>Digital test point</th><th>Expected</th></tr></thead><tbody>
-        <tr><td>Scope 1+ (first check)</td><td data-probe="digital:J1:1:Net-(J1-Pin_1)">J1.1 · Pierce output</td><td>6.144 MHz ±0.01 %, 5 V logic</td></tr>
-        <tr><td>DIO0</td><td data-probe="digital:U4:10:CLK6M">U4.10 · CLK6M</td><td>6.144 MHz, 5 V logic</td></tr>
-        <tr><td>DIO1</td><td data-probe="digital:J4:8:MCLK">J4.8 · MCLK</td><td>1.536 MHz, 5 V logic</td></tr>
-        <tr><td>DIO2</td><td data-probe="digital:U4:9:BCLK">U4.9 · BCLK</td><td>3.072 MHz, 5 V logic</td></tr>
-        <tr><td>DIO3</td><td data-probe="digital:U4:4:LRCLK">U4.4 · LRCLK</td><td>48 kHz, 5 V logic</td></tr>
-        <tr><td>DIO4</td><td data-probe="digital:J2:4:PI_BCLK">J2.4 · PI_BCLK</td><td>3.072 MHz, 3.3 V logic</td></tr>
-        <tr><td>DIO5</td><td data-probe="digital:J2:5:PI_LRCLK">J2.5 · PI_LRCLK</td><td>48 kHz, 3.3 V logic</td></tr>
-        <tr><td>DIO10</td><td data-probe="digital:J4:10:PUMP">J4.10 · PUMP</td><td>192 kHz, 5 V logic</td></tr>
+      <div class="testing-table"><table><caption>Minimum clock checks — two probe tips, header pins only</caption><thead><tr><th>Check</th><th>Scope 1+</th><th>Scope 2+</th><th>Expected</th></tr></thead><tbody>
+        <tr><td>Pi-side clocks</td><td data-probe="digital:J2:4:PI_BCLK">J2.4 · PI_BCLK</td><td data-probe="digital:J2:5:PI_LRCLK">J2.5 · PI_LRCLK</td><td>3.072 MHz and 48 kHz, 3.3 V logic (highs 2.7…3.6 V)</td></tr>
+        <tr><td>Bus clocks</td><td data-probe="digital:J4:8:MCLK">J4.8 · MCLK</td><td data-probe="digital:J4:10:PUMP">J4.10 · PUMP</td><td>1.536 MHz and 192 kHz, 5 V logic</td></tr>
+        <tr><td>If nothing runs</td><td data-probe="digital:J1:1:Net-(J1-Pin_1)">J1.1 · Pierce output</td><td data-probe="digital:U4:10:CLK6M">U4.10 · CLK6M</td><td>6.144 MHz on both; see troubleshooting</td></tr>
       </tbody></table></div>
       <p>Screen frequencies within ±2% (the crystal itself should be within ±0.01 %) and duty cycle within 35–65%. Also check that divider outputs track the measured CLK6M by ÷2, ÷4, ÷32 and ÷128 respectively. Use the scope to check voltage: 5 V logic low −0.3…0.45 V, high 4.0…5.3 V; Pi-facing logic low −0.3…0.45 V, high 2.7…3.6 V. A logic analyzer alone cannot establish safe output voltage.</p>
       <p>Compare BCLK to PI_BCLK and LRCLK to PI_LRCLK with both scope channels: the paths should be non-inverting, with small propagation delay. At 50 MS/s, each sample is 20 ns; this is a gross polarity/timing check, not a precision jitter measurement.</p>
@@ -172,24 +202,23 @@ python assembly/bench/run.py digital --ad3-3v3                # direct 1x scope 
   </details>
 
   <details id="test-later">
-    <summary>7 · Channel and complete-system tests — SDK route</summary>
+    <summary>7 · Full stack, then the Raspberry Pi</summary>
     <div class="testing-body">
       <p>Both channels are now fully populated, including their seven 100 nF decoupling capacitors. Before powering a channel, check all 20 required top-side pad connections on it against its assembly map; unplated holes do not join top and bottom copper automatically. Confirm J21: <strong>1–2 on the left board, 2–3 on the right board</strong>.</p>
-      <p>The channel scripts need the tested power and digital boards on the bus: the digital board supplies MCLK and PUMP from its crystal, the power board supplies the references and the negative rail. W1 is used only as the 1 kHz audio source into J20.</p>
+      <p>The minimum before the Pi is the <strong>stack</strong> test: power, digital and both channels on the bus, no Pi, +3.3 V still from AD3 V+. It checks the rails and references under full load at power J3, then PI_BCLK/PI_LRCLK and PI_DIN/PI_BCLK at the Pi header. PI_DIN must toggle continuously at 3.3 V logic; a constant line means a stuck modulator, a wrong J21 or a dead bus line. Start the +5 V current limit at 0.30 A.</p>
       <ol>
-        <li>Inspect the channel soldering, then run the digital screening above on the rev B board first. Close WaveForms before running SDK tests.</li>
-        <li>Test one channel at a time with the verified power and digital boards. Remove all QL/QR test ties before connecting a channel. Left J21 = 1–2; right J21 = 2–3. Follow the terminal fixture prompts. Start +5 V current limit at 0.20 A for power + digital + one channel; persistent CC remains a stop condition.</li>
-        <li>The scripts check loaded rails and references, grounded-input bit density, complementary feedback outputs and two 1 kHz signal levels: 0.10 and 0.25 V peak, zero offset. Keep the channel gain trimmer fixed. These are functional screens, not calibrated audio-quality measurements.</li>
-        <li>After each channel passes, power off and connect both channels with opposite J21 selections. Remove any remaining input ties. Recheck +5 V, negative rail, both references and supply current under full load before attempting capture. Do not assume the unloaded pump result proves sufficient current for the stereo stack.</li>
-        <li>Raspberry Pi capture and SNR/THD measurements are a later stage after electrical verification. No Pi connection is part of the procedures above.</li>
+        <li>Power off, remove the AD3 V+ wire from J2.3 and every probe. Connect the Pi's I²S GPIO header to J2 with matching pin numbers; the Pi now supplies +3.3 V to J2.3 and shares GND. Never leave AD3 V+ connected once the Pi is attached.</li>
+        <li>Power the stack from the Korad first, then boot the Pi, and capture with the Pi's I²S receiver. Audio-quality measurements (SNR, THD, frequency response) happen there, not in these screens.</li>
+        <li>If one channel misbehaves, run the detailed per-channel test (<code>left</code> or <code>right</code>): it uses DIO inputs and a 1 kHz tone from W1 and needs the stack reduced to power + digital + that channel.</li>
       </ol>
       <pre class="command"># Browser front end (same tests, big buttons, resume support):
 python assembly/bench/gui.py      # then open http://127.0.0.1:8090
 # Terminal route. --probe declares each scope channel's probe: 10,1 = CH1 10x probe, CH2 1x probe (current BNC fixture)
 python assembly/bench/run.py power --probe 10,1
 python assembly/bench/run.py digital --ad3-3v3 --probe 10,1
-python assembly/bench/run.py left --ad3-3v3 --probe 10,1
-python assembly/bench/run.py right --ad3-3v3 --probe 10,1</pre>
+python assembly/bench/run.py stack --ad3-3v3 --probe 10,1
+# optional per-channel debugging:
+python assembly/bench/run.py left --ad3-3v3 --probe 10,1</pre>
       <p>Follow the full fixture instructions in <a href="bench/README.md">the SDK test README</a> and the per-board “Board tests · AD3” stage below. A simulated PASS does not qualify a physical board.</p>
     </div>
   </details>
