@@ -38,7 +38,7 @@ class WebOperator:
         with self.lock:
             if self.aborted:raise KeyboardInterrupt
             self.counter+=1;self.pending={'id':self.counter,'kind':kind,'message':message,'word':word};self.answered.clear()
-        self.emit(kind='prompt',**self.pending)
+        self.emit(**dict(self.pending,kind='prompt',prompt_kind=self.pending['kind']))
         self.answered.wait()
         with self.lock:
             value=self.answer_value;self.pending=None;self.answer_value=None
