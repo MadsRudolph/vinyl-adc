@@ -119,6 +119,12 @@ class Run:
         if not self.args.simulate:
             self.prompt('Set bench +5.00 V with the documented current limit. Turn on the supply and confirm it is stable in CV (not persistent CC).', 'ON')
             self.current_samples.append({'step':key,'milliamps':self.op.ask_current()})
+            if self.args.ad3_3v3 and self.board!='power':
+                time.sleep(.3);v,i=self.device.supply_status()
+                self.current_samples[-1]['ad3_vplus_v']=v;self.current_samples[-1]['ad3_vplus_ma']=i*1000
+                self.say(f'  AD3 V+ as reported by the instrument: {v:.3f} V, {i*1000:.1f} mA')
+                if v<LIMITS['rail_3v3'][0]:self.say('  AD3 V+ has not reached 3.3 V at the instrument: the +3.3 V wire is probably shorted on the board (V+ folds back) or V+ is not enabled.')
+                elif i*1000<0.5:self.say('  AD3 V+ is at 3.3 V but sourcing almost no current: check that the V+ flywire actually lands on digital J2.3 and that the +3V3 wire link WL5a–WL5b is fitted.')
         if pump:self.device.wave('square',192000,2.5,2.5)
         if wave is not None:self.device.wave('sine',1000,wave,0)
         if not self.args.simulate:time.sleep(.25)

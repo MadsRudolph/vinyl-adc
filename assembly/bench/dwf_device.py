@@ -26,6 +26,7 @@ SIGNATURES={
  'AnalogOutNodeOffsetSet':[I,I,I,D], 'AnalogOutNodeSymmetrySet':[I,I,I,D],
  'AnalogOutIdleSet':[I,I,I],
  'AnalogIOReset':[I], 'AnalogIOChannelNodeSet':[I,I,I,D], 'AnalogIOEnableSet':[I,I],
+ 'AnalogIOStatus':[I], 'AnalogIOChannelNodeStatus':[I,I,I,PD],
  'DigitalOutReset':[I], 'DigitalIOOutputEnableSet':[I,U], 'DigitalIOConfigure':[I],
  'DigitalIOPullSet':[I,U,U],
  'AnalogInReset':[I], 'AnalogInChannelEnableSet':[I,I,I], 'AnalogInChannelAttenuationSet':[I,I,D],
@@ -122,6 +123,11 @@ class AD3:
         self.call('AnalogIOChannelNodeSet',0,1,3.3)
         self.call('AnalogIOChannelNodeSet',0,0,float(bool(enabled)))
         self.call('AnalogIOEnableSet',int(bool(enabled)))
+    def supply_status(self):
+        """Measured V+ voltage and current as the AD3 itself reports them."""
+        self.call('AnalogIOStatus');v,i=D(),D()
+        self.call('AnalogIOChannelNodeStatus',0,1,C.byref(v));self.call('AnalogIOChannelNodeStatus',0,2,C.byref(i))
+        return v.value,i.value
     def scope(self,rate=1e6,count=8192):
         self.call('AnalogInReset')
         for channel in (0,1):

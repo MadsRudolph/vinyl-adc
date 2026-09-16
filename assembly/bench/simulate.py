@@ -8,6 +8,7 @@ class SimulatedAD3:
     def wave(self,*args):pass
     def wave_off(self):pass
     def supply_3v3(self,*args):pass
+    def supply_status(self):return 3.3,0.012
     def scope_fixture(self,kind,rate,count):
         t=np.arange(count)/rate;rng=np.random.default_rng(19)
         sine=lambda amp:amp*np.sin(2*np.pi*1000*t)
