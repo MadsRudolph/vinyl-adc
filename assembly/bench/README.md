@@ -12,6 +12,16 @@ python assembly/bench/run.py left --ad3-3v3 --probe 10,1
 python assembly/bench/run.py right --ad3-3v3 --probe 10,1
 ```
 
+## Browser front end (recommended at the bench)
+
+```sh
+python assembly/bench/gui.py
+```
+
+Open **http://127.0.0.1:8090**. Pick the board, probes and 3.3 V source, optionally **continue from an earlier run** of the same board (its leading passed steps are carried into the new report and not repeated), then press Start. Each step shows its wiring table and one large button labelled with the confirmation it needs (READY, ON, OFF) plus a field for the Korad current. The page only relays your answers to the same `run.py` logic: it never enables an AD3 output on its own and never controls the bench supply. Abort stops at the next prompt and shuts down AD3 outputs; you still switch the Korad off. Reports and captures land in `results/` exactly as with the terminal route. The server listens on loopback only and runs one test at a time.
+
+The terminal route accepts the same resume option (`--resume RUN_ID`) and now takes confirmation words case-insensitively; anything else, or `q`, still aborts.
+
 `--probe` declares the probe attenuation per scope channel: `10,1` is the current BNC fixture (scope 1 with a 10× probe, scope 2 with a 1× probe), `10` means both at 10×, and omitting it means direct 1× flywires. Each physical probe switch must match its channel. The SDK scales the range and the returned samples, so every limit is still checked in probe-tip volts, and the report records the setting under `scope_inputs`. The DIO flywires and V+ remain available on the BNC adapter's pass-through header.
 
 `--ad3-3v3` explicitly supplies **3.3 V from AD3 V+ to digital J2.3**. Omit it if a separate regulated bench output provides 3.3 V. **Never parallel these sources.** The bench supply always provides +5 V. Power alone does not use 3.3 V.

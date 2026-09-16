@@ -110,7 +110,7 @@ python assembly/bench/run.py power</pre>
     <div class="testing-body">
       <p class="testing-callout"><strong>The rev B digital board clocks itself.</strong> U9 (74HCU04) and Y1 form a 6.144 MHz Pierce oscillator whose output reaches J1 pin 1; the J1 shunt across <strong>pins 1–2</strong> feeds it to the 74HCT132 buffer. W1 is not connected to the digital board for any test. Keep the power board, channels and Pi disconnected for the standalone test.</p>
       <h3>Option A: guided SDK test with saved captures</h3>
-      <p>Close WaveForms, then run one of these, depending on the scope fixture:</p>
+      <p>Easiest at the bench: start the local browser front end with <code>python assembly/bench/gui.py</code> and open <a href="http://127.0.0.1:8090" rel="noreferrer">http://127.0.0.1:8090</a>. It shows each step’s wiring, one big READY / ON / OFF button and the current field, and can continue an earlier aborted run without repeating its passed steps. Or, in a terminal, close WaveForms and run one of these, depending on the scope fixture:</p>
       <pre class="command">cd /home/mads/Projects/vinyl-adc
 python assembly/bench/run.py digital --ad3-3v3 --probe 10,1   # BNC adapter: CH1 10x probe, CH2 1x probe
 python assembly/bench/run.py digital --ad3-3v3                # direct 1x scope flywires</pre>
@@ -183,7 +183,9 @@ python assembly/bench/run.py digital --ad3-3v3                # direct 1x scope 
         <li>After each channel passes, power off and connect both channels with opposite J21 selections. Remove any remaining input ties. Recheck +5 V, negative rail, both references and supply current under full load before attempting capture. Do not assume the unloaded pump result proves sufficient current for the stereo stack.</li>
         <li>Raspberry Pi capture and SNR/THD measurements are a later stage after electrical verification. No Pi connection is part of the procedures above.</li>
       </ol>
-      <pre class="command"># --probe declares each scope channel's probe: 10,1 = CH1 10x probe, CH2 1x probe (current BNC fixture)
+      <pre class="command"># Browser front end (same tests, big buttons, resume support):
+python assembly/bench/gui.py      # then open http://127.0.0.1:8090
+# Terminal route. --probe declares each scope channel's probe: 10,1 = CH1 10x probe, CH2 1x probe (current BNC fixture)
 python assembly/bench/run.py power --probe 10,1
 python assembly/bench/run.py digital --ad3-3v3 --probe 10,1
 python assembly/bench/run.py left --ad3-3v3 --probe 10,1

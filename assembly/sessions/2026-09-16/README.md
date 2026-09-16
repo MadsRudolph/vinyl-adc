@@ -17,6 +17,8 @@ Close WaveForms before any script; only one application may own the AD3.
 
 ## Run order
 
+Preferred: `python assembly/bench/gui.py` and open http://127.0.0.1:8090. Same tests as the commands below, with the wiring table and one big READY / ON / OFF button per prompt, and a "continue from an earlier run" option that carries passed steps instead of repeating them. The terminal commands remain equivalent.
+
 Type READY / ON / OFF only after doing what the prompt says. Each run writes `assembly/bench/results/<id>/report.json` plus raw captures; the assembly page's **Board tests · AD3 → Refresh results** shows them.
 
 ### 1. Power board again, this time with a saved report
