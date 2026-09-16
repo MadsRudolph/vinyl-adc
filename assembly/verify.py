@@ -6,12 +6,12 @@ import pcbnew as p
 p.SwigPyIterator.next=p.SwigPyIterator.__next__
 root=Path(__file__).resolve().parents[1]
 data=json.loads((root/'assembly/generated/boards.json').read_text())['boards']
-expected={'power':18,'digital':13,'channel_l':39}
+expected={'power':18,'digital':18,'channel_l':39}
 for name,d in data.items():
  path=root/d['source'];assert hashlib.sha256(path.read_bytes()).hexdigest()==d['sha256'],f'{name}: stale snapshot'
  b=p.LoadBoard(str(path))
  assert all(not z.GetLayerSet().Contains(p.F_Cu) for z in b.Zones()),'Top copper pour requires extending top-pad extraction'
- assert not d['vias'],'Vias require explicit two-face assembly instructions'
+ for via in d['vias']:assert any(f['kind']=='wire' and a['net']==via['net'] and a['at']==via['at'] for f in d['parts'] for a in f['pads']),f'{name}: via without a wire-link anchor'
  assert len([f for f in d['parts'] if f['kind'] not in ['mount','wire']])==expected[name]
  assert not d['drc']['unconnected'],f'{name}: unconnected PCB items'
  assert all(len(f['pads'])==len({a['pin'] for a in f['pads']}) for f in d['parts'])
@@ -21,10 +21,11 @@ assert {s for s in top if s.startswith('U')}=={'U20.1','U22.4','U23.1','U23.2','
 for name in ['power','digital']:
  parts=data[name]['parts'];wires={f['ref']:f for f in parts if f['kind']=='wire'}
  for ref,f in wires.items():
-  mate=ref[:-1]+('B' if ref.endswith('A') else 'A')
-  assert mate in wires and wires[mate]['pads'][0]['net']==f['pads'][0]['net']
+  net=f['pads'][0]['net']
+  assert sum(w['pads'][0]['net']==net for w in wires.values())>=2,f'{name}: {ref} has no same-net anchor to link to'
  for f in parts:
   for a in f['pads']:
    if a['top'] and f['kind']!='wire':assert any(w['pads'][0]['net']==a['net'] for w in wires.values()),'Top-connected component needs a wire anchor'
-assert len([f for f in data['digital']['parts'] if f['kind']=='wire'])==18
-print('PASS: source hashes, 109 component positions, 20 channel top joints, six critical socket pins, link mates/nets, no unconnected items, no unsupported vias/top pours.')
+assert len([f for f in data['digital']['parts'] if f['kind']=='wire'])==16
+assert {f['ref'] for f in data['digital']['parts'] if f['kind'] in ('socket','crystal')}=={'U3','U4','U6','U8','U9','Y1'},'digital rev B must carry the on-board Pierce oscillator'
+print('PASS: source hashes, 114 component positions, 20 channel top joints, six critical socket pins, link anchors/nets, no unconnected items, vias only on link anchors, no top pours.')

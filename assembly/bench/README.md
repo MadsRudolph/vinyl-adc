@@ -6,11 +6,13 @@ From the project root:
 
 ```sh
 python assembly/bench/run.py devices
-python assembly/bench/run.py power
-python assembly/bench/run.py digital --ad3-3v3
-python assembly/bench/run.py left --ad3-3v3
-python assembly/bench/run.py right --ad3-3v3
+python assembly/bench/run.py power --probe 10
+python assembly/bench/run.py digital --ad3-3v3 --probe 10
+python assembly/bench/run.py left --ad3-3v3 --probe 10
+python assembly/bench/run.py right --ad3-3v3 --probe 10
 ```
+
+`--probe 10` declares the BNC adapter with two 10× probes on scope 1 and 2 (both physical probe switches at 10×). Omit it for direct 1× flywires. The SDK scales the range and the returned samples, so every limit is still checked in probe-tip volts, and the report records the setting under `scope_inputs`. The DIO flywires and V+ remain available on the BNC adapter's pass-through header.
 
 `--ad3-3v3` explicitly supplies **3.3 V from AD3 V+ to digital J2.3**. Omit it if a separate regulated bench output provides 3.3 V. **Never parallel these sources.** The bench supply always provides +5 V. Power alone does not use 3.3 V.
 
@@ -21,7 +23,7 @@ The scripts refuse other instrument models. `devices` only enumerates devices, w
 ## Test order and scope
 
 1. **Power standalone:** W1 loopback verifies the generated 192 kHz, 0–5 V pump clock before attaching it to J3.10. The power board receives bench +5 V at J3.2/GND at J3.1. The script checks +5 V, the generated negative rail, both references, ratiometric reference accuracy, and gross ripple. No digital board is attached to compete with W1.
-2. **Digital standalone:** bench +5 V at J2.1, +3.3 V at J2.3, GND at J2.2. J1 shunt 1–2. Measure the oscillator/divider outputs, level-shifted clocks (including a sample-limited non-inversion/delay screen) and all four QL/QR mux truth-table cases. Temporary QL/QR ties are to board GND or +5 V, never to 3.3 V DIO outputs. The script checks actual input states before judging the outputs.
+2. **Digital standalone (rev B):** bench +5 V at J2.1, +3.3 V at J2.3, GND at J2.2. J1 shunt 1–2 selects the on-board 6.144 MHz Pierce oscillator (U9 74HCU04 + Y1); W1 never connects to the digital board. The raw oscillator output is at J1.1 if the divider shows nothing. Measure the divider outputs, level-shifted clocks (including a sample-limited non-inversion/delay screen) and all four QL/QR mux truth-table cases. Temporary QL/QR ties are to board GND or +5 V, never to 3.3 V DIO outputs. The script checks actual input states before judging the outputs.
 3. **Each channel:** use the tested power/digital boards and one channel at a time. Remove the digital-test input ties from the selected channel output. Check loaded supplies/references, quiet input density and switching, complementary flip-flop/DAC outputs, the selected bus output, and the response to two levels of 1 kHz input. Set J21 1–2 for left or 2–3 for right; physical reference numbers are identical on both copies.
 4. **Complete stack:** with power off, remove all remaining test ties, connect both tested channels, and recheck the power rails/references under full load before enclosing the stack. Individual board results do not prove the full-stack power margin.
 
@@ -32,7 +34,7 @@ CLK6M is **6.144 MHz**; the net called MCLK is **1.536 MHz**. BCLK is 3.072 MHz,
 ## Connections and operation
 
 - Common reference: AD3 GND, 1−, 2−, board GND, and bench negative. A negative-rail measurement uses **2+ on the negative rail**, never a ground clip on that rail. Confirm any earth-referenced bench connections before adding the USB-connected instrument.
-- Use direct 1× AD3 flywire scope connections, DC coupled, with short grounds. The driver sets a 20 V total input range and measures actual sample rates. A passive attenuating probe requires a scaling change; do not silently substitute a 10× probe.
+- Scope inputs are either direct 1× AD3 flywires (default) or the BNC adapter with two 10× probes declared by `--probe 10`; both DC coupled, with short grounds. The driver requests a 20 V probe-tip range, reads back the actual range, and measures actual sample rates. Never change probes or the `--probe` setting within a run.
 - DIO pins are always inputs, with internal pulls and pattern outputs disabled. They observe 0–5 V logic only. AD3 outputs are 3.3 V logic, which is why they are not used to drive 5 V HC test inputs. AD3 W1 is used for the pump stimulus and audio sine; W2 and V− are disabled and unused.
 - Bench starting point: +5.00 V, 0.10 A current limit for a standalone power/digital board; 0.20 A for power + digital + one channel. These are starting protection settings, not expected current consumption. Persistent CC, abnormal current or heating requires stopping and diagnosis, not automatically raising the limit. The script records your manual +5 V current readings.
 - AD3 V+ (when selected) is 3.30 V. It is disabled between rewiring steps and at shutdown. Its default instrument protection is not a substitute for the bench +5 V current limit.
@@ -67,7 +69,7 @@ python -m unittest discover -s assembly/bench -p 'test_*.py' -v
 
 Simulated reports use `status: SIMULATED` and a separate `simulation_outcome`; they cannot qualify a board. Regression tests exercise healthy fixtures and deliberately inject a bad supply, wrong clock, reversed mux, stuck channel and missing tone. They also cover missing clocks, record loss, shutdown failures and output-range guards.
 
-No AD3 was attached when these scripts were created. SDK loading/enumeration and software tests can be checked here, but real acquisition, wiring, analog acceptance limits and board behaviour still need the first physical run.
+No AD3 was attached when these scripts were created; on 16 September 2026 the `devices` command enumerated the AD3 through the installed SDK on this computer. Real acquisition, wiring, analog acceptance limits and board behaviour still need the first physical run, which is the next step.
 
 ## Primary references
 

@@ -1,8 +1,8 @@
 # Vinyl ADC
 
-[Assembly guide & bench log](https://vinyl-adc.madsrudolph.dev/) · [6 September test handoff](assembly/sessions/2026-09-06/README.md)
+[Assembly guide & bench log](https://vinyl-adc.madsrudolph.dev/) · [16 September bench plan](assembly/sessions/2026-09-16/README.md) · [6 September test handoff](assembly/sessions/2026-09-06/README.md)
 
-Initial bench tests have reached the digital mux **0/0 Pi-output case**. Power rails were reported working after correcting the W1 offset and BNC jumper; the CLK6M low-level check and remaining digital, loaded-power and channel tests are still open. Resume instructions, screenshots, visual wiring and the exact recorded readings are in the assembly guide. Both channel boards still need their decoupling capacitors. No complete-system audio performance is claimed by these assembly tests.
+All four boards are now assembled: the rev B digital board with the on-board crystal Pierce oscillator replaces the rev A board that was bench-tested on 6 September with an external W1 clock, and both channels are fully populated. The power board's rails and references were reported working on the old fixture. The next step is the AD3 SDK screening in the order power → digital → left → right → full stack; the bench plan, fixture and commands are in the assembly guide. No complete-system audio performance is claimed by these assembly tests.
 
 <p align="center">
   <a href="https://madsrudolph.github.io/vinyl-adc/"><img src="https://img.shields.io/badge/🚀_Interactive_3D-Live_Web_Viewer-38bdf8?style=for-the-badge&logo=webgl&logoColor=white" alt="Live 3D Web Viewer"></a>

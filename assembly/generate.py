@@ -15,7 +15,11 @@ for name in ['power','channel_l','digital']:
  path=ROOT/f'hardware/kicad/{name}/vinyl_adc_{name}.kicad_pcb'
  b=p.LoadBoard(str(path));tracks=b.GetTracks()
  assert all(not z.GetLayerSet().Contains(p.F_Cu) for z in b.Zones()), 'Top pours need explicit joint extraction'
- assert not any(isinstance(t,p.PCB_VIA) for t in tracks), 'Vias need explicit assembly instructions'
+ # Rev B digital carries plated vias only where a wire-link anchor already joins both faces; anything else needs explicit instructions.
+ anchor_pads=[pad for f in b.GetFootprints() if f.GetReference().startswith('WL') for pad in f.Pads()]
+ for t in tracks:
+  if isinstance(t,p.PCB_VIA):
+   assert any(a.GetNetCode()==t.GetNetCode() and a.HitTest(t.GetPosition()) for a in anchor_pads), f'{name}: via at {xy(t.GetPosition())} is not on a same-net wire-link anchor'
  top=[t for t in tracks if t.GetLayer()==p.F_Cu and not isinstance(t,p.PCB_VIA)]
  parts=[];allpads=[]
  for f in sorted(b.GetFootprints(),key=lambda f:natural(f.GetReference())):
@@ -25,7 +29,7 @@ for name in ['power','channel_l','digital']:
    d={'pin':pad.GetNumber(),'net':pad.GetNetname(),'at':xy(pad.GetPosition()),'size':xy(pad.GetSize()),'angle':pad.GetOrientationDegrees(),'drill':xy(pad.GetDrillSize()),'top':bool(hits),'ref':f.GetReference()}
    pads.append(d);allpads.append((pad,d))
   fp=str(f.GetFPID().GetLibItemName());ref=f.GetReference()
-  kind='mount' if ref.startswith('H') else 'wire' if ref.startswith('WL') else 'socket' if ref.startswith(('U','X')) else 'resistor' if ref.startswith('R') and not ref.startswith('RV') else 'diode' if ref.startswith('D') else 'electrolytic' if fp.startswith('CP_') else 'capacitor' if ref.startswith('C') else 'connector'
+  kind='mount' if ref.startswith('H') else 'wire' if ref.startswith('WL') else 'socket' if ref.startswith(('U','X')) else 'resistor' if ref.startswith('R') and not ref.startswith('RV') else 'diode' if ref.startswith('D') else 'crystal' if ref.startswith('Y') else 'electrolytic' if fp.startswith('CP_') else 'capacitor' if ref.startswith('C') else 'connector'
   parts.append({'ref':ref,'value':f.GetValue(),'footprint':fp,'at':xy(f.GetPosition()),'angle':f.GetOrientationDegrees(),'kind':kind,'pads':pads})
  # Connected top-layer routes; retain exact geometry and terminal identities.
  pending=set(range(len(top)));runs=[]

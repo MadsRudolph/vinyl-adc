@@ -37,7 +37,7 @@ class Run:
         self.folder=args.output/self.run_id;self.folder.mkdir(parents=True,exist_ok=False)
         snapshot=json.loads((HERE.parent/'generated/boards.json').read_text())['boards']
         relevant=['power'] if args.board=='power' else ['digital'] if args.board=='digital' else ['power','digital','channel_l']
-        self.report={'format':'vinyl-adc-bench-report-v1','id':self.run_id,'board':args.board,'started':dt.datetime.now(dt.timezone.utc).isoformat(),'simulated':args.simulate,'status':'RUNNING','scope':'Assembly functional screening only; not production qualification, SNR, THD or 24-bit validation.','limits':LIMITS,'limits_sha256':sha(HERE/'limits.json'),'sources':{k:snapshot[k]['sha256'] for k in relevant},'steps':[],'supply':{'control':'manual','3v3_source':'AD3 V+' if args.ad3_3v3 else 'external regulated source','current_readings_ma':self.current_samples}}
+        self.report={'format':'vinyl-adc-bench-report-v1','id':self.run_id,'board':args.board,'started':dt.datetime.now(dt.timezone.utc).isoformat(),'simulated':args.simulate,'status':'RUNNING','scope':'Assembly functional screening only; not production qualification, SNR, THD or 24-bit validation.','limits':LIMITS,'limits_sha256':sha(HERE/'limits.json'),'sources':{k:snapshot[k]['sha256'] for k in relevant},'steps':[],'supply':{'control':'manual','3v3_source':'AD3 V+' if args.ad3_3v3 else 'external regulated source','current_readings_ma':self.current_samples},'scope_inputs':{'probe_attenuation':args.probe,'fixture':'BNC adapter with 10x probes' if args.probe==10 else 'direct 1x flywires'}}
         for k in relevant:
             if sha(ROOT/snapshot[k]['source'])!=snapshot[k]['sha256']:raise RuntimeError('PCB snapshot is stale. Regenerate it and review changed probe locations before testing.')
     def pause_off(self):
@@ -169,10 +169,11 @@ class Run:
         if np.count_nonzero(mask)<100:raise ValueError('No stable selected-bus samples')
         self.measure('selected channel bus mismatch',np.mean(bit(words,1)[mask]!=bit(words,5)[mask]),0,LIMITS['logic_error_fraction_max'],'fraction')
     def execute(self):
-        device=SimulatedAD3(self.args.simulate_fault) if self.args.simulate else AD3(self.args.serial)
+        device=SimulatedAD3(self.args.simulate_fault) if self.args.simulate else AD3(self.args.serial,self.args.probe)
         try:
             if not self.args.simulate:
                 print('\n'.join(PLANS['common']))
+                print(f"\nScope inputs for this run: {self.args.probe}x ({self.report['scope_inputs']['fixture']}). Both physical probes must match this setting.")
                 prompt('Disconnect AD3 W1/W2/V+/V− from the boards; bench supply OFF. Close WaveForms. The script will take exclusive AD3 control and initially disable all its outputs.', 'READY')
             with device as self.device:
                 self.report['device']=device.info
@@ -213,6 +214,7 @@ def main(argv=None):
     p.add_argument('board',choices=['devices','power','digital','left','right'])
     p.add_argument('--serial',help='AD3 serial number from devices')
     p.add_argument('--ad3-3v3',action='store_true',help='Explicitly use AD3 V+ at 3.3 V for digital J2.3; never in parallel with another supply')
+    p.add_argument('--probe',type=int,choices=[1,10],default=1,help='Scope probe attenuation: 1 for direct flywires (default), 10 for the BNC adapter with two 10x probes; both channels must match')
     p.add_argument('--plan',action='store_true',help='Print fixture plan without opening any device')
     p.add_argument('--simulate',action='store_true',help='Use synthetic data only; report can never be a hardware PASS')
     p.add_argument('--simulate-fault',choices=['wrong-clock','bad-rail','swapped-mux','stuck-channel','missing-tone'])

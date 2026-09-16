@@ -3,7 +3,7 @@
   "common": [
     "Close WaveForms before running a script; only one application can own the AD3.",
     "Power off before changing wiring. AD3 GND, scope 1\u2212, scope 2\u2212 and bench supply negative all connect to board GND. Never connect a ground clip to the negative rail.",
-    "Use the AD3 flywire scope inputs directly (1\u00d7, DC). Use short ground returns. DIO0\u202615 remain INPUTS and can observe 0\u20135 V logic; never connect DIO to the negative rail.",
+    "Scope inputs: either direct 1\u00d7 flywires (default) or the BNC adapter with two 10\u00d7 probes and --probe 10, DC coupled, short ground returns. Never mix the two without changing --probe. DIO0\u202615 remain INPUTS and can observe 0\u20135 V logic; never connect DIO to the negative rail.",
     "Bench supply provides +5.00 V. Start with a 0.10 A current limit for standalone power/digital tests; 0.20 A for power + digital + one channel. These are conservative starting limits, not expected measured currents. If the supply remains in CC or a component heats, switch off and investigate; do not automatically raise the limit.",
     "For digital and channel fixtures, provide +3.30 V at digital J2.3 from either a separate regulated bench channel OR AD3 V+ with --ad3-3v3. Never connect the two sources together. AD3 V\u2212 and W2 are unused. Never connect the Raspberry Pi during these tests.",
     "Scripts pause for connection changes and rail readings. They do not control or turn off the bench supply. Ctrl+C shuts down AD3 outputs; you must turn off the bench supply immediately afterwards."
@@ -76,7 +76,7 @@
         {
           "id": "rails",
           "title": "Digital board rails",
-          "instructions": "Digital board only; no power or channel boards. J1 shunt 1\u20132 selects the oscillator. Bench +5 V \u2192 J2.1 and GND \u2192 J2.2. Supply +3.3 V \u2192 J2.3 using the selected source. With power OFF, tie QL (J4.12) and QR (J4.14) to GND so mux inputs do not float.",
+          "instructions": "Digital board only; no power or channel boards. J1 shunt 1\u20132 selects the on-board 6.144 MHz crystal oscillator (U9/Y1); nothing connects to J2.7. Bench +5 V \u2192 J2.1 and GND \u2192 J2.2. Supply +3.3 V \u2192 J2.3 using the selected source. With power OFF, tie QL (J4.12) and QR (J4.14) to GND so mux inputs do not float.",
           "connections": [
             {
               "lead": "Scope 1+",
@@ -96,7 +96,7 @@
         {
           "id": "clocks",
           "title": "Clock tree and Pi clock levels",
-          "instructions": "Keep J1 at 1\u20132. Wire the DIO inputs once as below, then attach the scope inputs to the Pi clock outputs. Use grabbers or temporary test wires with power off; DIP pins are close together.",
+          "instructions": "Keep J1 at 1\u20132; the crystal is the only clock source, so W1 stays disconnected. Wire the DIO inputs once as below, then attach the scope inputs to the Pi clock outputs. Use grabbers or temporary test wires with power off; DIP pins are close together.",
           "connections": [
             {
               "lead": "DIO0",

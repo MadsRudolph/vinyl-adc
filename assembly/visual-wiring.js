@@ -20,24 +20,25 @@
     W('c1n',P('power','J3',5,'GND')), W('c2n',P('power','J3',7,'GND')),
   ];
   const digitalGrounds = () => [
-    W('black',P('digital','J2',2,'GND')), W('ground',P('digital','J4',1,'GND')),
+    W('black',P('digital','J2',2,'GND')),
     W('c1n',P('digital','J4',3,'GND')), W('c2n',P('digital','J4',5,'GND')),
   ];
-  const modeLink = () => link(P('digital','J1',2,'Net-(J1-Pin_2)'),P('digital','J1',3,'GPCLK0'),'J1 shunt · pins 2–3','#e6c3ff');
+  const modeLink = () => link(P('digital','J1',1,'Net-(J1-Pin_1)'),P('digital','J1',2,'Net-(J1-Pin_2)'),'J1 shunt · pins 1–2 (crystal)','#e6c3ff');
   const ties = (ql=0,qr=0) => [
     link(P('digital','J4',12,'QL'),P('digital','J4',ql?2:11,ql?'+5V':'GND'),`QL tie → ${ql?'+5V':'GND'}`),
     link(P('digital','J4',14,'QR'),P('digital','J4',qr?2:13,qr?'+5V':'GND'),`QR tie → ${qr?'+5V':'GND'}`),
   ];
   const digitalBase = (ql=0,qr=0) => [
     ...digitalGrounds(), W('red',P('digital','J2',1,'+5V')),
-    W('vp',P('digital','J2',3,'+3V3')), W('w1',P('digital','J2',7,'GPCLK0')),
+    W('vp',P('digital','J2',3,'+3V3')),
     modeLink(), ...ties(ql,qr),
   ];
   const scopePairs = [
-    ['Clock input / MCLK',P('digital','U4',10,'CLK6M'),P('digital','J4',8,'MCLK'),'CH1: 6.144 MHz / 5 V logic. CH2: 1.536 MHz / 5 V logic.','100 ns/div'],
+    ['Crystal output / CLK6M',P('digital','J1',1,'Net-(J1-Pin_1)'),P('digital','U4',10,'CLK6M'),'CH1: raw Pierce output 6.144 MHz ±0.01 %, 5 V logic. CH2: buffered CLK6M, same frequency, 5 V logic, clean edges.','50 ns/div'],
+    ['CLK6M / MCLK',P('digital','U4',10,'CLK6M'),P('digital','J4',8,'MCLK'),'CH1: 6.144 MHz / 5 V logic. CH2: 1.536 MHz / 5 V logic.','100 ns/div'],
     ['BCLK / Pi BCLK',P('digital','U4',9,'BCLK'),P('digital','J2',4,'PI_BCLK'),'CH1: 3.072 MHz / 5 V logic. CH2: 3.072 MHz / 3.3 V logic. Same polarity.','100 ns/div'],
     ['LRCLK / Pi LRCLK',P('digital','U4',4,'LRCLK'),P('digital','J2',5,'PI_LRCLK'),'CH1: 48 kHz / 5 V logic. CH2: 48 kHz / 3.3 V logic. Same polarity.','5 µs/div'],
-    ['Clock input / pump',P('digital','U4',10,'CLK6M'),P('digital','J4',10,'PUMP'),'CH1: 6.144 MHz / 5 V logic. CH2: 192 kHz / 5 V logic.','2 µs/div'],
+    ['CLK6M / pump',P('digital','U4',10,'CLK6M'),P('digital','J4',10,'PUMP'),'CH1: 6.144 MHz / 5 V logic. CH2: 192 kHz / 5 V logic.','2 µs/div'],
   ];
   const steps = [
     {id:'probe-check', phase:'Power',title:'Connect and compensate your two BNC probes', boards:[],
@@ -65,40 +66,40 @@
       on:'Korad ON → confirm CV → W1 RUN. Wait about one second before reading.',
       expected:'CH1: +2.35…+2.65 V. CH2: −2.65…−2.35 V. Each should be within 3% of ±half your measured +5 V supply.',
       wires:()=>[...powerGrounds(),W('red',P('power','J3',2,'+5V')),W('w1',P('power','J3',10,'PUMP')),W('c1',P('power','J3',4,'VREF_P')),W('c2',P('power','J3',6,'VREF_N'))],help:'vw-power-limits'},
-    {id:'clock-check', phase:'Digital',title:'Check the temporary oscillator and 3.3 V supply', boards:[],
-      brief:'Disconnect the power board completely. No PCB is connected while checking these AD3 outputs.',
-      settings:[['Korad','OFF · disconnected'],['W1','Square · 6.144 MHz · 50%'],['Amplitude / offset','1.65 V / +1.65 V → 0–3.3 V'],['AD3 Supplies','V+ = +3.30 V · V− OFF']],
-      on:'With no PCB connected, run W1, enable V+ and run Scope (≥50 MS/s, about 50 ns/div, DC). Stop W1 and V+ before wiring the board.',
-      expected:'CH1: 6.144 MHz, lows below 0.8 V, highs above 2 V, overall approximately 0–3.3 V. Rounded edges are possible. CH2: steady +3.15…+3.45 V.',
-      wires:()=>[W('c1',leads.w1),W('c1n',leads.ground),W('c2',leads.vp),W('c2n',leads.ground)],help:'vw-digital-limits'},
-    {id:'digital-rails', phase:'Digital',title:'Connect the digital board — X1 stays empty',boards:['digital'],
-      brief:'Fit J1 across pins 2–3. Keep QL and QR tied low. The Korad and AD3 V+ supply different rails.',
-      settings:[['Korad','5.00 V · limit 0.100 A'],['AD3 V+','+3.30 V'],['W1','6.144 MHz · 0–3.3 V'],['Scope','Both channels DC · 1 V/div']],
-      on:'AD3 V+ ON → Korad ON, confirm CV → W1 RUN promptly. V−, W2 and all DIO outputs remain off.',
+    {id:'clock-check', phase:'Digital',title:'Check the AD3 3.3 V supply before it touches the board', boards:[],
+      brief:'Disconnect the power board completely. No PCB is connected while checking the AD3 V+ output. The rev B digital board has its own crystal oscillator, so W1 is not used for any digital test.',
+      settings:[['Korad','OFF · disconnected'],['W1','OFF · coax disconnected'],['AD3 Supplies','V+ = +3.30 V · V− OFF']],
+      on:'With no PCB connected, enable V+ and run Scope (DC, about 1 V/div). Disable V+ before wiring the board.',
+      expected:'CH2: steady +3.15…+3.45 V. Nothing else is expected on this step.',
+      wires:()=>[W('c2',leads.vp),W('c2n',leads.ground)],help:'vw-digital-limits'},
+    {id:'digital-rails', phase:'Digital',title:'Connect the rev B digital board — crystal selected',boards:['digital'],
+      brief:'Fit J1 across pins 1–2 so U3 takes the on-board Pierce oscillator. Keep QL and QR tied low. The Korad and AD3 V+ supply different rails. Nothing connects to J2.7.',
+      settings:[['Korad','5.00 V · limit 0.100 A'],['AD3 V+','+3.30 V'],['W1','OFF · disconnected'],['Scope','Both channels DC · 1 V/div']],
+      on:'AD3 V+ ON → Korad ON, confirm CV. V−, W1, W2 and all DIO outputs remain off.',
       expected:'CH1 at C9: +4.75…+5.25 V. CH2 at C15: +3.15…+3.45 V. Record current; stop for CC or heating.',
       wires:()=>[...digitalBase(),W('c1',P('digital','C9',1,'+5V')),W('c2',P('digital','C15',1,'+3V3'))],help:'vw-digital-limits'},
     {id:'digital-clocks',phase:'Digital',title:'Check four clock pairs',boards:['digital'],
-      brief:'Choose a clock pair below. Only the two probe tips move; the supplies, W1, J1 and QL/QR ties remain.',
-      settings:[['Korad / V+','5.00 V / +3.30 V'],['W1','6.144 MHz · 0–3.3 V'],['Scope','DC · ≥50 MS/s · 1 V/div']],
-      on:'After each unpowered probe change: V+ ON → Korad ON → W1 RUN. Scope Auto trigger; adjust timebase for the selected pair.',
+      brief:'Choose a clock pair below. Only the two probe tips move; the supplies, J1 and QL/QR ties remain. Start with the crystal pair: no 6.144 MHz at J1.1 means the oscillator itself is not running.',
+      settings:[['Korad / V+','5.00 V / +3.30 V'],['W1','OFF · disconnected'],['Scope','DC · ≥50 MS/s · 1 V/div']],
+      on:'After each unpowered probe change: V+ ON → Korad ON. Scope Auto trigger; adjust timebase for the selected pair.',
       expected:()=>scopePairs[pair][3]+' Frequency screen ±2%; duty 35–65%. Pi output highs must be 2.7–3.6 V.',
       wires:()=>[...digitalBase(),W('c1',scopePairs[pair][1]),W('c2',scopePairs[pair][2])],help:'vw-digital-limits'},
     {id:'digital-mux',phase:'Digital',title:'Check the four data combinations',boards:['digital'],
       brief:'Select each QL/QR case. The diagram changes the jumper endpoints. No channel boards may be connected.',
-      settings:[['Korad / V+','5.00 V / +3.30 V'],['W1','6.144 MHz · 0–3.3 V'],['Scope','DC · ≥50 MS/s · 200 ns/div']],
-      on:'All power off for each jumper or probe change. Then V+ ON → Korad ON → W1 RUN. Check all four cases for both raw and Pi data.',
+      settings:[['Korad / V+','5.00 V / +3.30 V'],['W1','OFF · disconnected'],['Scope','DC · ≥50 MS/s · 200 ns/div']],
+      on:'All power off for each jumper or probe change. Then V+ ON → Korad ON. Check all four cases for both raw and Pi data.',
       expected:()=>`CH1 is MCLK. CH2 (${raw?'raw DIN, 5 V logic':'PI_DIN, 3.3 V logic'}) should ${['stay LOW','follow MCLK','invert MCLK','stay HIGH'][mux]}. Judge after the switching edges.`,
       wires:()=>[...digitalBase(...[[0,0],[1,0],[0,1],[1,1]][mux]),W('c1',P('digital','J4',8,'MCLK')),W('c2',raw?P('digital','U6',4,'DIN'):P('digital','J2',6,'PI_DIN'))],help:'vw-digital-limits'},
     {id:'together-rails',phase:'Together',title:'Connect the tested boards with three jumper wires',boards:['digital','power'],
-      brief:'Digital now drives PUMP. W1 connects to digital J2.7 only—remove the old W1-to-power-J3.10 connection.',
-      settings:[['Korad / V+','5.00 V, 0.100 A / +3.30 V'],['W1','6.144 MHz · 0–3.3 V'],['Scope','DC · 1 V/div · Auto trigger']],
-      on:'Use the three illustrated bus wires; do not also stack the boards for this fixture. V+ ON → Korad ON → W1 RUN. Channels and Pi remain disconnected.',
+      brief:'Digital now drives PUMP from its crystal-derived divider. Remove the old W1-to-power-J3.10 connection; W1 stays disconnected from both boards.',
+      settings:[['Korad / V+','5.00 V, 0.100 A / +3.30 V'],['W1','OFF · disconnected'],['Scope','DC · 1 V/div · Auto trigger']],
+      on:'Use the three illustrated bus wires; do not also stack the boards for this fixture. V+ ON → Korad ON. Channels and Pi remain disconnected.',
       expected:'CH1: +4.75…+5.25 V. CH2: −5.25…−3.50 V. The negative rail is now generated using the digital board’s pump output.',
       wires:()=>combined(false),help:'vw-power-limits'},
     {id:'together-refs',phase:'Together',title:'Check the references with both boards connected',boards:['digital','power'],
       brief:'Keep all supply, clock and inter-board wires. Move only the two probe tips after powering off.',
-      settings:[['Korad / V+','5.00 V, 0.100 A / +3.30 V'],['W1','6.144 MHz · 0–3.3 V'],['Scope','DC · 1 V/div · Auto trigger']],
-      on:'V+ ON → Korad ON → W1 RUN. Record references and supply current, then shut down. Stop here until channel decoupling is complete.',
+      settings:[['Korad / V+','5.00 V, 0.100 A / +3.30 V'],['W1','OFF · disconnected'],['Scope','DC · 1 V/div · Auto trigger']],
+      on:'V+ ON → Korad ON. Record references and supply current, then shut down. The channel boards are then tested with the SDK scripts in Step 10.',
       expected:'CH1: +2.35…+2.65 V. CH2: −2.65…−2.35 V. This does not yet prove full-stereo load capacity or audio conversion.',
       wires:()=>combined(true),help:'vw-power-limits'},
   ];
@@ -132,7 +133,7 @@
       <div class="vw-bottom"><button id="vw-prev-wire" ${active===0?'disabled':''}>← Previous wire</button><strong>Wire ${active+1} / ${wires.length}</strong><button id="vw-next-wire" ${active===wires.length-1?'disabled':''}>Next wire →</button></div>
       <div class="vw-instructions"><div><h3>Set WaveForms and the Korad</h3><dl>${s.settings.map(([a,b])=>`<dt>${e(a)}</dt><dd>${e(b)}</dd>`).join('')}</dl></div><div><h3>Once every connection is checked</h3><p>${e(s.on)}</p><h3>What you should see</h3><p class="vw-expect">${e(typeof s.expected==='function'?s.expected():s.expected)}</p><p class="muted">Screening limits are provisional. “Next test” does not record a hardware PASS.</p></div></div>
       <div class="vw-testnav"><button id="vw-prev" ${step===0?'disabled':''}>← Previous test</button><a href="#${s.help}">Measurement limits</a><button id="vw-next" ${step===steps.length-1?'disabled':''}>Next test →</button></div>
-      <p class="vw-footnote">Use <strong>WaveForms manually</strong> with this guide. Do not run the Step 10 SDK tests at the same time. Orange = Scope 1, blue = Scope 2 in this drawing (not necessarily your probe body colours). Dashed lines are probe ground clips. Yellow = coax centre conductor. Grey = coax shield or Korad return. All clips/shields go to circuit GND, never to −5 V.</p>`;
+      <p class="vw-footnote">Use <strong>WaveForms manually</strong> with this guide. Do not run the Step 10 SDK tests at the same time; for the rev B digital board those scripts are the preferred route (add --probe 10 for these probes). Orange = Scope 1, blue = Scope 2 in this drawing (not necessarily your probe body colours). Dashed lines are probe ground clips. Yellow = coax centre conductor. Grey = coax shield or Korad return. All clips/shields go to circuit GND, never to −5 V.</p>`;
     draw(wires);
   }
   function boardSVG(name, x,y,size, wires) {
@@ -237,8 +238,11 @@
     else return;render();
   });
   document.addEventListener('click',event=>{
-    if(!event.target.closest('[data-vw-resume="digital-mux"]') || !boards)return;
-    step=steps.findIndex(s=>s.id==='digital-mux');mux=1;raw=false;active=8;
+    const resume=event.target.closest('[data-vw-resume]');
+    if(!resume || !boards)return;
+    const target=steps.findIndex(s=>s.id===resume.dataset.vwResume);
+    if(target<0)return;
+    step=target;pair=0;mux=0;raw=false;active=0;
     render();root.scrollIntoView({block:'start'});
   });
   fetch('generated/boards.json').then(r=>{if(!r.ok)throw Error('Cannot load the PCB data');return r.json();}).then(d=>{
