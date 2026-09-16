@@ -362,7 +362,7 @@
     {
      "id": "rails-left",
      "title": "Rails with the left channel only",
-     "instructions": "Power, digital and ONLY the left channel board on the bus, aligned pin for pin; J21 = 1–2 on it; short its input J20.1 to J20.2 (GND) with a jumper. Bench +5 V → digital J2.1, GND → J2.2, +3.3 V → J2.3 from the selected source. W1 disconnected. Start the current limit at 0.20 A.",
+     "instructions": "Everything off. 1) Plug the LEFT channel board onto the power + digital stack using its 2×8 bus connector J7, so its pin 1 sits on pin 1 of the digital board's J4 and the power board's J3 (all three headers carry the same 16 signals). 2) On the left board put the J21 shunt on pins 1–2, the square-pad end. 3) Put a short wire between the two screw terminals of J20 (the LINE IN block) so the input is grounded. 4) Take the W1 coax off the power board: PUMP now comes from the digital board and two drivers must never share that pin. 5) Korad red → digital J2.1, Korad black → J2.2; the bus carries +5 V to the other boards. 6) AD3 V+ wire → digital J2.3. 7) Probe tips as listed below, ground clips on any bus GND pin. Korad current limit 0.20 A.",
      "connections": [
       {
        "board": "power",
@@ -384,7 +384,7 @@
     {
      "id": "q-left",
      "title": "Left modulator output on the bus",
-     "instructions": "Power off; move the two probe tips to the digital board's bus header. QL is the left channel's 1-bit output as the mux sees it.",
+     "instructions": "Power off. Move only the two probe tips to the digital board's bus header J4: scope 1 on pin 12, scope 2 on pin 8. Nothing else changes.",
      "connections": [
       {
        "board": "digital",
@@ -406,7 +406,7 @@
     {
      "id": "rails",
      "title": "Rails with both channels",
-     "instructions": "Power off. Add the RIGHT channel board to the bus (J21 = 2–3 on it), aligned pin for pin, input shorted J20.1–J20.2. Keep the probes where they are. Same supplies; limit 0.30 A.",
+     "instructions": "Power off. Plug the RIGHT channel board onto the stack the same way (J7 pin 1 on pin 1). On it: J21 shunt on pins 2–3, the end away from the square pad; a short wire across its J20 terminals. Move the probe tips back to power J3 pin 2 and pin 16. Raise the Korad current limit to 0.30 A.",
      "connections": [
       {
        "board": "power",
@@ -428,7 +428,7 @@
     {
      "id": "q-right",
      "title": "Right modulator output on the bus",
-     "instructions": "Power off; move only scope 1+ to QR. Scope 2+ stays on MCLK.",
+     "instructions": "Power off. Move only scope 1's tip to J4 pin 14. Scope 2 stays on J4 pin 8.",
      "connections": [
       {
        "board": "digital",
@@ -450,7 +450,7 @@
     {
      "id": "references",
      "title": "References under full load",
-     "instructions": "Power off; move the two probe tips to the power board's reference pins. Both channels stay on the bus.",
+     "instructions": "Power off. Move the two probe tips to power J3 pin 4 and pin 6. Both channels stay on the stack.",
      "connections": [
       {
        "board": "power",
@@ -472,7 +472,7 @@
     {
      "id": "pi-clocks",
      "title": "Pi-side clocks with the stack loaded",
-     "instructions": "Power off; move the two probe tips to the Pi header on the digital board.",
+     "instructions": "Power off. Move the two probe tips to the digital board's Pi header J2: scope 1 on pin 4, scope 2 on pin 5.",
      "connections": [
       {
        "board": "digital",
@@ -494,7 +494,7 @@
     {
      "id": "pi-data",
      "title": "Interleaved data reaching the Pi header",
-     "instructions": "Power off; move scope 1+ to the data pin and scope 2+ to PI_BCLK. With no audio input the two modulators idle around 50% density, so PI_DIN must toggle continuously at 3.3 V logic.",
+     "instructions": "Power off. Scope 1 tip to J2 pin 6, scope 2 tip to J2 pin 4. With both inputs shorted the two modulators idle around 50 % density, so PI_DIN must toggle continuously at 3.3 V logic.",
      "connections": [
       {
        "board": "digital",
