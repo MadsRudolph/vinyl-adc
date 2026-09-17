@@ -66,7 +66,15 @@ The 32-bit words are not PCM: each 64-bit frame carries 32 left and 32 right mod
 
 **Left/right:** by the divider's phase the first bit after the frame edge belongs to the left channel. Confirm by feeding a signal into the LEFT input only; if it appears on the right, add `--swap`.
 
-## 5. If it does not work
+## 5. Live view
+
+```sh
+sudo systemd-run --unit=vinyl-adc-live --uid=$USER --working-directory=$HOME/pi --property=Restart=on-failure /usr/bin/python3 $HOME/pi/live.py
+```
+
+Then open **http://vinyladc.local:8091** on the PC. Twice a second it shows, per channel: a health verdict, in-band noise, noise-shaping slope, one-density and run length; the noise spectrum of both 1-bit streams from 20 Hz to 768 kHz; the last 20 ms of decimated audio; and the first 192 modulator bits, where a limit cycle shows up as long solid bars. On a Pi 4 it needs about 0.35 s of one core per 0.5 s of signal. It holds the capture device, so stop it (`sudo systemctl stop vinyl-adc-live`) before using `arecord` by hand, or download the last 10 s from `/snapshot.raw` and feed that to `analyze_bitstream.py`. `python3 live.py --replay capture.raw` replays a saved capture on any machine.
+
+## 6. If it does not work
 
 | Symptom | Check |
 |---|---|
