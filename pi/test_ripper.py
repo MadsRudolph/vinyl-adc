@@ -43,23 +43,34 @@ def test_identify_selects_album_and_track():
     with tempfile.TemporaryDirectory() as tmp:
         rip=make(tmp);f,_=side_file(rip,'s1',200)
         rip.side={'id':'s1','file':str(f),'album':None,'frames':200*R.FS}
-        rip.identify('s1')
+        rip.identify(('s1',200.))
         assert rip.store['current_album']=='rel-vinyl' and rip.side['first']==1 and rip.side['ident']['status']=='ok',rip.side
         # a later side of the same record: the album in use is kept even though AcoustID ranks the CD first for it
         R.acoustid_lookup=lambda key,fp,dur:{'status':'ok','results':[{'score':.9,'id':'c','recordings':[{'id':'rec-anthem','title':'The National Anthem','releases':[release('rel-cd','Kid A',['a','b','The National Anthem'],fmt='CD')]}]}]}
-        rip.side={'id':'s2','file':str(f),'album':None,'frames':200*R.FS};rip.identify('s2')
+        rip.side={'id':'s2','file':str(f),'album':None,'frames':200*R.FS};rip.identify(('s2',200.))
         assert rip.side['album']=='rel-vinyl' and rip.side['first']==2,rip.side
         # a different record while an album is in progress: the old one is sent as it is
         rip.store['albums']['rel-vinyl']['status']='in progress'
         R.acoustid_lookup=lambda key,fp,dur:{'status':'ok','results':[{'score':.9,'id':'d','recordings':[{'id':'rec-new','title':'New','releases':[release('rel-new','New Album',['New'])]}]}]}
         R.mb_release=lambda mbid:album(mbid,['rec-new'],[300.])
-        rip.side={'id':'s3','file':str(f),'album':None,'frames':200*R.FS};rip.identify('s3')
+        rip.side={'id':'s3','file':str(f),'album':None,'frames':200*R.FS};rip.identify(('s3',200.))
         assert rip.store['current_album']=='rel-new' and ('finalize','rel-vinyl') in list(rip.jobs.queue),list(rip.jobs.queue)
 
 def test_no_key():
     with tempfile.TemporaryDirectory() as tmp:
         rip=make(tmp);rip.acoustid=None;f,_=side_file(rip,'s1',200);rip.side={'id':'s1','file':str(f),'album':None,'frames':200*R.FS}
-        rip.identify('s1');assert rip.side['ident']=={'status':'no key'} and rip.store['current_album'] is None
+        rip.identify(('s1',200.));assert rip.side['ident']=={'status':'no key'} and rip.store['current_album'] is None
+
+def test_duration_from_envelope_and_scan():
+    """AcoustID answers only for durations near the real track length: the closed-side path measures it, the scan finds it."""
+    with tempfile.TemporaryDirectory() as tmp:
+        rip=make(tmp);asked=[];R.time.sleep=lambda s:None
+        R.acoustid_lookup=lambda key,fp,dur:(asked.append(dur) or {'status':'ok','results':results() if abs(dur-251)<=10 else []})
+        f,env=side_file(rip,'s1',640);env[:5,2]=-80.;env[2520:2550,2]=-80.;env[6300:,2]=-80.;np.save(f.with_suffix('.env.npy'),env)     # music from 0.5 s, gap at 252 s
+        side={'id':'s1','started':time.time(),'file':str(f),'frames':640*R.FS,'gaps':[],'album':None,'status':'recorded','seconds':640.,'peak':.3,'tracks':[]}
+        rip.store['sides'].append(side);t0,gaps=rip.first_track_extent(side);assert abs(t0-0.)<.6 and len(gaps)==1 and abs(gaps[0][0]-252)<1 and abs(gaps[0][1]-255)<1,(t0,gaps)
+        rip.identify(('s1','closed'));assert side['ident']['status']=='ok' and len(asked)==1 and abs(asked[0]-253.5)<1,(side['ident'],asked)
+        asked.clear();side2={**side,'id':'s2','ident':None};rip.side=side2;rip.identify(('s2',None));assert side2['ident']['status']=='ok' and asked[-1]==250 and len(asked)==14,asked
 
 def test_split_uses_first_and_trashes_repeats():
     with tempfile.TemporaryDirectory() as tmp:

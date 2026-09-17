@@ -26,7 +26,7 @@ FS=48000;BLOCK_FRAMES=24000;BLOCK_BYTES=BLOCK_FRAMES*8;CHUNK=4800           # 0.
 UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
 DEFAULTS={'start_db':-62.,'start_seconds':2.,'stop_db':-65.,'stop_seconds':30.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
           'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.,
-          'identify':True,'identify_at_seconds':130.,'finalize_after_hours':3.,'min_free_gb':3.}
+          'identify':True,'identify_at_seconds':480.,'finalize_after_hours':3.,'min_free_gb':3.}
 ACOUSTID='https://api.acoustid.org/v2/lookup'
 
 def db(x):return float(10*np.log10(x+1e-20))
@@ -223,11 +223,14 @@ class Ripper:
             t=len(self.side['level'])*.1
             if v<cfg['gap_db']:self.gap_run+=1
             else:
-                if self.gap_run*.1>=cfg['gap_seconds']:self.side['gaps'].append([round(t-self.gap_run*.1,1),round(t,1)])
+                if self.gap_run*.1>=cfg['gap_seconds']:
+                    g0=t-self.gap_run*.1;self.side['gaps'].append([round(g0,1),round(t,1)])
+                    if not self.side.get('ident') and g0>40:          # first gap over: the first track's length is known, identify now
+                        self.side['ident']={'status':'pending'};self.jobs.put(('identify',(self.side['id'],(.5,(g0,t)))))
                 self.gap_run=0
         seconds=self.side['frames']/FS
-        if seconds>=self.cfg['identify_at_seconds'] and not self.side.get('ident'):
-            self.side['ident']={'status':'pending'};self.jobs.put(('identify',self.side['id']))
+        if seconds>=self.cfg['identify_at_seconds'] and not self.side.get('ident'):                       # tracks that run into each other: scan durations
+            self.side['ident']={'status':'pending'};self.jobs.put(('identify',(self.side['id'],None)))
         if self.manual=='stop':self.close_side('stopped from the dashboard')
         elif len(self.still)==self.still.maxlen and sum(self.still)>=.8*len(self.still):self.quiet=cfg['stop_seconds'];self.close_side(f'{cfg["stop_seconds"]:.0f} s of silence')
         elif seconds>=cfg['max_side_seconds']:self.close_side('maximum side length reached')
@@ -247,6 +250,7 @@ class Ripper:
         meta={k:s[k] for k in ('id','started','file','frames','gaps','album')};meta.update(status='recorded',seconds=round(seconds,1),peak=float(np.max(s['peaks'])),tracks=[],first=s.get('first'),ident=s.get('ident'))
         with self.lock:self.store['sides'].append(meta);self.save()
         self.log(f'Side {s["id"]} closed after {seconds/60:.1f} min ({why})')
+        if (meta['ident'] or {}).get('status') in (None,'pending','unknown','failed'):meta['ident']={'status':'pending'};self.jobs.put(('identify',(meta['id'],'closed')))
         self.jobs.put(('split',meta['id']));self.jobs.put(('purge',None))
     # ---- track assignment
     def side_env(self,side):return np.load(Path(side['file']).with_suffix('.env.npy'))
@@ -297,13 +301,41 @@ class Ripper:
         with self.lock:
             if self.side and self.side['id']==sid:return self.side
             return next((s for s in self.store['sides'] if s['id']==sid),None)
-    def identify(self,sid):
-        """Fingerprint the first two minutes of a side and ask AcoustID which recording it is; that fixes the album and the starting track."""
-        side=self.find_side(sid)
+    def first_track_extent(self,side):
+        """From a closed side's envelope: the music start and the quiet fragments (start, end) within 30 s of the first one, longest
+        first. A fade-out leaves several quiet spots before the real gap, and the true track length ends at the next track's start."""
+        level=self.side_env(side)[:,2];frac=lambda mask,n:np.convolve(mask.astype(float),np.ones(n)/n,'same')
+        music=np.flatnonzero(frac(level>self.cfg['start_db'],30)>=.5)
+        if not len(music):return .5,[]
+        t0=max(0.,music[0]*.1-.5);t1=music[-1]*.1+1.;edge=np.diff(np.r_[0,(frac(level<self.cfg['gap_db'],15)>=.8).astype(int),0])
+        gaps=[(a*.1,b*.1) for a,b in zip(np.flatnonzero(edge==1),np.flatnonzero(edge==-1)) if a*.1>t0+20 and b-a>=5]
+        if not gaps:return t0,[(t1,t1)]
+        gaps=[g for g in gaps if g[0]<=gaps[0][0]+30];return t0,sorted(gaps,key=lambda g:g[0]-g[1])
+    def identify(self,arg):
+        """Fingerprint the first two minutes of a side and ask AcoustID which recording it is; that fixes the album and the starting track.
+
+        AcoustID only answers when the declared duration is within about ten seconds of the real track length, so the
+        lookup is made once the first track's length is known: from the first gap while recording (`duration`), from the
+        finished envelope ('closed'), or by scanning plausible lengths when tracks run into each other (None).
+        """
+        sid,duration=arg if isinstance(arg,tuple) else (arg,'closed');side=self.find_side(sid)
         if side is None or not self.cfg['identify']:return
         if not self.acoustid:
             side['ident']={'status':'no key'};self.log('Cannot identify the record: no AcoustID key (see ~/vinyl/acoustid.key)');return
-        try:fp,dur=fingerprint(side['file'],self.cfg['preroll_seconds']);res=acoustid_lookup(self.acoustid,fp,dur)
+        try:
+            if duration=='closed':start,gaps=self.first_track_extent(side);duration=(start,gaps)
+            if duration is None:start,candidates=.5,list(range(120,int(side['frames']/FS)+1,10))
+            elif isinstance(duration,tuple):                    # (music start, quiet fragments): a track ends where the next begins, somewhere in or after the gap
+                start,gaps=duration;gaps=gaps if isinstance(gaps,list) else [gaps];candidates=[]
+                for g0,g1 in gaps:candidates+=[(g0+g1)/2-start,g1-start,g0-start]
+                candidates+=[c+d for c in candidates[:3] for d in (10,-10)]
+                seen=[];candidates=[c for c in candidates if c>=30 and not any(abs(c-x)<3 for x in seen) and not seen.append(c)][:8]
+            else:start,candidates=.5,[duration,duration-8,duration+8]
+            fp,_=fingerprint(side['file'],start,min(120.,max(30.,candidates[0])));res={}
+            for i,d in enumerate(candidates):
+                if i:time.sleep(.4)                                   # AcoustID allows three requests a second
+                res=acoustid_lookup(self.acoustid,fp,d)
+                if res.get('results'):break
         except Exception as e:side['ident']={'status':'failed','error':repr(e)};self.log(f'Identification failed: {e!r}');return
         with self.lock:current=self.store['albums'].get(side['album'] or self.store['current_album'] or '')
         matches=rank_releases(res.get('results',[]),current['mbid'] if current else None)
@@ -498,7 +530,7 @@ def make_handler(rip):
                 elif self.path=='/api/hold':                # measurements: do not start a side while test signals are on the input
                     rip.hold_until=time.time()+float(body.get('seconds',0));self.reply({'ok':True,'until':rip.hold_until})
                 elif self.path=='/api/identify':
-                    rip.jobs.put(('identify',body['id']));self.reply({'ok':True})
+                    rip.jobs.put(('identify',(body['id'],'closed')));self.reply({'ok':True})
                 elif self.path=='/api/clear':
                     with rip.lock:rip.store['current_album']=None;rip.save()
                     self.reply({'ok':True})
