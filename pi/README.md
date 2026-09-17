@@ -1,6 +1,6 @@
 # Raspberry Pi capture
 
-The ADC is the I²S clock master; the Pi only listens. Status: the wiring and clocking follow the schematic and the 17 September bench screen (PI_BCLK 3.0727 MHz, PI_LRCLK 48.011 kHz, PI_DIN toggling, all 3.3 V logic). The overlay compiles and `decimate.py` passes its synthetic test, but **neither has run on a Pi yet**; treat the first capture as bring-up.
+The ADC is the I²S clock master; the Pi only listens. Status: the wiring and clocking follow the schematic and the 17 September bench screen (PI_BCLK 3.0727 MHz, PI_LRCLK 48.011 kHz, PI_DIN toggling, all 3.3 V logic). The overlay compiles and `decimate.py` passes its synthetic test, and on 17 September the overlay was installed on a Pi 4 (Pi OS Trixie, kernel 6.18): the `vinyladc` capture card registers and the I²S block programs 64-bit frames in consumer mode. **No capture from the real ADC has been decoded yet**; treat the first one as bring-up.
 
 ## 1. Wiring: digital board J2 → Pi 40-pin header
 
@@ -25,7 +25,11 @@ Keep these wires short (10 cm jumpers are fine) and run the two grounds.
 
 **Final build:** Pi pin 2 → J2.1 and no Korad. Never connect both 5 V sources at once.
 
-Either order of switching on is safe: the 74HC4049 accepts 5 V inputs with its own supply at 0 V, and its outputs can never exceed the Pi's 3.3 V because that is its supply. Sequence used here: Pi off → wire → Korad on (check ~74 mA, CV) → boot the Pi.
+**Power-up order: boot the Pi first, then switch the ADC's +5 V on.** Measured on a Pi 4 (Pi OS Trixie, kernel 6.18): the I²S block comes out of reset as clock *master*, so from the moment the driver claims GPIO18/19 until a capture device is first opened, both clock pins are **outputs** (`MODE_A = 0`). `vinyl-adc-consumer.service` (installed by `install-overlay.sh`) opens the device once at boot and logs the pin state before and after; it finishes about 22 s after kernel start, and from then on both pins are inputs (`CLKM = FSM = 1`). With the ADC unpowered during that window its level shifter outputs sit low, the same level the Pi drives, so nothing fights. `sudo python3 pcm_pins.py` shows the current direction at any time.
+
+For the final build, where the Pi's own 5 V powers the stack and the ADC therefore clocks during the Pi's boot, fit about 470 Ω in series with PI_BCLK and PI_LRCLK so the ten-second overlap is current-limited to a few milliamps.
+
+The 74HC4049 itself is safe in either order: it accepts 5 V inputs with its own supply at 0 V, and its outputs can never exceed the Pi's 3.3 V because that is its supply.
 
 The Pi must not drive GPIO18/19. They are inputs by default and with this overlay. Remove any other I²S sound overlay (hifiberry, iqaudio, googlevoicehat, i2s-…) from `config.txt` before connecting, because a Pi configured as I²S master would fight the ADC's clock outputs.
 

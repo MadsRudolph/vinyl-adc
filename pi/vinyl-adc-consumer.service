@@ -1,0 +1,16 @@
+[Unit]
+Description=Put the Pi I2S block in clock-consumer mode before the Vinyl ADC drives BCLK/LRCLK
+After=sound.target
+ConditionPathExists=/proc/asound/vinyladc
+
+[Service]
+Type=oneshot
+# Log the pin direction at boot, open the capture device once (this is what programs consumer mode;
+# it ends with an I/O error when the ADC is not clocking yet, which is fine), then log it again.
+ExecStartPre=-/usr/bin/python3 /usr/local/lib/vinyl-adc/pcm_pins.py
+ExecStart=-/usr/bin/timeout 6 /usr/bin/arecord -q -D hw:CARD=vinyladc -c 2 -r 48000 -f S32_LE -t raw -d 1 /dev/null
+ExecStartPost=-/usr/bin/python3 /usr/local/lib/vinyl-adc/pcm_pins.py
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
