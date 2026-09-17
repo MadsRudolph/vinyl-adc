@@ -2,7 +2,7 @@
 
 [Assembly guide & bench log](https://vinyl-adc.madsrudolph.dev/) · [16 September bench plan](assembly/sessions/2026-09-16/README.md) · [6 September test handoff](assembly/sessions/2026-09-06/README.md)
 
-All four boards are assembled and bench-screened with the AD3 (16–17 September): power, rev B digital with the on-board crystal Pierce, both channels and the full stack pass, after resoldering a crystal leg and swapping the reference op-amp U2 to an LM358 for output headroom on the charge-pump rail (design-notes §10b′). Next is the Raspberry Pi capture; wiring and setup are in [pi/README.md](pi/README.md). No complete-system audio performance is claimed by these assembly tests.
+All four boards are assembled and bench-screened with the AD3 (16–17 September): power, rev B digital with the on-board crystal Pierce, both channels and the full stack pass, after resoldering a crystal leg and swapping the reference op-amp U2 to an LM358 for output headroom on the charge-pump rail (design-notes §10b′). A Raspberry Pi 4 captures the stream, and a ripper service on it records sides automatically, splits and tags the tracks and hands finished albums to the Jellyfin server; setup in [pi/README.md](pi/README.md) and [server/README.md](server/README.md). No complete-system audio performance is claimed by these assembly tests.
 
 <p align="center">
   <a href="https://madsrudolph.github.io/vinyl-adc/"><img src="https://img.shields.io/badge/🚀_Interactive_3D-Live_Web_Viewer-38bdf8?style=for-the-badge&logo=webgl&logoColor=white" alt="Live 3D Web Viewer"></a>

@@ -1,0 +1,15 @@
+[Unit]
+Description=Vinyl ADC ripper and dashboard (http://vinyladc.local:8091)
+After=vinyl-adc-consumer.service network-online.target
+Wants=vinyl-adc-consumer.service
+Conflicts=vinyl-adc-live.service
+
+[Service]
+User=mads
+WorkingDirectory=/home/mads/pi
+ExecStart=/usr/bin/python3 /home/mads/pi/ripper.py --home /home/mads/vinyl
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

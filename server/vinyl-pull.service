@@ -1,0 +1,8 @@
+[Unit]
+Description=Fetch finished vinyl rips from the Vinyl ADC Pi into the Jellyfin music library
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/vinyl-pull
+ExecStart=/usr/bin/python3 /opt/vinyl-pull/vinyl-pull.py

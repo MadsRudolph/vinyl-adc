@@ -1,0 +1,10 @@
+[Unit]
+Description=Check the Vinyl ADC Pi for finished albums every two minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=2min
+AccuracySec=20s
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,96 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vinyl ADC · ripper</title>
+<style>
+:root{color-scheme:dark;--surface:#1a1a19;--card:#232321;--raise:#2d2d2a;--grid:#33332f;--text:#fff;--text2:#c3c2b7;--muted:#8d8c83;--left:#3987e5;--right:#d95926;--good:#0ca30c;--warning:#fab219;--serious:#ec835a;--critical:#d03b3b}
+*{box-sizing:border-box}body{margin:0;background:var(--surface);color:var(--text);font:15px/1.45 system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--grid)}h1{font-size:19px;margin:0 8px 0 0}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:999px;background:var(--raise);font-size:13.5px}.pill i{width:9px;height:9px;border-radius:50%}
+main{padding:16px 22px;max-width:1500px;margin:0 auto;display:grid;gap:16px}.row{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px}@media(max-width:950px){.row{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:12px;padding:16px}.card h2{font-size:13px;margin:0 0 10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.now{display:flex;gap:16px}.now img{width:150px;height:150px;border-radius:8px;object-fit:cover;background:var(--raise);flex:none}.now .t{min-width:0;flex:1}
+.artist{color:var(--text2)}.album{font-size:22px;font-weight:600;line-height:1.2;margin:2px 0 6px}.track{font-size:17px;margin-top:10px}.track small,.muted{color:var(--muted)}
+.bar{height:6px;border-radius:3px;background:var(--raise);margin:8px 0 4px;overflow:hidden}.bar div{height:100%;background:var(--text2);border-radius:3px}
+input,select,button{font:inherit}input[type=text],input[type=number]{background:#141413;border:1px solid var(--grid);color:var(--text);border-radius:8px;padding:8px 10px}
+button{border:0;border-radius:8px;padding:8px 14px;background:var(--raise);color:var(--text);cursor:pointer}button.primary{background:var(--text);color:#111;font-weight:600}button:disabled{opacity:.4;cursor:default}
+.search{display:flex;gap:8px;margin-top:12px}.search input{flex:1;min-width:0}
+.results{margin-top:10px;display:grid;gap:6px;max-height:300px;overflow:auto}.res{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--raise);cursor:pointer;text-align:left;width:100%}.res:hover{outline:1px solid var(--muted)}.res b{display:block}.res small{color:var(--text2)}
+.meter{display:grid;grid-template-columns:52px 1fr 78px;align-items:center;gap:10px;margin:9px 0}.meter .lab{display:flex;align-items:center;gap:7px;color:var(--text2)}.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.rail{position:relative;height:16px;border-radius:4px;background:#141413;overflow:hidden}.rail .fill{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0}.rail .peak{position:absolute;top:0;bottom:0;width:3px;background:var(--text)}.rail .mark{position:absolute;top:0;bottom:0;width:1px;background:var(--muted)}
+.meter .num{font-variant-numeric:tabular-nums;text-align:right;color:var(--text2);font-size:13.5px}.scale{display:grid;grid-template-columns:52px 1fr 78px;gap:10px;color:var(--muted);font-size:11.5px}.scale div:nth-child(2){display:flex;justify-content:space-between}
+.legend{display:flex;gap:16px;color:var(--text2);font-size:13px;margin:0 0 6px;flex-wrap:wrap}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.plot{position:relative}canvas{width:100%;display:block}.tip{position:absolute;pointer-events:none;background:#0f0f0e;border:1px solid var(--grid);border-radius:8px;padding:6px 9px;font-size:12.5px;white-space:nowrap;display:none;font-variant-numeric:tabular-nums}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{padding:7px 10px 7px 0;text-align:left;border-bottom:1px solid var(--grid);vertical-align:middle}th{color:var(--muted);font-weight:500;font-size:12.5px}td.n{font-variant-numeric:tabular-nums}
+.log{font-size:13px;color:var(--text2);max-height:210px;overflow:auto}.log div{padding:3px 0;border-bottom:1px solid var(--grid)}.log time{color:var(--muted);margin-right:8px;font-variant-numeric:tabular-nums}
+.banner{background:#3a2a12;border-left:4px solid var(--warning);padding:10px 14px;border-radius:8px}details summary{cursor:pointer;color:var(--text2)}.cfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px}.cfg label{display:grid;gap:4px;font-size:13px;color:var(--text2)}
+</style>
+<header><h1>Vinyl ADC · ripper</h1><span class="pill" id="state"><i></i><span>connecting…</span></span><span class="pill" id="chL"></span><span class="pill" id="chR"></span><span class="muted" id="mode"></span></header>
+<main>
+<div id="banner" class="banner" hidden></div>
+<div class="row">
+ <section class="card"><h2 id="nowhead">On the platter</h2><div id="now"></div>
+  <div class="search"><input type="text" id="q" placeholder="Search MusicBrainz: artist and album"><button id="go">Search</button></div><div class="results" id="results"></div></section>
+ <section class="card"><h2>Levels</h2><div id="meters"></div>
+  <div class="scale"><div></div><div><span>−60</span><span>−48</span><span>−36</span><span>−24</span><span>−12</span><span>0 dBFS</span></div><div></div></div>
+  <h2 style="margin-top:18px">Needle detector</h2><div id="detector"></div>
+  <p class="muted" style="margin:10px 0 0" id="dettext"></p>
+  <p style="margin:12px 0 0"><button id="manual"></button></p></section>
+</div>
+<section class="card"><h2 id="wavehead">Waveform</h2>
+ <div class="legend"><span><i style="background:var(--left)"></i>Left (up)</span><span><i style="background:var(--right)"></i>Right (down)</span><span><i style="background:var(--raise)"></i>Quiet gap</span><span><i style="background:none;border-left:2px dashed var(--text2);border-radius:0;width:2px"></i>Expected track change</span></div>
+ <div class="plot"><canvas id="wave" height="240"></canvas><div class="tip" id="tip"></div></div></section>
+<div class="row">
+ <section class="card"><h2>Records</h2><div id="albums"></div><h2 style="margin-top:18px">Recorded sides</h2><div id="sides"></div></section>
+ <section class="card"><h2>Log</h2><div class="log" id="log"></div>
+  <details style="margin-top:14px"><summary>Detection settings</summary><div class="cfg" id="cfg"></div><p><button id="savecfg">Save settings</button></p></details></section>
+</div>
+</main>
+<script>
+const $=s=>document.querySelector(s),css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim(),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COL={left:css('--left'),right:css('--right')};let S=null,hover=null,cfgDrawn=false,hold=[-99,-99],holdT=[0,0];
+const mmss=t=>{t=Math.max(0,Math.round(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')},dbtxt=v=>v<-99?'−∞':(v<0?'−':'+')+Math.abs(v).toFixed(1);
+async function api(path,body){const r=await fetch(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});return r.json()}
+function pill(el,token,icon,text){el.innerHTML=`<i style="background:var(${token})"></i><span>${icon} ${esc(text)}</span>`}
+function header(){const st=$('#state');if(S.status==='recording')pill(st,'--critical','●','Recording · '+mmss(S.recording.seconds));else if(S.status==='idle')pill(st,'--good','◆','Idle · waiting for the needle');else pill(st,'--warning','▲',S.status);
+ const m=S.meters;if(!m)return;[['#chL','Left',0],['#chR','Right',1]].forEach(([id,n,i])=>{const h=m.health[i];pill($(id),h.ok?'--good':'--critical',h.ok?'✓':'■',n+': '+h.verdict)});
+ $('#mode').textContent=m.mode==='stereo'?'Stereo':`Mono from the ${m.mode} channel (the other one is faulty) · ${m.repaired} stuck runs repaired`;
+ const b=$('#banner');if(S.status==='waiting'){b.hidden=false;b.textContent=S.message}else b.hidden=true}
+function now(){const n=S.now,box=$('#now');$('#nowhead').textContent=S.recording?'Now recording':'On the platter';
+ if(!n){box.innerHTML=`<div class="now"><img alt=""><div class="t"><div class="album">Unknown record</div><div class="artist">Search below and pick the release so tracks get names, numbers and cover art. Recording works without it; the side simply waits until you assign an album.</div></div></div>`;return}
+ let tr='';if(n.track){const t=n.track,len=t.length||0;tr=`<div class="track">${esc(t.number||t.position)} · ${esc(t.title)} <small>track ${t.number_in_album} of ${n.track_count}</small></div><div class="bar"><div style="width:${len?Math.min(100,100*t.elapsed/len):0}%"></div></div><small class="muted">${mmss(t.elapsed)}${len?' / '+mmss(len):''} · side ${mmss(S.recording.seconds)}</small>`}
+ else tr=`<div class="track muted">Next: track ${Math.min(n.next_track+1,n.track_count)} of ${n.track_count}${n.status==='complete'||n.status==='ready'||n.status==='delivered'?' · album '+esc(n.status):''}</div>`;
+ box.innerHTML=`<div class="now"><img src="/cover/${esc(n.mbid)}" alt="Cover of ${esc(n.title)}" onerror="this.style.visibility='hidden'"><div class="t"><div class="artist">${esc(n.artist)}</div><div class="album">${esc(n.title)}</div><div class="muted">${esc((n.date||'').slice(0,4))}</div>${tr}<p style="margin:10px 0 0"><button id="clear">Different record</button></p></div></div>`;
+ $('#clear').onclick=()=>api('/api/clear',{})}
+const pos=v=>Math.max(0,Math.min(100,(v+60)/60*100));
+function meters(){const m=S.meters;if(!m)return;const t=performance.now();
+ $('#meters').innerHTML=['Left','Right'].map((n,i)=>{const pk=m.peak_db[i];if(pk>=hold[i]||t-holdT[i]>2500){hold[i]=pk;holdT[i]=t}const k=i?'right':'left';
+  return `<div class="meter"><div class="lab"><span class="sw" style="background:${COL[k]}"></span>${n}</div><div class="rail"><div class="fill" style="width:${pos(m.rms_db[i])}%;background:${COL[k]}"></div><div class="peak" style="left:calc(${pos(hold[i])}% - 1px)"></div></div><div class="num">${dbtxt(m.rms_db[i])} · pk ${dbtxt(hold[i])}${hold[i]>-.3?' ■ CLIP':''}</div></div>`}).join('');
+ const c=S.config,dp=v=>Math.max(0,Math.min(100,(v+80)/50*100));
+ $('#detector').innerHTML=`<div class="meter"><div class="lab">Level</div><div class="rail"><div class="fill" style="width:${dp(m.level_db)}%;background:var(--text2)"></div><div class="mark" style="left:${dp(c.start_db)}%"></div><div class="mark" style="left:${dp(c.stop_db)}%"></div></div><div class="num">${dbtxt(m.level_db)} dB</div></div>`;
+ $('#dettext').textContent=S.recording?`Recording. It stops after ${c.stop_seconds} s below ${c.stop_db} dB; quiet so far: ${S.recording.quiet.toFixed(0)} s.`:`Starts by itself once the level stays above ${c.start_db} dB for ${c.start_seconds} s. Treble-weighted, so mains hum does not trigger it.`;
+ const b=$('#manual');b.textContent=S.recording?'Stop this side now':'Start recording now';b.onclick=()=>api('/api/record',{action:S.recording?'stop':'start'})}
+function wave(){const cv=$('#wave'),r=devicePixelRatio||1,w=cv.clientWidth,h=+cv.getAttribute('height');cv.width=w*r;cv.height=h*r;cv.style.height=h+'px';const g=cv.getContext('2d');g.setTransform(r,0,0,r,0,0);g.clearRect(0,0,w,h);g.font='12px system-ui,sans-serif';
+ const W=S.wave,n=W.left.length,m={l:44,r:12,t:16,b:22},total=Math.max(n*W.step_s,1),mid=(h-m.b+m.t)/2,half=(h-m.b-m.t)/2;let a=.02;for(let i=0;i<n;i++)a=Math.max(a,W.left[i],W.right[i]);
+ const X=t=>m.l+t/total*(w-m.l-m.r);$('#wavehead').textContent=S.recording?'This side, from the needle drop':'Last 60 seconds';
+ g.fillStyle=css('--raise');for(const [a0,a1] of S.gaps)g.fillRect(X(a0),m.t,Math.max(2,X(a1)-X(a0)),h-m.t-m.b);
+ g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--muted');g.textAlign='right';g.textBaseline='middle';[[a,'+'],[0,''],[-a,'−']].forEach(([v,s])=>{const y=mid-v/a*half;g.beginPath();g.moveTo(m.l,y+.5);g.lineTo(w-m.r,y+.5);g.stroke();g.fillText(v?s+(20*Math.log10(a)).toFixed(0)+' dB':'0',m.l-6,y)});
+ g.textAlign='center';g.textBaseline='top';const tick=total>1200?300:total>300?60:total>90?30:10;for(let t=0;t<=total;t+=tick)g.fillText(mmss(t),X(t),h-m.b+5);
+ for(const [k,arr,sign] of [['left',W.left,-1],['right',W.right,1]]){g.fillStyle=COL[k];g.beginPath();g.moveTo(X(0),mid);for(let i=0;i<n;i++)g.lineTo(X((i+.5)*W.step_s),mid+sign*arr[i]/a*half);g.lineTo(X(n*W.step_s),mid);g.closePath();g.fill()}
+ g.strokeStyle=css('--surface');g.lineWidth=2;g.beginPath();g.moveTo(m.l,mid);g.lineTo(w-m.r,mid);g.stroke();
+ if(S.now&&S.now.expected){g.strokeStyle=css('--text2');g.lineWidth=1;g.setLineDash([5,4]);S.now.expected.forEach((t,i)=>{if(t<total){g.beginPath();g.moveTo(X(t)+.5,m.t);g.lineTo(X(t)+.5,h-m.b);g.stroke();g.fillStyle=css('--text2');g.textAlign='left';g.fillText('track '+(S.now.next_track+i+2),X(t)+4,m.t-14)}});g.setLineDash([])}
+ cv._m={X,m,w,h,n,total};if(hover!==null&&hover<n){const x=X((hover+.5)*W.step_s);g.strokeStyle=css('--text2');g.lineWidth=1;g.beginPath();g.moveTo(x+.5,m.t);g.lineTo(x+.5,h-m.b);g.stroke();const tip=$('#tip'),d=v=>v>0?(20*Math.log10(v)).toFixed(1):'−∞';
+  tip.innerHTML=`<strong>${mmss(hover*W.step_s)}</strong><br><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${COL.left};margin-right:6px"></i>Left peak ${d(W.left[hover])} dBFS<br><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${COL.right};margin-right:6px"></i>Right peak ${d(W.right[hover])} dBFS<br>Detector ${W.level[hover]} dB`;tip.style.display='block';tip.style.left=Math.min(x+12,w-200)+'px';tip.style.top='8px'}}
+function lists(){const st={selected:'waiting for the first side','in progress':'in progress',complete:'complete, encoding next',encoding:'encoding…',ready:'ready, waiting for the media server',delivered:'on the media server'};
+ $('#albums').innerHTML=S.albums.length?'<table><tr><th>Record</th><th>Tracks</th><th>Status</th><th></th></tr>'+S.albums.map(a=>`<tr><td><b>${esc(a.title)}</b><br><span class="muted">${esc(a.artist)}</span></td><td class="n">${a.next_track} / ${a.track_count}</td><td>${esc(st[a.status]||a.status)}${a.gain_db!=null?` <span class="muted">· gain ${a.gain_db>0?'+':''}${a.gain_db} dB</span>`:''}</td><td>${a.next_track>0&&!['encoding','ready','delivered'].includes(a.status)?`<button data-fin="${esc(a.mbid)}">Finish and send</button>`:''}</td></tr>`).join('')+'</table>':'<p class="muted">Nothing yet. Pick a record above, then drop the needle.</p>';
+ document.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>api('/api/finalize',{mbid:b.dataset.fin}));
+ const names=Object.fromEntries(S.albums.map(a=>[a.mbid,a.title]));
+ $('#sides').innerHTML=S.sides.length?'<table><tr><th>Recorded</th><th>Length</th><th>Status</th></tr>'+S.sides.slice().reverse().map(x=>`<tr><td class="n">${new Date(x.started*1000).toLocaleString()}</td><td class="n">${mmss(x.seconds)}</td><td>${x.tracks&&x.tracks.length?`${x.tracks.length} tracks of ${esc(names[x.album]||'?')}`:x.album?'waiting to be split':'<span class="muted">no album assigned yet</span>'}</td></tr>`).join('')+'</table>':'<p class="muted">No sides recorded yet.</p>';
+ $('#log').innerHTML=S.events.map(e=>`<div><time>${new Date(e.time*1000).toLocaleTimeString()}</time>${esc(e.text)}</div>`).join('')||'<span class="muted">Nothing has happened yet.</span>'}
+function settings(){if(cfgDrawn)return;cfgDrawn=true;const L={start_db:'Start above (dB)',start_seconds:'…for (s)',stop_db:'Stop below (dB)',stop_seconds:'…for (s)',gap_db:'Track gap below (dB)',gap_seconds:'…for at least (s)',min_side_seconds:'Discard sides shorter than (s)',snap_seconds:'Snap cuts to gaps within (s)'};
+ $('#cfg').innerHTML=Object.entries(L).map(([k,l])=>`<label>${l}<input type="number" step="0.1" data-k="${k}" value="${S.config[k]}"></label>`).join('');$('#savecfg').onclick=()=>{const o={};document.querySelectorAll('[data-k]').forEach(i=>o[i.dataset.k]=+i.value);api('/api/config',o)}}
+async function search(){const q=$('#q').value.trim();if(!q)return;$('#results').innerHTML='<span class="muted">Searching MusicBrainz…</span>';const r=await api('/api/search?q='+encodeURIComponent(q));
+ $('#results').innerHTML=Array.isArray(r)&&r.length?r.map(x=>`<button class="res" data-mbid="${esc(x.mbid)}"><span><b>${esc(x.artist)} — ${esc(x.title)}</b><small>${esc(x.date||'no date')} · ${esc(x.country||'')} · ${esc(x.formats)} · ${x.tracks} tracks</small></span></button>`).join(''):'<span class="muted">No releases found.</span>';
+ document.querySelectorAll('[data-mbid]').forEach(b=>b.onclick=async()=>{await api('/api/select',{mbid:b.dataset.mbid,assign_waiting:true});$('#results').innerHTML='';$('#q').value=''})}
+$('#go').onclick=search;$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')search()});
+const cv=$('#wave');cv.addEventListener('mousemove',e=>{if(!S||!cv._m)return;const r=cv.getBoundingClientRect(),{m,w,n}=cv._m;hover=Math.max(0,Math.min(n-1,Math.floor((e.clientX-r.left-m.l)/(w-m.l-m.r)*n)));wave()});cv.addEventListener('mouseleave',()=>{hover=null;$('#tip').style.display='none';wave()});
+async function poll(){try{S=await api('/api/state');header();now();meters();wave();lists();settings()}catch(e){pill($('#state'),'--warning','▲','lost contact with the Pi')}setTimeout(poll,500)}
+addEventListener('resize',()=>S&&wave());poll();
+</script></html>

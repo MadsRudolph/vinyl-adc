@@ -66,13 +66,18 @@ The 32-bit words are not PCM: each 64-bit frame carries 32 left and 32 right mod
 
 **Left/right:** by the divider's phase the first bit after the frame edge belongs to the left channel. Confirm by feeding a signal into the LEFT input only; if it appears on the right, add `--swap`.
 
-## 5. Live view
+## 5. The ripper and its dashboard
 
-```sh
-sudo systemd-run --unit=vinyl-adc-live --uid=$USER --working-directory=$HOME/pi --property=Restart=on-failure /usr/bin/python3 $HOME/pi/live.py
-```
+`vinyl-adc-ripper.service` starts at boot and owns the capture card. Dashboard: **http://vinyladc.local:8091**.
 
-Then open **http://vinyladc.local:8091** on the PC. Twice a second it shows, per channel: a health verdict, in-band noise, noise-shaping slope, one-density and run length; the noise spectrum of both 1-bit streams from 20 Hz to 768 kHz; the last 20 ms of decimated audio; and the first 192 modulator bits, where a limit cycle shows up as long solid bars. On a Pi 4 it needs about 0.35 s of one core per 0.5 s of signal. It holds the capture device, so stop it (`sudo systemctl stop vinyl-adc-live`) before using `arecord` by hand, or download the last 10 s from `/snapshot.raw` and feed that to `analyze_bitstream.py`. `python3 live.py --replay capture.raw` replays a saved capture on any machine.
+- **Automatic.** When the level stays above the start threshold for two seconds a *side* is recorded to `~/vinyl/sides/` (with 2.5 s of pre-roll); 15 s of silence closes it. The detector is treble-weighted, so mains hum cannot trigger it, and it uses a window rather than a run, so isolated clicks do not keep a finished side open. Sides shorter than 90 s are discarded.
+- **Identify the record** with the MusicBrainz search on the dashboard and pick the release, before or after playing it. A side is matched to the album's next tracks by duration, and each cut is snapped to the quiet gap nearest the expected boundary (within 15 s), else placed at the expected time.
+- **Finishing.** When the last side is in, or on "Finish and send", all tracks get one common gain (album peak to −1 dBFS), are encoded to 24-bit 48 kHz FLAC, tagged (title, artist, album, track and disc numbers, date, MusicBrainz ids, `MEDIA=Vinyl`), given the Cover Art Archive front cover, and published under `~/vinyl/library/` and at `/outbox.json`.
+- **Delivery.** `server/vinyl-pull.py` on the media server polls the outbox every two minutes and files albums under `/srv/media/music/Vinyl/Artist/Album (Year) [Vinyl]/`. See `server/README.md`.
+- **Channel faults.** A channel whose bitstream is stuck or oscillating is detected from its run lengths; the healthy channel is then recorded to both sides (mono) and the dashboard says so. Runs of 7+ identical bits, which music never produces, are repaired in the bitstream before decimation.
+- Offline test: `python3 ripper.py --replay capture.raw --fast --home /tmp/vinyl`.
+
+`live.py` (`vinyl-adc-live.service`, disabled) is the diagnostic view with the modulator noise spectra; the two services conflict because only one process can hold the capture card: `sudo systemctl start vinyl-adc-live` stops the ripper, and starting the ripper again stops the live view.
 
 ## 6. If it does not work
 
