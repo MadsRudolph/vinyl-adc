@@ -16,6 +16,7 @@ import argparse,sys,wave
 import numpy as np
 
 CIC_ORDER,CIC_R,FIR_R,FIR_TAPS,FS_MOD=4,8,4,161,1_536_000
+SETTLE=960   # output samples (20 ms) discarded at the start
 
 class Cic:
     """Hogenauer CIC decimator with state, so a long capture can be streamed in chunks. int64 wrap-around is harmless here."""
@@ -86,7 +87,7 @@ def main(argv=None):
         for ch,bits in enumerate(streams):
             ones[ch]+=int(bits.sum());cic,fir=chains[ch];out[ch].append(fir.process(cic.process(bits.astype(np.int8)*2-1)))
     if not total:sys.exit('No complete frames in the capture')
-    audio=np.vstack([np.concatenate(c) for c in out])
+    audio=np.vstack([np.concatenate(c) for c in out])[:,SETTLE:]   # drop the filters' start-up transient (they begin from zero state)
     if a.swap:audio=audio[::-1]
     names=('right','left') if a.swap else ('left','right')
     print(f'{total/FS_MOD:.2f} s captured, {audio.shape[1]} output samples at 48 kHz')

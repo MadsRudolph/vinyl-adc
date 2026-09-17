@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory() as d:
     raw,out=os.path.join(d,'c.raw'),os.path.join(d,'c.wav');words.tofile(raw)
     decimate.main([raw,out,'--keep-dc'])
     with wave.open(out) as w:pcm=np.frombuffer(w.readframes(w.getnframes()),dtype='<i4').reshape(-1,2)/2**31
-x=pcm[2000:-2000];x=x[:len(x)//48*48]   # skip filter settling; whole periods of 1 kHz
+x=pcm[1040:-2000];x=x[:len(x)//48*48]   # skip filter settling; whole periods of 1 kHz
 aL,aR,dc=amplitude(x[:,0],1000),amplitude(x[:,1],18000),x[:,1].mean()
 print(f'left 1 kHz amplitude {aL:.4f} (want 0.5000); right 18 kHz amplitude {aR:.4f} (want 0.2500, {20*np.log10(aR/0.25):+.2f} dB); right DC {dc:+.4f} (want +0.1000)')
 print(f'crosstalk: 18 kHz in left {20*np.log10(amplitude(x[:,0],18000)/0.25+1e-12):.0f} dB, 1 kHz in right {20*np.log10(amplitude(x[:,1],1000)/0.5+1e-12):.0f} dB')

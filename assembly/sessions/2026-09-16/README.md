@@ -125,3 +125,19 @@ Power-board U2 changed from TL072 to LM358. Stack current 73–74 mA (83 mA with
 | pi-data | PI_DIN 521 edges in the record, one-density **0.516** (was 0.615 with the skewed reference), 3.3 V logic |
 
 One intermediate failure (`20260917T152142Z`) was the probes one pin low on J2: scope 1 read LRCLK's 48.01 kHz and scope 2 the data stream's ≈0.79 MHz edge rate. The boards are now cleared for the Raspberry Pi: AD3 V+ off J2.3 first, the Pi supplies the 3.3 V from then on.
+
+## 17 September evening: first Raspberry Pi capture
+
+Pi 4B, Pi OS Trixie (kernel 6.18), first booted from a USB stick, then cloned to the SD card with rpi-clone; reachable as `vinyladc.local`. The `vinyl-adc` overlay registers the capture card and `vinyl-adc-consumer.service` puts the I²S block in clock-consumer mode at boot (measured: GPIO18/19 are *outputs* until a capture device is first opened, so the Pi boots first and the ADC's +5 V comes on afterwards). Wiring per `pi/README.md`, J2.1 still on the Korad, J2.7 open, both inputs shorted.
+
+10 s capture, `arecord` S32_LE stereo 48 kHz → exactly 3 840 000 bytes, so BCLK/LRCLK are locked. `pi/analyze_bitstream.py` on the raw bits:
+
+| | Left | Right |
+|---|---|---|
+| one-density | 0.4959 | 0.4982 |
+| in-band floor at 1 / 5 / 20 kHz | −118 / −118 / −117 dBFS/Hz | −123 / −104 / −100 dBFS/Hz |
+| noise shaping 30→80 kHz | +68 dB/decade | **+13 dB/decade** |
+| 20 Hz–20 kHz noise | **−74.3 dBFS** | −41.4 dBFS |
+| strongest in-band line | 12.59 kHz, −85 dBFS | **5.51 kHz, −46 dBFS** |
+
+Left is a healthy third-order loop and lands on the design's simulated figure (design-notes: 70.0 dB with real parts; measured ≈71 dB below a full-scale sine). Both idle tones sit at |DC| × 1.536 MHz as theory says. **The right channel shapes like a first-order loop**: one or two of its integrators are not in the loop (stuck at a rail, an open component-side joint such as U20.1 or U22.4, or a wrong value). Next: scope the three integrator outputs on the right board, U20 pin 1, U20 pin 7 and U22 pin 1, and compare with the left board.

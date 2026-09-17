@@ -60,6 +60,8 @@ python3 decimate.py capture.raw capture.wav
 
 The 32-bit words are not PCM: each 64-bit frame carries 32 left and 32 right modulator bits at 1.536 MHz. `decimate.py` de-interleaves them and decimates by 32 (4th-order CIC to 192 kHz, then a 161-tap droop-compensating FIR), printing each bitstream's one-density and the DC, RMS and peak per channel before writing a 32-bit 48 kHz WAV. `python3 test_decimate.py` checks it against a synthetic stream (1 kHz at 0.5 FS and 18 kHz at 0.25 FS recover within 0.03 dB).
 
+`python3 analyze_bitstream.py capture.raw` judges each modulator from the raw bits at 1.536 MHz: in-band floor, noise-shaping slope (about +60 dB/decade just above the audio band for a healthy third-order loop) and the idle tone, which sits at |DC| × 1.536 MHz.
+
 **First capture, inputs still shorted:** expect both one-densities near 0.50 (the bench measured 0.50 and 0.53 per channel, 0.516 combined), a small DC term and a low RMS noise floor.
 
 **Left/right:** by the divider's phase the first bit after the frame edge belongs to the left channel. Confirm by feeding a signal into the LEFT input only; if it appears on the right, add `--swap`.
