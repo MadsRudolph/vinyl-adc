@@ -4,12 +4,12 @@
 Runs on the Proxmox host as root from vinyl-pull.timer (same posture as autorip: LAN only, no auth).
 The Pi publishes finished albums at /outbox.json; this script downloads each file next to its final place,
 checks size and SHA-256, moves it in, fixes ownership and tells the Pi the album has arrived.
-Strictly additive: it never deletes anything and never overwrites a file that differs.
+Nothing is ever deleted: a file the Pi re-encoded (another side arrived, the common gain changed) replaces the old one, which is moved to /srv/media/.vinyl-replaced.
 Jellyfin's Music library already watches /srv/media/music with real-time monitoring, so albums show up by themselves.
 """
-import hashlib,json,os,re,sys,urllib.parse,urllib.request
+import time,hashlib,json,os,re,sys,urllib.parse,urllib.request
 PI=os.environ.get('VINYL_PI','http://192.168.50.137:8091').rstrip('/')
-DEST=os.environ.get('VINYL_DEST','/srv/media/music/Vinyl');LIBRARY=os.environ.get('VINYL_LIBRARY_ROOT','/srv/media/music')
+DEST=os.environ.get('VINYL_DEST','/srv/media/music/Vinyl');LIBRARY=os.environ.get('VINYL_LIBRARY_ROOT','/srv/media/music');REPLACED=os.environ.get('VINYL_REPLACED','/srv/media/.vinyl-replaced')   # outside every Jellyfin library path
 OK=re.compile(r"^[^/\\\x00-\x1f]{1,180}$")
 
 def fetch(path,data=None):
@@ -38,7 +38,8 @@ def main():
             name=clean(f['name']);final=os.path.join(folder,name)
             if os.path.exists(final):
                 if sha(final)==f['sha256']:continue
-                print(f'KEEPING existing, different file {final}; not overwriting');complete=False;continue
+                # the Pi re-encoded the album (more sides, new common gain): the old file goes aside, never away
+                aside=os.path.join(REPLACED,*parts);os.makedirs(aside,exist_ok=True);os.replace(final,os.path.join(aside,time.strftime('%Y%m%d-%H%M%S ')+name));print(f'moved the old {name} to {aside}')
             tmp=os.path.join(folder,'.incoming-'+name)
             with fetch(f"/outbox/{album['album']}/{urllib.parse.quote(name)}") as r,open(tmp,'wb') as out:
                 while True:

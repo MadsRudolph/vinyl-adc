@@ -24,7 +24,7 @@ SIGNATURES={
  'AnalogOutNodeEnableSet':[I,I,I,I], 'AnalogOutNodeFunctionSet':[I,I,I,B],
  'AnalogOutNodeFrequencySet':[I,I,I,D], 'AnalogOutNodeAmplitudeSet':[I,I,I,D],
  'AnalogOutNodeOffsetSet':[I,I,I,D], 'AnalogOutNodeSymmetrySet':[I,I,I,D],
- 'AnalogOutIdleSet':[I,I,I],
+ 'AnalogOutIdleSet':[I,I,I], 'AnalogOutNodeDataSet':[I,I,I,PD,I],
  'AnalogIOReset':[I], 'AnalogIOChannelNodeSet':[I,I,I,D], 'AnalogIOEnableSet':[I,I],
  'AnalogIOStatus':[I], 'AnalogIOChannelNodeStatus':[I,I,I,PD],
  'DigitalOutReset':[I], 'DigitalIOOutputEnableSet':[I,U], 'DigitalIOConfigure':[I],
@@ -115,6 +115,19 @@ class AD3:
         self.call('AnalogOutNodeOffsetSet',0,0,float(offset))
         self.call('AnalogOutNodeSymmetrySet',0,0,50.)
         self.call('AnalogOutIdleSet',0,0)  # idle disabled, not hold last value
+        self.call('AnalogOutConfigure',0,1)
+    def wave_custom(self,frequency,shape,amplitude):
+        """One period of `shape` (values in -1..1) repeated at `frequency`, scaled to `amplitude` volts peak. Used for two-tone IMD signals."""
+        shape=np.asarray(shape,dtype=float)
+        if amplitude<0 or amplitude>5 or np.abs(shape).max()>1 or len(shape)<16 or len(shape)>16384:raise ValueError('Invalid custom W1 setting')
+        self.call('AnalogOutConfigure',0,0)
+        self.call('AnalogOutNodeEnableSet',0,0,1)
+        self.call('AnalogOutNodeFunctionSet',0,0,30)          # funcCustom
+        self.call('AnalogOutNodeDataSet',0,0,shape.ctypes.data_as(PD),len(shape))
+        self.call('AnalogOutNodeFrequencySet',0,0,float(frequency))
+        self.call('AnalogOutNodeAmplitudeSet',0,0,float(amplitude))
+        self.call('AnalogOutNodeOffsetSet',0,0,0.)
+        self.call('AnalogOutIdleSet',0,0)
         self.call('AnalogOutConfigure',0,1)
     def wave_off(self):self.call('AnalogOutReset',0)
     def supply_3v3(self,enabled):

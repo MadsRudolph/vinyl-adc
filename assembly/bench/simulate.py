@@ -2,11 +2,12 @@
 import numpy as np
 
 class SimulatedAD3:
-    def __init__(self,fault=None):self.fault=fault;self.info={'serial':'SIMULATED','name':'Synthetic fixture','sdk':'none'};self.cleanup_errors=[]
+    def __init__(self,fault=None):self.fault=fault;self.w1=None;self.info={'serial':'SIMULATED','name':'Synthetic fixture','sdk':'none'};self.cleanup_errors=[]
     def __enter__(self):return self
     def __exit__(self,*args):pass
-    def wave(self,*args):pass
-    def wave_off(self):pass
+    def wave(self,kind,frequency=0.,amplitude=0.,offset=0.):self.w1=(kind,float(frequency),float(amplitude),float(offset),None)
+    def wave_custom(self,frequency,shape,amplitude):self.w1=('custom',float(frequency),float(amplitude),0.,np.asarray(shape,dtype=float))
+    def wave_off(self):self.w1=None
     def supply_3v3(self,*args):pass
     def supply_status(self):return 3.3,0.012
     def scope_fixture(self,kind,rate,count):
@@ -53,3 +54,25 @@ class SimulatedAD3:
             if self.fault=='stuck-channel':q=np.zeros_like(q)
             words=clk(1536000)|(q<<1)|((1-q)<<2)|(q<<3)|((1-q)<<4)|(q<<5)
         return words,rate
+
+class SimulatedPi:
+    """Stands in for the Pi's /api/audio: renders what the ADC model would deliver for the simulated W1 setting.
+
+    Full scale 3.49 Vpk; harmonics at -92/-100 dBc, flat noise at -108 dBFS/bin-ish, 50 Hz hum at -80 dBFS, a gentle
+    top-end roll-off and a right channel 0.5 dB lower with -70 dB crosstalk. Numbers are plausible, not measured.
+    """
+    FS=48000;VFS=3.49
+    def __init__(self,device):self.device=device;self.rng=np.random.default_rng(3);self.held=0.
+    def hold(self,seconds):self.held=seconds
+    def grab(self,seconds):
+        n=int(seconds*self.FS);t=np.arange(n)/self.FS;w=self.device.w1;x=np.zeros(n)
+        if w:
+            kind,f,amp,off,shape=w;a=amp/self.VFS
+            if kind=='sine':x=a*np.sin(2*np.pi*f*t)
+            elif kind=='custom':x=a*np.interp((t*f)%1,np.linspace(0,1,len(shape),endpoint=False),shape,period=1)
+            x=x+3e-5*x**2+1e-5*x**3          # -92 dBc second, -100 dBc third at full scale
+            if self.device.fault=='missing-tone':x=np.zeros(n)
+        x=x+1e-4*np.sin(2*np.pi*50*t)+self.rng.normal(0,4e-6,n)
+        X=np.fft.rfft(x);fr=np.fft.rfftfreq(n,1/self.FS);X*=1/np.sqrt(1+(fr/24000)**8);x=np.fft.irfft(X,n)
+        right=3e-4*x+self.rng.normal(0,4e-6,n)          # the other input is idle: -70 dB crosstalk and its own noise
+        return np.vstack((x,right)).astype(np.float32)

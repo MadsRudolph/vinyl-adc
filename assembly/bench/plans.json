@@ -514,6 +514,34 @@
      "expect": "PI_DIN toggles (≥100 edges in the record) with a one-density between 10% and 90% and 3.3 V logic levels; PI_BCLK 3.072 MHz (its levels were already screened in the previous step; the 1× probe loads it here). A constant PI_DIN means a stuck modulator, a wrong J21 selection or a dead bus line. This is a smoke test, not an audio measurement."
     }
    ]
+  },
+  "audio": {
+   "title": "Audio performance of the finished converter",
+   "command": "audio",
+   "steps": [
+    {
+     "id": "connect",
+     "title": "Generator on the channel input",
+     "instructions": "Whole stack assembled and powered from the Pi as in normal use, ripper running, turntable stopped. Unplug the phono lead from the channel under test and connect the AD3 as below. Nothing else changes: no bench supply, no probes. The script asks the ripper to hold recording, then steps the generator through calibration, idle noise, 1 kHz at five levels, a third-octave sweep and two-tone IMD (about eight minutes), and pulls the decimated 48 kHz audio back from the Pi for every step.",
+     "connections": [
+      {
+       "board": "channel_l",
+       "lead": "W1",
+       "ref": "J20",
+       "pin": "1",
+       "net": "Net-(J20-Pin_1)"
+      },
+      {
+       "board": "channel_l",
+       "lead": "AD3 GND",
+       "ref": "J20",
+       "pin": "2",
+       "net": "GND"
+      }
+     ],
+     "expect": "Figures are recorded, not judged: full-scale input voltage, idle noise (unweighted and A), hum, THD/THD+N at −3…−60 dBFS, AES17 dynamic range, crosstalk, response ±ripple, CCIF and SMPTE IMD. The AD3 generator bounds distortion and noise near −80 dB; better figures than that are the generator, not the ADC."
+    }
+   ]
   }
  },
  "sources": [

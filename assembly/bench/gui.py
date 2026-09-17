@@ -75,6 +75,7 @@ class Session:
             if settings.get('resume'):argv+=['--resume',settings['resume']]
             if settings.get('serial'):argv+=['--serial',settings['serial']]
             if settings.get('simulate'):argv.append('--simulate')  # offline self-test of the page; reports stay SIMULATED
+            if settings['board']=='audio':argv+=['--channel',settings.get('channel','left'),'--pi',settings.get('pi') or 'http://vinyladc.local:8091']
             p=runner.build_parser()
             try:args=p.parse_args(argv)
             except SystemExit:raise RuntimeError('Invalid settings: '+' '.join(argv))
@@ -158,9 +159,11 @@ table{width:100%;border-collapse:collapse;margin:8px 0}td,th{text-align:left;pad
 <div class="radios" id="boards"></div>
 <label>Scope probes (scope 1, scope 2)<select id="probe"><option value="10,1" selected>10× on scope 1 · 1× on scope 2 (current BNC fixture)</option><option value="10">10× on both</option><option value="1">1× direct flywires on both</option></select></label>
 <label id="v3wrap"><input type="checkbox" id="ad3_3v3" checked> +3.3 V from AD3 V+ to digital J2.3 (never together with another 3.3 V source)</label>
+<div id="audiowrap" hidden><label>Channel under test<select id="channel"><option value="left">Left (J20 on the left channel board)</option><option value="right">Right</option></select></label>
+<label>Ripper on the Pi<input id="pi" value="http://vinyladc.local:8091" style="width:100%"></label></div>
 <label>Continue from an earlier run of this board<select id="resume"><option value="">No — full run</option></select></label>
 <p class="muted" id="resumenote"></p>
-<div class="warn">Before you press Start: close WaveForms, disconnect every AD3 lead from the boards, Korad off.</div>
+<div class="warn" id="warn">Before you press Start: close WaveForms, disconnect every AD3 lead from the boards, Korad off.</div>
 <button class="primary big" id="start">Start</button>
 <p class="muted" id="starterr"></p>
 </section>
@@ -175,15 +178,16 @@ table{width:100%;border-collapse:collapse;margin:8px 0}td,th{text-align:left;pad
 </main>
 <script>
 const $=s=>document.querySelector(s);const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const BOARDS=[['power','Power'],['digital','Digital'],['stack','Full stack'],['left','Left channel'],['right','Right channel']];
+const BOARDS=[['power','Power'],['digital','Digital'],['stack','Full stack'],['left','Left channel'],['right','Right channel'],['audio','Audio performance']];
 $('#boards').innerHTML=BOARDS.map(([v,l],i)=>`<label><input type="radio" name="board" value="${v}" ${i===0?'checked':''}><span>${l}</span></label>`).join('');
 const board=()=>document.querySelector('input[name=board]:checked').value;
 let since=0,lastStep=null,running=false;
 async function api(path,body){const r=await fetch(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});return r.json()}
-async function loadReports(){const b=board();$('#v3wrap').style.display=b==='power'?'none':'block';const list=await api('/api/reports?board='+b);const sel=$('#resume');sel.innerHTML='<option value="">No — full run</option>'+list.filter(r=>r.resumable).map(r=>`<option value="${esc(r.id)}">${esc(new Date(r.started).toLocaleString())} · ${esc(r.status)} · carry ${esc(r.passed.join(', '))}</option>`).join('');$('#resumenote').textContent=list.some(r=>r.resumable)?'Carried steps are copied from the earlier report and not repeated. The fixture (probes, 3.3 V source) must match that run.':'No earlier run of this board has leading passed steps to carry over.';}
+async function loadReports(){const b=board();$('#v3wrap').style.display=b==='power'||b==='audio'?'none':'block';$('#audiowrap').hidden=b!=='audio';$('#probe').parentElement.style.display=b==='audio'?'none':'block';
+ $('#warn').textContent=b==='audio'?'Before you press Start: close WaveForms. The stack stays powered from the Pi; only W1 and AD3 GND go to the channel input J20.':'Before you press Start: close WaveForms, disconnect every AD3 lead from the boards, Korad off.';const list=await api('/api/reports?board='+b);const sel=$('#resume');sel.innerHTML='<option value="">No — full run</option>'+list.filter(r=>r.resumable).map(r=>`<option value="${esc(r.id)}">${esc(new Date(r.started).toLocaleString())} · ${esc(r.status)} · carry ${esc(r.passed.join(', '))}</option>`).join('');$('#resumenote').textContent=list.some(r=>r.resumable)?'Carried steps are copied from the earlier report and not repeated. The fixture (probes, 3.3 V source) must match that run.':'No earlier run of this board has leading passed steps to carry over.';}
 document.querySelectorAll('input[name=board]').forEach(r=>r.addEventListener('change',loadReports));loadReports();
 api('/api/devices').then(d=>{$('#device').textContent=d.devices&&d.devices.length?`AD3 ${d.devices[0].serial} · SDK ${d.sdk}${d.devices[0].in_use?' · IN USE by another program':''}`:'No AD3 found: '+(d.error||'plug it in and reload');});
-$('#start').onclick=async()=>{$('#starterr').textContent='';const r=await api('/api/start',{board:board(),probe:$('#probe').value,ad3_3v3:$('#ad3_3v3').checked&&board()!=='power',resume:$('#resume').value||null});if(r.error){$('#starterr').textContent=r.error;return}since=0;$('#log').innerHTML='';$('#done').innerHTML='';$('#stepcard').innerHTML='';$('#setup').hidden=true;$('#live').hidden=false;};
+$('#start').onclick=async()=>{$('#starterr').textContent='';const r=await api('/api/start',{board:board(),probe:$('#probe').value,ad3_3v3:$('#ad3_3v3').checked&&board()!=='power'&&board()!=='audio',resume:$('#resume').value||null,channel:$('#channel').value,pi:$('#pi').value});if(r.error){$('#starterr').textContent=r.error;return}since=0;$('#log').innerHTML='';$('#done').innerHTML='';$('#stepcard').innerHTML='';$('#setup').hidden=true;$('#live').hidden=false;};
 $('#abort').onclick=async()=>{if(confirm('Abort the run? Remaining checks will not be performed.'))await api('/api/abort',{})};
 function renderStep(e){const s=e.step;$('#stepcard').innerHTML=`<h3>${esc(s.title)}</h3><p>${esc(s.instructions)}</p>${e.extra?`<p><strong>${esc(e.extra)}</strong></p>`:''}<table><tr><th>Lead</th><th>Connect to</th><th>Net</th></tr>${s.connections.map(c=>`<tr><td>${esc(c.lead)}</td><td><strong>${esc(c.ref)}.${esc(c.pin)}</strong></td><td>${esc(c.net)}</td></tr>`).join('')}<tr><td>AD3 GND, scope 1 clip, scope 2 clip, Korad black</td><td><strong>board GND</strong></td><td>GND</td></tr></table><p class="muted">Pad positions: <a href="http://localhost:8080/#visual-wiring" target="_blank" rel="noreferrer">visual wiring guide</a>.</p>`;}
 function renderPrompt(p){const box=$('#promptcard');if(!p){box.innerHTML='<p class="muted">Measuring… keep everything as it is.</p>';return}

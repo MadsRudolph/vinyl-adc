@@ -2,7 +2,7 @@
 
 `vinyl-pull.py` runs on the Proxmox host as root from `vinyl-pull.timer`, every two minutes, in the same style as the host's autorip service. It **pulls** from the Pi, so no server credentials live on the Pi.
 
-It reads the Pi's `/outbox.json`, downloads every file of a finished album next to its final place, checks size and SHA-256, moves it in, gives it the library's ownership and tells the Pi the album has arrived. It never deletes anything and never overwrites a file that differs. Names from the Pi are validated before they touch the filesystem.
+It reads the Pi's `/outbox.json`, downloads every file of a finished album next to its final place, checks size and SHA-256, moves it in, gives it the library's ownership and tells the Pi the album has arrived. It never deletes anything; a file the Pi re-encoded replaces the old one, which is moved to `/srv/media/.vinyl-replaced/`. Names from the Pi are validated before they touch the filesystem.
 
 Albums land in `/srv/media/music/Vinyl/Artist/Album (Year) [Vinyl]/`. Jellyfin's Music library already includes `/media/music` with real-time monitoring, so they appear without a manual scan.
 

@@ -24,12 +24,14 @@ import uuid
 import numpy as np
 from analysis import bit,frequency,summary,sine_fit,mux_errors,channel_stream,dac_errors,stable_mask,clock_delay_ns,digitize,follow_error,mux_case_error
 from dwf_device import AD3,SDK,InstrumentError
-from simulate import SimulatedAD3
+from simulate import SimulatedAD3,SimulatedPi
+import audio as A
 
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
 PLANS=json.loads((HERE/'plans.json').read_text());LIMITS=json.loads((HERE/'limits.json').read_text())
 STEP_ORDER={'power':['pump-check','rails','references'],'digital':['rails','pi-clocks','bus-clocks'],'stack':['rails-left','q-left','rails','q-right','references','pi-clocks','pi-data'],
-            'left':['rails','references','quiet','tone-0.1','tone-0.25','gain-response'],'right':['rails','references','quiet','tone-0.1','tone-0.25','gain-response']}
+            'left':['rails','references','quiet','tone-0.1','tone-0.25','gain-response'],'right':['rails','references','quiet','tone-0.1','tone-0.25','gain-response'],
+            'audio':['level','noise','tone','crosstalk','response','imd']}
 class ScreenFailure(RuntimeError):pass
 
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -241,6 +243,50 @@ class Run:
             self.capture('recovered-density-'+name,stream['audio'],stream['audio_rate']);self.end()
         if self.carried('gain-response'):return
         self.begin('gain-response');self.window('output amplitude ratio for 2.5x input',amplitudes[1]/amplitudes[0],'tone_gain_ratio','ratio');self.end()
+    # ---- audio performance of the finished converter (stack + Pi, generator on the channel input, capture from the ripper)
+    def audio(self):
+        pi=SimulatedPi(self.device) if self.args.simulate else A.PiAudio(self.args.pi);ch={'left':0,'right':1}[self.args.channel];other=1-ch;name=self.args.channel
+        settle=0. if self.args.simulate else 5.;grab=4.;self.report['audio']={'channel':name,'pi':self.args.pi,'generator':'AD3 W1 (14-bit; bounds distortion and noise results near -80 dB)'}
+        step=next(x for x in PLANS['boards']['audio']['steps'] if x['id']=='connect');self.op.show_step(step,f'Measuring the {name} channel; the other input may stay on the turntable or be shorted.')
+        self.prompt('Wire W1 and AD3 GND to the channel input as above. Stack powered as in normal use, Pi running the ripper, turntable stopped.','READY')
+        pi.hold(1800);self.say('  The ripper is told not to record for the next 30 minutes.')
+        def tone(f,amp,seconds=grab):
+            self.device.wave('sine',f,amp);time.sleep(settle);return pi.grab(seconds)
+        # full scale: what input voltage gives 0 dBFS at the output
+        self.begin('level');x=tone(1000.,.5);fig=A.tone_figures(x[ch],1000.);vfs=.5/10**(fig['level_dbfs']/20)
+        self.measure('output for 0.5 Vpk at 1 kHz',fig['level_dbfs'],-40,-1,'dBFS');self.measure('full-scale input',vfs,None,None,'Vpk');self.measure('full-scale input (rms)',vfs/np.sqrt(2),None,None,'Vrms')
+        self.report['audio']['vfs_peak']=round(vfs,3);amp=lambda dbfs:min(5.,vfs*10**(dbfs/20))
+        if vfs>5.:self.say(f'  Full scale needs {vfs:.2f} Vpk; the AD3 gives 5 V at most, so the loudest test tone is {20*np.log10(5/vfs):+.1f} dBFS.')
+        self.end()
+        # idle noise with the input driven to 0 V by the generator
+        self.begin('noise');self.device.wave('dc',0.,0.,0.);time.sleep(settle);x=pi.grab(8.);nf=A.noise_figures(x[ch]);self.capture('noise',x,A.FS)
+        self.measure('idle noise 20 Hz–20 kHz',nf['noise_dbfs'],None,None,'dBFS');self.measure('idle noise, A-weighted',nf['noise_dbfs_a'],None,None,'dBFS(A)')
+        for h,v in nf['hum_dbfs'].items():self.measure(f'hum {h} Hz',v,None,None,'dBFS')
+        self.measure('SNR (0 dBFS re idle noise, A-weighted)',-nf['noise_dbfs_a'],None,None,'dB');A.plot_spectrum(self.folder/'noise.png',x[ch],f'Idle noise, {name} channel ({nf["noise_dbfs_a"]:.1f} dBFS(A))');self.end()
+        # 1 kHz at several levels: THD, THD+N, and the AES17 dynamic range from the -60 dBFS tone
+        self.begin('tone');f0=A.bin_centred(1000.,grab);loud=None
+        for dbfs in (-3,-6,-20,-40,-60):
+            if amp(dbfs)>=5. and dbfs>-3:continue
+            x=tone(f0,amp(dbfs));fig=A.tone_figures(x[ch],f0);self.capture(f'tone{dbfs}',x,A.FS)
+            self.measure(f'level for {dbfs} dBFS request',fig['level_dbfs'],None,None,'dBFS');self.measure(f'THD at {dbfs} dBFS',fig['thd_pct'],None,None,'%');self.measure(f'THD+N at {dbfs} dBFS',fig['thdn_db'],None,None,'dB')
+            if dbfs==-3:loud=x;self.measure('2nd harmonic',fig['harmonics_dbc'][0],None,None,'dBc');self.measure('3rd harmonic',fig['harmonics_dbc'][1],None,None,'dBc');A.plot_spectrum(self.folder/'tone-3dbfs.png',x[ch],f'1 kHz at {fig["level_dbfs"]:.1f} dBFS: THD {fig["thd_pct"]:.4f} %, THD+N {fig["thdn_db"]:.1f} dB',f0)
+            if dbfs==-60:wa=A.tone_figures(x[ch],f0,weighted=True);self.measure('dynamic range (AES17, −60 dBFS tone, A-weighted)',-(wa['level_dbfs']+wa['thdn_db']),None,None,'dB');A.plot_spectrum(self.folder/'tone-60dbfs.png',x[ch],f'1 kHz at −60 dBFS: THD+N {wa["thdn_db"]:.1f} dB(A)',f0)
+        self.end()
+        # crosstalk: the 1 kHz tone as seen by the channel that has no input
+        self.begin('crosstalk');fig=A.tone_figures(loud[ch],f0);oth=A.tone_figures(loud[other],f0);self.measure(f'crosstalk into {("left","right")[other]}',oth['level_dbfs']-fig['level_dbfs'],None,None,'dB');self.end()
+        # frequency response at -20 dBFS, third-octave points
+        self.begin('response');freqs=A.sweep_points();gains=[];ref=None
+        for f in freqs:
+            fb=A.bin_centred(f,grab);x=tone(fb,amp(-20));lv=A.tone_figures(x[ch],fb)['level_dbfs'];gains.append(lv)
+        ref=gains[freqs.index(1000.)];gains=[g-ref for g in gains]
+        for f,g in zip(freqs,gains):self.measure(f'response {f:g} Hz',g,None,None,'dB re 1 kHz')
+        self.measure('response 20 Hz–20 kHz peak-to-peak',max(gains)-min(gains),None,None,'dB');A.plot_response(self.folder/'response.png',freqs,gains,f'Frequency response, {name} channel, −20 dBFS');self.end()
+        # two-tone intermodulation
+        self.begin('imd');g,shape=A.two_tone(19000,20000);self.device.wave_custom(g,shape,amp(-6));time.sleep(settle);x=pi.grab(grab);im=A.imd_ccif(x[ch]);self.capture('imd-ccif',x,A.FS)
+        self.measure('IMD CCIF 19+20 kHz, 1 kHz product',im['imd_d2_db'],None,None,'dB');self.measure('IMD CCIF 19+20 kHz, 18 kHz product',im['imd_d3_db'],None,None,'dB')
+        g,shape=A.two_tone(60,7000,4.,1.);self.device.wave_custom(g,shape,amp(-6));time.sleep(settle);x=pi.grab(grab);im=A.imd_smpte(x[ch]);self.capture('imd-smpte',x,A.FS)
+        self.measure('IMD SMPTE 60 Hz + 7 kHz (4:1)',im['imd_pct'],None,None,'%');A.plot_spectrum(self.folder/'imd-smpte.png',x[ch],f'SMPTE IMD: {im["imd_pct"]:.4f} %');self.end()
+        self.device.wave_off();pi.hold(0);(self.folder/'summary.md').write_text(A.summary_markdown(self.report));self.say('  Plots and summary.md are in the report folder.')
     def check_channel(self,words,rate):
         stream=channel_stream(words,rate)
         self.clock('MCLK',bit(words,0),rate,1536000)
@@ -255,7 +301,9 @@ class Run:
     def execute(self):
         device=SimulatedAD3(self.args.simulate_fault) if self.args.simulate else AD3(self.args.serial,self.args.probe)
         try:
-            if not self.args.simulate:
+            if self.board=='audio' and not self.args.simulate:
+                self.prompt('Close WaveForms. Leave the stack running from the Pi as in normal use; the AD3 is used only as a signal generator and shares GND with the boards.','READY')
+            elif not self.args.simulate:
                 self.say('\n'.join(PLANS['common']))
                 self.say(f"\nScope inputs for this run: scope 1 = {self.args.probe[0]}x, scope 2 = {self.args.probe[1]}x ({self.report['scope_inputs']['fixture']}). Each physical probe switch must match its channel.")
                 self.prompt('Disconnect AD3 W1/W2/V+/V− from the boards; bench supply OFF. Close WaveForms. The script will take exclusive AD3 control and initially disable all its outputs.', 'READY')
@@ -264,8 +312,9 @@ class Run:
                 if self.board=='power':self.power()
                 elif self.board=='digital':self.digital()
                 elif self.board=='stack':self.stack()
+                elif self.board=='audio':self.audio()
                 else:self.channel()
-                self.pause_off()
+                if self.board!='audio':self.pause_off()
             if device.cleanup_errors:raise InstrumentError('AD3 shutdown could not be verified: '+'; '.join(device.cleanup_errors))
             self.report['status']='PASS'
         except ScreenFailure as e:self.report.update(status='FAIL',error=str(e))
@@ -278,7 +327,8 @@ class Run:
             if self.args.simulate:self.report['simulation_outcome']=self.report['status'];self.report['status']='SIMULATED'
             self.write_report()
             self.say('\n'+self.report['status']+': '+self.report.get('error','Finished screening sequence.'))
-            self.say('TURN OFF THE BENCH SUPPLY. AD3 outputs have been shut down unless a cleanup error is reported. A disabled W1 is not guaranteed to be high impedance; disconnect it before other use.')
+            if self.board=='audio':self.say('AD3 outputs are off; unplug W1 from the channel input before playing a record (a disabled W1 is not high impedance).')
+            else:self.say('TURN OFF THE BENCH SUPPLY. AD3 outputs have been shut down unless a cleanup error is reported. A disabled W1 is not guaranteed to be high impedance; disconnect it before other use.')
             self.say('Report: '+str(self.folder/'report.json'))
             self.op.finished(self.report)
         outcome=self.report.get('simulation_outcome',self.report['status'])
@@ -300,7 +350,9 @@ def write_index(output):
 
 def build_parser():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('board',choices=['devices','power','digital','left','right','stack'])
+    p.add_argument('board',choices=['devices','power','digital','left','right','stack','audio'])
+    p.add_argument('--pi',default='http://vinyladc.local:8091',help='audio plan: the ripper on the Pi, which supplies the decimated capture')
+    p.add_argument('--channel',choices=['left','right'],default='left',help='audio plan: which channel input W1 is wired to')
     p.add_argument('--serial',help='AD3 serial number from devices')
     p.add_argument('--ad3-3v3',action='store_true',help='Explicitly use AD3 V+ at 3.3 V for digital J2.3; never in parallel with another supply')
     p.add_argument('--probe',type=probe_setting,default=(1,1),help='Scope probe attenuation per channel: 1 (default, direct flywires), 10 (both 10x probes), or two values such as 10,1 for scope 1 at 10x and scope 2 at 1x')

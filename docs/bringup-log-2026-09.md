@@ -482,7 +482,7 @@ so no side letters are needed and multi-disc albums just continue. Expected boun
 
 One common gain per album (album peak to −1 dBFS, capped at +24 dB) so relative levels between tracks survive; 10 ms fades at the cuts; `flac --best`, 24-bit 48 kHz; tags via mutagen (title, artist, album artist, album, track and disc numbers, date, MusicBrainz ids, `MEDIA=Vinyl`, a comment with the rip date and gain); the Cover Art Archive front cover embedded and as `cover.jpg`. Finished albums appear at `/outbox.json` with sizes and SHA-256.
 
-`server/vinyl-pull.py` runs on the Proxmox host from a two-minute timer, in the style of the host's existing autorip service. **It pulls**, so no server credentials live on the Pi. It validates every name, downloads next to the final place, verifies size and hash, moves in, applies the library's ownership (100000:100000, read from the library root) and acknowledges to the Pi. It never deletes and never overwrites a differing file. Jellyfin's Music library already includes `/media/music` with real-time monitoring, so albums in `/srv/media/music/Vinyl/Artist/Album (Year) [Vinyl]/` appear by themselves.
+`server/vinyl-pull.py` runs on the Proxmox host from a two-minute timer, in the style of the host's existing autorip service. **It pulls**, so no server credentials live on the Pi. It validates every name, downloads next to the final place, verifies size and hash, moves in, applies the library's ownership (100000:100000, read from the library root) and acknowledges to the Pi. It never deletes; a file the Pi re-encoded (a later side, a new common gain) replaces the old one, which is moved to `/srv/media/.vinyl-replaced/`. Jellyfin's Music library already includes `/media/music` with real-time monitoring, so albums in `/srv/media/music/Vinyl/Artist/Album (Year) [Vinyl]/` appear by themselves.
 
 ### 12.4 Tests
 
@@ -495,6 +495,28 @@ One common gain per album (album peak to −1 dBFS, capped at +24 dB) so relativ
 ### 12.5 Dashboard
 
 State pill (idle / recording with time / not clocking), per-channel health, mono notice; the record on the platter with cover, current track and progress; stereo RMS meters with peak hold and clip flag on a −60…0 dBFS scale; the needle detector with its two thresholds and the silence countdown; the whole side as a waveform (left up, right down, detected gaps shaded, expected track changes dashed, hover for time and levels); records and sides with status, "Finish and send"; log; detection settings.
+
+## 12b. The first real rip, and what the cut got wrong (18 September, 00:44–01:10)
+
+The first side recorded with the ripper was side A of Radiohead's *KID A MNESIA* (2021, 3 LP), stopped after the third track to test the delivery path.
+
+**What worked.** Detection started the side at the needle drop, the dashboard showed the album and track, "Finish and send" encoded three FLACs with tags, and the server's timer fetched them, verified their checksums and filed them under `/srv/media/music/Vinyl/Radiohead/KID A MNESIA (2021) [Vinyl]/` with the library's owner; Jellyfin's monitor rescanned by itself. The Pi kept up (backlog 0, about 250 ms of CPU per 500 ms block).
+
+**What went wrong.**
+
+1. *The side did not close by itself.* With the needle lifted, the level sat at −73 dB but the right channel board's clicks pushed 28 % of the 100 ms frames above the −67 dB stop threshold, so the "85 % of a 15 s window quiet" rule never fired; the side was stopped by hand 85 s later. The envelope also showed why a longer rule is needed rather than a lower threshold: the gap after *Everything in Its Right Place* is 17 s of −71 dB, as quiet as a lifted needle. Over 30 s the two are separable: a 30 s window at −65 dB is at most 65 % quiet anywhere in the music and at least 84 % quiet after the lift. That is the new rule (`stop_db −65`, `stop_seconds 30`, 80 %); it would have closed this side about 30 s after the lift.
+2. *The cut was 30 s off.* The music extent was taken from single frames above −62 dB, so a click in the silent tail made the side 16.4 min long instead of 14.8, the track list was stretched to fit, and the cuts fell at 279 s, 595 s and 985 s against real boundaries near 251, 537 and 895 s; the first "track" ended half a minute into *Kid A*. The fix computes the extent from 3 s windows (≥ 50 % of frames above the threshold), extends both ends to where a 3 s window is 80 % below the stop threshold so fade-outs are kept, recomputes the gaps from the finished envelope and merges fragments closer than 2.5 s (the clicks had split the 241–261 s gap into three), and where no gap exists near an expected boundary (*Kid A* runs into *The National Anthem*) cuts at the quietest second within ±15 s instead of at a scaled guess. Re-run on the same envelope: 251.2, 535.0, 882 s.
+3. *No cover.* This pressing has no scan on the Cover Art Archive; the release group's front cover is fetched as a fallback (it exists for this album).
+
+The delivered files were re-encoded and replaced. The puller, until then strictly additive, now replaces a file whose checksum changed and moves the old one to `/srv/media/.vinyl-replaced/`, because the common album gain changes whenever a side is added, and the zero-touch flow below re-sends albums.
+
+## 12c. Zero-touch: the record identifies itself
+
+The intended use is to put a record on and never open the dashboard. Two minutes into a side the ripper now fingerprints the audio (Chromaprint `fpcalc` on the raw 24-bit side file, about 0.7 s on the Pi) and queries AcoustID with `meta=recordings releases tracks`. Every (release, medium, track) an answer could be is ranked: the album already in use first (+100, so a chosen pressing is never abandoned because AcoustID lists the recording under other editions), then vinyl formats (+2), then the match score, with a small penalty for long track lists so compilations lose to the album. If one of the current album's recordings matched, the side is attached to it at that track; otherwise the best release becomes the current album (its tracklist from MusicBrainz), and an album that was in progress is finalised with what it has. The side then carries its own starting track (`first`), so side B before side A, or a needle dropped mid-side, cuts correctly. A side whose tracks are already recorded goes to the trash instead of being assigned twice; an album untouched for three hours is sent as it is; below 3 GB free the ripper removes trash and the raw audio of delivered albums, oldest first. The lookup needs a free AcoustID application key in `~/vinyl/acoustid.key`; without it the dashboard says so and manual selection still works. Tests: `pi/test_ripper.py` (ranking, current-album stickiness, album switching, no-key path, cutting from a given track, repeat-play rejection).
+
+## 12d. Audio performance plan (`assembly/bench/run.py audio`)
+
+"Is the rip better than streaming?" cannot be answered yes: a lossless stream is the digital master, and vinyl is a lossy analogue copy of it (60–70 dB SNR, 25–35 dB separation, 0.5–3 % distortion; *KID A MNESIA* was cut from digital files). What can be proved is that the ADC is transparent to the medium. The `audio` bench plan measures the finished converter as used: stack powered from the Pi, ripper running, only W1 and AD3 GND on the channel input J20. The ripper gained `/api/hold` (do not record test tones) and `/api/audio` (the last 60 s of decimated audio), so the measurement uses the exact signal path that ends in the FLAC. Steps: full-scale calibration from a 0.5 Vpk tone; idle noise (unweighted, A-weighted, hum lines, SNR); 1 kHz at −3/−6/−20/−40/−60 dBFS (THD, THD+N, harmonics, AES17 dynamic range); crosstalk; third-octave response at −20 dBFS; CCIF 19+20 kHz and SMPTE 60 Hz + 7 kHz IMD from custom W1 waveforms. Spectra and the response are plotted, `summary.md` tabulates everything, and dBFS follows AES17 (rms relative to a full-scale sine; the Hann-window scaling was checked against synthetic sines and noise). The AD3's 14-bit generator bounds distortion and noise figures near −80 dB. The plan is verified in simulation (`SimulatedPi`) and not yet run on the hardware; the "before" baseline is the next bench session.
 
 ## 13. Measured performance so far
 
@@ -538,8 +560,8 @@ Process lessons: compare two boards rather than reasoning about one; let the har
 3. **Hum:** turntable ground to the chassis post, enclosure, shielded input leads. Currently −39 dBFS at 50 Hz.
 4. **Supply noise:** filter the 5 V feeding the DAC gates before running the stack from the Pi (6–11 dB worse than the bench supply today); fit 470 Ω in PI_BCLK and PI_LRCLK for that configuration.
 5. **Decimator:** steeper final stage to remove the 20–24 kHz shaped noise (−62 dBFS unweighted).
-6. **Ripper:** tune thresholds on full sides with real groove noise; optional AcoustID fingerprinting for automatic identification (needs an API key); a DHCP reservation for the Pi, whose address is configured on the server.
-7. **Performance measurements:** THD+N, SNR with a calibrated source, frequency response, crosstalk.
+6. **Ripper:** tune thresholds on full sides with real groove noise; register an AcoustID application key and put it in `~/vinyl/acoustid.key`; a DHCP reservation for the Pi, whose address is configured on the server.
+7. **Performance measurements:** run `assembly/bench/run.py audio` on the hardware for the baseline, again after each fix (§12d).
 8. The hosted guide (`vinyl-adc.madsrudolph.dev`) was last deployed from commit `c99fa82`; the `gh` CLI on the PC hangs behind a mise shim, so later deploy dispatches did not go out.
 
 ## 16. Software written in these three days
@@ -554,6 +576,7 @@ Process lessons: compare two boards rather than reasoning about one; let the har
 | `pi/decimate.py`, `test_decimate.py` | Bit de-interleaving and ÷32 decimation, with self-test |
 | `pi/analyze_bitstream.py` | Modulator health from the raw bits |
 | `pi/live.py`, `vinyl-adc-live.service` | Diagnostic live view |
-| `pi/ripper.py`, `ripper.html`, `vinyl-adc-ripper.service` | Automatic recording, splitting, encoding, dashboard |
+| `pi/ripper.py`, `ripper.html`, `vinyl-adc-ripper.service`, `test_ripper.py` | Automatic recording, identification, splitting, encoding, dashboard |
+| `assembly/bench/audio.py` | Audio performance analysis (THD+N, SNR, DR, response, IMD) for the `audio` plan |
 | `server/vinyl-pull.py`, `.service`, `.timer` | Delivery into the Jellyfin library |
 | `sim/listen.py` | Audio through the modulator model and the real decimator |

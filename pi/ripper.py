@@ -25,7 +25,9 @@ import decimate as d
 FS=48000;BLOCK_FRAMES=24000;BLOCK_BYTES=BLOCK_FRAMES*8;CHUNK=4800           # 0.5 s blocks, 100 ms level chunks
 UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
 DEFAULTS={'start_db':-62.,'start_seconds':2.,'stop_db':-65.,'stop_seconds':30.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
-          'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.}
+          'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.,
+          'identify':True,'identify_at_seconds':130.,'finalize_after_hours':3.,'min_free_gb':3.}
+ACOUSTID='https://api.acoustid.org/v2/lookup'
 
 def db(x):return float(10*np.log10(x+1e-20))
 def safe(name):return re.sub(r'\s+',' ',re.sub(r'[\\/:*?"<>|\x00-\x1f]','_',name)).strip(' .') or 'Unknown'
@@ -95,6 +97,33 @@ def mb_release(mbid):
     return {'mbid':mbid,'title':r.get('title',''),'artist':''.join(a.get('name','')+a.get('joinphrase','') for a in r.get('artist-credit',[])),'date':r.get('date',''),
             'discs':len(r.get('media',[])),'tracks':tracks}
 
+def fingerprint(path,start,seconds=120.):
+    """Chromaprint of `seconds` of a raw 24-bit side file from `start` seconds in (fpcalc from libchromaprint-tools)."""
+    a=int(start*FS)*6;raw=np.memmap(path,dtype=np.uint8,mode='r')[a:a+int(seconds*FS)*6]
+    if len(raw)<FS*6*30:raise ValueError('too little audio to fingerprint')
+    out=subprocess.run(['fpcalc','-format','s24le','-rate',str(FS),'-channels','2','-length',str(int(seconds)),'-json','-'],input=bytes(raw),capture_output=True,check=True).stdout
+    return json.loads(out)['fingerprint'],len(raw)//(6*FS)
+def acoustid_lookup(key,fp,duration):
+    body=urllib.parse.urlencode({'client':key,'duration':int(duration),'fingerprint':fp,'meta':'recordings releases tracks'}).encode()
+    with MB_LOCK:
+        req=urllib.request.Request(ACOUSTID,data=body,headers={'User-Agent':UA,'Content-Type':'application/x-www-form-urlencoded'})
+        with urllib.request.urlopen(req,timeout=30) as r:return json.loads(r.read())
+def rank_releases(results,current=None,min_score=.5):
+    """Every (release, medium, track) an AcoustID match could be, best first: the album already in use, then vinyl pressings, then the match score."""
+    found=[]
+    for res in results:
+        if res.get('score',0)<min_score:continue
+        for rec in res.get('recordings') or []:
+            artist=''.join(a.get('name','')+a.get('joinphrase','') for a in rec.get('artists') or [])
+            for rel in rec.get('releases') or []:
+                for med in rel.get('mediums') or []:
+                    for tr in med.get('tracks') or []:
+                        vinyl='vinyl' in (med.get('format') or '').lower()
+                        found.append({'score':res['score']+(100 if rel['id']==current else 0)+(2 if vinyl else 0)-(med.get('track_count') or 0)/100,
+                                      'release':rel['id'],'album':rel.get('title',''),'medium':med.get('position',1),'position':tr.get('position'),
+                                      'recording':rec['id'],'title':rec.get('title',''),'artist':artist,'vinyl':vinyl})
+    return sorted(found,key=lambda x:-x['score'])
+
 # ------------------------------------------------------------------ the ripper
 class Ripper:
     def __init__(self,home,replay=None,fast=False):
@@ -106,6 +135,8 @@ class Ripper:
         self.cfg=self.store['config'];self.dsp=Dsp(self.cfg)
         self.status='starting';self.message='Starting…';self.meters=None;self.recent=deque(maxlen=600)       # 60 s of (peakL,peakR,level)
         self.stop=threading.Event();self.recover_orphans()
+        self.acoustid=(self.home/'acoustid.key').read_text().strip() if (self.home/'acoustid.key').exists() else None
+        self.ring=deque(maxlen=120);self.hold_until=0.;self.last_check=time.time()       # ring: the last 60 s of decimated audio, for measurements
         self.pre=deque();self.side=None;self.loud=deque(maxlen=int(self.cfg['start_seconds']*10));self.still=deque(maxlen=int(self.cfg['stop_seconds']*10));self.quiet=0.;self.gap_run=0;self.events=deque(maxlen=40);self.seq=0;self.manual=None
     def recover_orphans(self):
         """A side file without a state entry means the process died while recording (power loss, kill). Rebuild its envelope and keep it."""
@@ -170,7 +201,8 @@ class Ripper:
             if raw is None:
                 if self.side:self.close_side('end of the replay file')
                 self.jobs.join();self.log('Replay finished');return
-            t0=time.time();audio,info=self.dsp.process(raw);self.feed(audio,info)
+            t0=time.time();audio,info=self.dsp.process(raw);self.feed(audio,info);self.ring.append(audio.astype(np.float32))
+            if time.time()-self.last_check>60:self.last_check=time.time();self.housekeeping()
             with self.lock:
                 self.seq+=1;self.status='recording' if self.side else 'idle';self.message='';self.meters={**{k:info[k] for k in ('mode','health','rms_db','peak_db')},'level_db':float(info['level'].max()),
                     'cpu_ms':round((time.time()-t0)*1000),'backlog':q.qsize(),'repaired':self.dsp.repaired}
@@ -183,7 +215,7 @@ class Ripper:
             self.pre.append(block)
             while len(self.pre)>max(1,round(cfg['preroll_seconds']*2)):self.pre.popleft()
             self.loud.extend(v>cfg['start_db'] for v in block[2])
-            if self.manual=='start' or (len(self.loud)==self.loud.maxlen and sum(self.loud)>=.7*len(self.loud)):self.open_side()
+            if self.manual=='start' or (time.time()>self.hold_until and len(self.loud)==self.loud.maxlen and sum(self.loud)>=.7*len(self.loud)):self.open_side()
             self.manual=None;return
         self.write_block(block)
         for v in block[2]:
@@ -194,6 +226,8 @@ class Ripper:
                 if self.gap_run*.1>=cfg['gap_seconds']:self.side['gaps'].append([round(t-self.gap_run*.1,1),round(t,1)])
                 self.gap_run=0
         seconds=self.side['frames']/FS
+        if seconds>=self.cfg['identify_at_seconds'] and not self.side.get('ident'):
+            self.side['ident']={'status':'pending'};self.jobs.put(('identify',self.side['id']))
         if self.manual=='stop':self.close_side('stopped from the dashboard')
         elif len(self.still)==self.still.maxlen and sum(self.still)>=.8*len(self.still):self.quiet=cfg['stop_seconds'];self.close_side(f'{cfg["stop_seconds"]:.0f} s of silence')
         elif seconds>=cfg['max_side_seconds']:self.close_side('maximum side length reached')
@@ -210,9 +244,10 @@ class Ripper:
         if music<self.cfg['min_side_seconds'] and not keep:
             Path(s['file']).unlink(missing_ok=True);self.log(f'Discarded a {music:.0f} s recording ({why}); shorter than {self.cfg["min_side_seconds"]:.0f} s');return
         np.save(Path(s['file']).with_suffix('.env.npy'),np.column_stack((np.array(s['peaks']),np.array(s['level']))))
-        meta={k:s[k] for k in ('id','started','file','frames','gaps','album')};meta.update(status='recorded',seconds=round(seconds,1),peak=float(np.max(s['peaks'])),tracks=[])
+        meta={k:s[k] for k in ('id','started','file','frames','gaps','album')};meta.update(status='recorded',seconds=round(seconds,1),peak=float(np.max(s['peaks'])),tracks=[],first=s.get('first'),ident=s.get('ident'))
         with self.lock:self.store['sides'].append(meta);self.save()
-        self.log(f'Side {s["id"]} closed after {seconds/60:.1f} min ({why})');self.jobs.put(('split',meta['id']))
+        self.log(f'Side {s["id"]} closed after {seconds/60:.1f} min ({why})')
+        self.jobs.put(('split',meta['id']));self.jobs.put(('purge',None))
     # ---- track assignment
     def side_env(self,side):return np.load(Path(side['file']).with_suffix('.env.npy'))
     def split_side(self,arg):
@@ -234,7 +269,8 @@ class Ripper:
             if found and g0-found[-1][1]<2.5:found[-1][1]=round(float(g1),1)
             else:found.append([round(float(g0),1),round(float(g1),1)])
         side['gaps']=[g for g in found if g[1]-g[0]>=self.cfg['gap_seconds'] and t0+20<(g[0]+g[1])/2<t1-20]
-        first=album['next_track'] if first is None else int(first);rest=album['tracks'][first:]
+        if first is None:first=side['first'] if side.get('first') is not None else album['next_track']
+        first=int(first);rest=album['tracks'][first:]
         if not rest:self.log(f'Album already complete; side {sid} left unassigned');return
         lengths=[x['length'] for x in rest]
         if all(lengths):
@@ -251,9 +287,76 @@ class Ripper:
                 cuts.append((lo+int(np.argmin(smooth))+5)*.1 if len(smooth) else e)
         edges=[t0]+cuts+[t1];tracks=[{'index':first+i,'start':round(edges[i],2),'end':round(edges[i+1],2),'snapped':i==0 or any(abs(edges[i]-(g[0]+g[1])/2)<.01 for g in side['gaps'])} for i in range(k)]
         with self.lock:
+            have={tr['index'] for s in self.store['sides'] if s is not side and s['album']==album['mbid'] for tr in s['tracks']}
+            if all(tr['index'] in have for tr in tracks):          # the same side played again: the library already has it
+                self.log(f'Side {sid} is tracks {first+1}–{first+k} of “{album["title"]}” again; already recorded, so it goes to the trash');self.trash_side(side);return
             side['tracks']=tracks;side['status']='split';self.recount(album);self.save()
         self.log(f'Side {sid}: tracks {first+1}–{first+k} of “{album["title"]}”'+(' — album complete' if album['status']=='complete' else ''))
         if album['status']=='complete':self.jobs.put(('finalize',album['mbid']))
+    def find_side(self,sid):
+        with self.lock:
+            if self.side and self.side['id']==sid:return self.side
+            return next((s for s in self.store['sides'] if s['id']==sid),None)
+    def identify(self,sid):
+        """Fingerprint the first two minutes of a side and ask AcoustID which recording it is; that fixes the album and the starting track."""
+        side=self.find_side(sid)
+        if side is None or not self.cfg['identify']:return
+        if not self.acoustid:
+            side['ident']={'status':'no key'};self.log('Cannot identify the record: no AcoustID key (see ~/vinyl/acoustid.key)');return
+        try:fp,dur=fingerprint(side['file'],self.cfg['preroll_seconds']);res=acoustid_lookup(self.acoustid,fp,dur)
+        except Exception as e:side['ident']={'status':'failed','error':repr(e)};self.log(f'Identification failed: {e!r}');return
+        with self.lock:current=self.store['albums'].get(side['album'] or self.store['current_album'] or '')
+        matches=rank_releases(res.get('results',[]),current['mbid'] if current else None)
+        if not matches:side['ident']={'status':'unknown'};self.log('AcoustID does not know this record; choose the album in the dashboard');return
+        # the album in use wins whenever one of its recordings matched, even if AcoustID lists that recording under other pressings only
+        recs={m['recording'] for m in matches};hit=next((i for i,t in enumerate(current['tracks']) if t['recording'] in recs),None) if current else None
+        if hit is not None:best=next(m for m in matches if m['recording']==current['tracks'][hit]['recording'])
+        else:
+            best=matches[0]
+            if current and current.get('status')=='in progress':self.jobs.put(('finalize',current['mbid']))   # a new record: send what the last one has
+            try:album=mb_release(best['release']);album.update(next_track=0,status='selected')
+            except Exception as e:side['ident']={'status':'failed','error':repr(e)};self.log(f'MusicBrainz lookup failed: {e!r}');return
+            with self.lock:self.store['albums'].setdefault(album['mbid'],album);current=self.store['albums'][album['mbid']];self.store['current_album']=album['mbid']
+            self.log(f'Record identified: {current["artist"]} — {current["title"]}'+('' if best['vinyl'] else ' (no vinyl pressing matched; using another edition)'))
+            hit=next((i for i,t in enumerate(current['tracks']) if t['recording']==best['recording']),None)
+            if hit is None:hit=next((i for i,t in enumerate(current['tracks']) if t['disc']==best['medium'] and t['position']==best['position']),0)
+        with self.lock:
+            side['album']=current['mbid'];side['first']=hit;side['ident']={'status':'ok','title':best['title'],'artist':best['artist'],'score':round(best['score']%100,2)};self.save()
+        self.log(f'Side {sid} starts with track {hit+1}: {best["title"]}')
+    def housekeeping(self):
+        """An album nobody has added to for a few hours is sent as it is: one side of a record still ends up in the library."""
+        with self.lock:
+            for a in list(self.store['albums'].values()):
+                if a.get('status')!='in progress':continue
+                last=max((s['started']+s['seconds'] for s in self.store['sides'] if s['album']==a['mbid']),default=0)
+                if last and time.time()-last>self.cfg['finalize_after_hours']*3600 and not (self.side and self.side['album']==a['mbid']):
+                    self.log(f'“{a["title"]}”: nothing new for {self.cfg["finalize_after_hours"]:g} h, sending what was recorded');self.jobs.put(('finalize',a['mbid']))
+    def trash_side(self,side):
+        """Nothing is deleted here: the files move to ~/vinyl/trash, which purge() thins out only when the disk runs short."""
+        with self.lock:
+            old=self.store['albums'].get(side['album'] or '')
+            if side in self.store['sides']:self.store['sides'].remove(side)
+            if old:self.recount(old)
+            self.save()
+        trash=self.home/'trash';trash.mkdir(exist_ok=True)
+        for f in (Path(side['file']),Path(side['file']).with_suffix('.env.npy')):
+            if f.exists():shutil.move(str(f),str(trash/f.name))
+    def purge(self,_=None):
+        """Keep `min_free_gb` free: oldest first, drop trash, then the raw audio of albums that are already in the library (their entries stay)."""
+        def free():return shutil.disk_usage(self.home).free/2**30
+        if free()>=self.cfg['min_free_gb']:return
+        with self.lock:
+            delivered={a['mbid'] for a in self.store['albums'].values() if a.get('status')=='delivered'}
+            raw=[s for s in self.store['sides'] if s['album'] in delivered and Path(s['file']).exists()]
+        victims=sorted([(f.stat().st_mtime,f) for f in (self.home/'trash').glob('*') if f.is_file()])+sorted([(s['started'],Path(s['file'])) for s in raw])
+        for _,f in victims:
+            if free()>=self.cfg['min_free_gb']:break
+            for g in {f,f.with_suffix('.env.npy'),f.with_suffix('.s24')}:
+                if g.exists() and g.parent.name in ('trash','sides'):g.unlink()
+            self.log(f'Disk below {self.cfg["min_free_gb"]:g} GB free: removed {f.name}')
+        for s in raw:
+            if not Path(s['file']).exists():s['purged']=True
+        self.save()
     def recount(self,album):
         """What has been recorded decides where the album stands, so assigning, unassigning or re-cutting a side can never leave a stale counter."""
         done={tr['index'] for s in self.store['sides'] if s['album']==album['mbid'] for tr in s['tracks']}
@@ -304,7 +407,7 @@ class Ripper:
     def worker(self):
         while True:
             kind,arg=self.jobs.get()
-            try:{'split':self.split_side,'finalize':self.finalize}[kind](arg)
+            try:{'split':self.split_side,'finalize':self.finalize,'identify':self.identify,'purge':self.purge}[kind](arg)
             except Exception as e:self.log(f'{kind} failed: {e!r}')
             finally:self.jobs.task_done()
     # ---- what the dashboard sees
@@ -321,14 +424,15 @@ class Ripper:
                 now={'mbid':album['mbid'],'artist':album['artist'],'title':album['title'],'date':album['date'],'status':album['status'],'next_track':album['next_track'],'track_count':len(album['tracks']),
                      'tracklist':[{'index':i,'label':f"{(str(x['disc'])+'-') if album['discs']>1 else ''}{x['number'] or x['position']} · {x['title']}"} for i,x in enumerate(album['tracks'])]}
                 if s:
-                    rest=album['tracks'][album['next_track']:];t=max(0.,seconds-self.cfg['preroll_seconds']);acc=0.;idx=0
+                    start=s['first'] if s.get('first') is not None else album['next_track'];rest=album['tracks'][start:];t=max(0.,seconds-self.cfg['preroll_seconds']);acc=0.;idx=0
                     for i,tr in enumerate(rest):
                         idx=i
                         if tr['length'] is None or t<acc+tr['length']:break
                         acc+=tr['length']
-                    if rest:now['track']={**rest[idx],'elapsed':round(t-acc,1),'number_in_album':album['next_track']+idx+1};now['expected']=[round(float(v)+self.cfg['preroll_seconds'],1) for v in np.cumsum([x['length'] or 0 for x in rest])[:-1] if v]
+                    now['ident']=s.get('ident')
+                    if rest:now['track']={**rest[idx],'elapsed':round(t-acc,1),'number_in_album':start+idx+1};now['expected']=[round(float(v)+self.cfg['preroll_seconds'],1) for v in np.cumsum([x['length'] or 0 for x in rest])[:-1] if v]
             return {'seq':self.seq,'status':self.status,'message':self.message,'meters':self.meters,'recording':{'id':s['id'],'seconds':round(seconds,1),'quiet':round(sum(self.still)*.1,1)} if s else None,'wave':wave,'gaps':gaps,
-                    'now':now,'config':self.cfg,'events':list(self.events),'albums':[{k:a.get(k) for k in ('mbid','artist','title','date','status','next_track','gain_db','folder')}|{'track_count':len(a['tracks'])} for a in self.store['albums'].values()],
+                    'now':now,'config':self.cfg,'acoustid':bool(self.acoustid),'hold':max(0.,self.hold_until-time.time()),'events':list(self.events),'albums':[{k:a.get(k) for k in ('mbid','artist','title','date','status','next_track','gain_db','folder')}|{'track_count':len(a['tracks'])} for a in self.store['albums'].values()],
                     'sides':[{k:x.get(k) for k in ('id','started','seconds','status','album','tracks','recovered')} for x in self.store['sides'][-12:]],'current_album':self.store['current_album']}
 
 # ------------------------------------------------------------------ HTTP
@@ -355,6 +459,10 @@ def make_handler(rip):
                     with rip.lock:a=rip.store['albums'][mbid];ok=any(f['name']==name for f in a['files'])
                     if not ok:return self.reply({'error':'not in the manifest'},code=404)
                     self.reply((rip.home/'library'/a['folder']/name).read_bytes(),'application/octet-stream')
+                elif url.path=='/api/audio':               # the last N seconds of decimated audio, float32 interleaved stereo at 48 kHz
+                    n=min(60,max(1,int(float(q.get('seconds',['10'])[0]))));blocks=list(rip.ring)[-n*2:]
+                    data=(np.concatenate(blocks,axis=1).T.astype('<f4').tobytes() if blocks else b'')
+                    self.send_response(200);self.send_header('Content-Type','application/octet-stream');self.send_header('Content-Length',str(len(data)));self.send_header('X-Rate',str(FS));self.send_header('X-Channels','2');self.end_headers();self.wfile.write(data)
                 elif url.path.startswith('/cover/'):
                     mbid=url.path.split('/')[2]
                     if not re.fullmatch(r'[0-9a-f-]{36}',mbid):return self.reply({'error':'bad id'},code=400)
@@ -385,14 +493,12 @@ def make_handler(rip):
                     if body.get('mbid'):rip.jobs.put(('split',(side['id'],int(body.get('first',0)))))
                     self.reply({'ok':True})
                 elif self.path=='/api/side/trash':          # nothing is deleted: the files move to ~/vinyl/trash
-                    with rip.lock:
-                        side=next(s for s in rip.store['sides'] if s['id']==body['id']);old=rip.store['albums'].get(side['album'] or '');rip.store['sides'].remove(side)
-                        if old:rip.recount(old)
-                        rip.save()
-                    trash=rip.home/'trash';trash.mkdir(exist_ok=True)
-                    for f in (Path(side['file']),Path(side['file']).with_suffix('.env.npy')):
-                        if f.exists():shutil.move(str(f),str(trash/f.name))
-                    rip.log(f'Side {side["id"]} moved to the trash folder');self.reply({'ok':True})
+                    with rip.lock:side=next(s for s in rip.store['sides'] if s['id']==body['id'])
+                    rip.trash_side(side);rip.log(f'Side {side["id"]} moved to the trash folder');self.reply({'ok':True})
+                elif self.path=='/api/hold':                # measurements: do not start a side while test signals are on the input
+                    rip.hold_until=time.time()+float(body.get('seconds',0));self.reply({'ok':True,'until':rip.hold_until})
+                elif self.path=='/api/identify':
+                    rip.jobs.put(('identify',body['id']));self.reply({'ok':True})
                 elif self.path=='/api/clear':
                     with rip.lock:rip.store['current_album']=None;rip.save()
                     self.reply({'ok':True})
