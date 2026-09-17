@@ -1,0 +1,71 @@
+# Raspberry Pi capture
+
+The ADC is the I²S clock master; the Pi only listens. Status: the wiring and clocking follow the schematic and the 17 September bench screen (PI_BCLK 3.0727 MHz, PI_LRCLK 48.011 kHz, PI_DIN toggling, all 3.3 V logic). The overlay compiles and `decimate.py` passes its synthetic test, but **neither has run on a Pi yet**; treat the first capture as bring-up.
+
+## 1. Wiring: digital board J2 → Pi 40-pin header
+
+J2 is the single row of 8 on the digital board; pin 1 is the square pad.
+
+| J2 pin | Signal | Pi pin | Notes |
+|---|---|---|---|
+| 1 | +5 V | 2 (5 V) | **Leave open for the first power-up**, see below |
+| 2 | GND | 6 | |
+| 3 | +3.3 V | 1 (3V3) | Powers only the 74HC4049 level shifter. Remove the AD3 V+ wire first |
+| 4 | PI_BCLK | 12 (GPIO18, PCM_CLK) | 3.072 MHz, from the ADC |
+| 5 | PI_LRCLK | 35 (GPIO19, PCM_FS) | 48 kHz, from the ADC |
+| 6 | PI_DIN | 38 (GPIO20, PCM_DIN) | interleaved modulator bits |
+| 7 | GPCLK0 | leave open | only for clocking the ADC from the Pi (J1 on 2–3); J1 stays on 1–2, the crystal |
+| 8 | GND | 39 | |
+
+Keep these wires short (10 cm jumpers are fine) and run the two grounds.
+
+## 2. Power
+
+**First power-up (recommended): keep the Korad.** J2.1 stays on the Korad at 5.00 V with the 0.30 A limit, exactly as in the bench tests, and is *not* connected to the Pi. The Pi shares ground, supplies the 3.3 V and receives the three signals. A wiring mistake then trips the Korad instead of loading the Pi's 5 V rail. The stack draws about 74 mA.
+
+**Final build:** Pi pin 2 → J2.1 and no Korad. Never connect both 5 V sources at once.
+
+Either order of switching on is safe: the 74HC4049 accepts 5 V inputs with its own supply at 0 V, and its outputs can never exceed the Pi's 3.3 V because that is its supply. Sequence used here: Pi off → wire → Korad on (check ~74 mA, CV) → boot the Pi.
+
+The Pi must not drive GPIO18/19. They are inputs by default and with this overlay. Remove any other I²S sound overlay (hifiberry, iqaudio, googlevoicehat, i2s-…) from `config.txt` before connecting, because a Pi configured as I²S master would fight the ADC's clock outputs.
+
+## 3. Pi setup (once)
+
+Copy this `pi/` folder to the Pi, then on the Pi:
+
+```sh
+sudo apt install device-tree-compiler python3-numpy
+cd pi && ./install-overlay.sh
+sudo reboot
+```
+
+`vinyl-adc-overlay.dts` is the capture twin of the stock `i2s-master-dac` overlay: I²S controller in clock-consumer mode, two 32-bit slots, with the S/PDIF receiver stub as a dummy capture codec.
+
+After the reboot:
+
+```sh
+arecord -l        # expect: card N: vinyladc [vinyl-adc], device 0
+```
+
+## 4. Capture and decimate
+
+```sh
+arecord -D hw:CARD=vinyladc -c 2 -r 48000 -f S32_LE -t raw -d 10 capture.raw
+python3 decimate.py capture.raw capture.wav
+```
+
+The 32-bit words are not PCM: each 64-bit frame carries 32 left and 32 right modulator bits at 1.536 MHz. `decimate.py` de-interleaves them and decimates by 32 (4th-order CIC to 192 kHz, then a 161-tap droop-compensating FIR), printing each bitstream's one-density and the DC, RMS and peak per channel before writing a 32-bit 48 kHz WAV. `python3 test_decimate.py` checks it against a synthetic stream (1 kHz at 0.5 FS and 18 kHz at 0.25 FS recover within 0.03 dB).
+
+**First capture, inputs still shorted:** expect both one-densities near 0.50 (the bench measured 0.50 and 0.53 per channel, 0.516 combined), a small DC term and a low RMS noise floor.
+
+**Left/right:** by the divider's phase the first bit after the frame edge belongs to the left channel. Confirm by feeding a signal into the LEFT input only; if it appears on the right, add `--swap`.
+
+## 5. If it does not work
+
+| Symptom | Check |
+|---|---|
+| `arecord -l` shows no vinyl-adc card | `dmesg | grep -i -E 'i2s|asoc|simple-card|spdif'`; is `dtoverlay=vinyl-adc` in `config.txt`; is another sound overlay claiming I²S |
+| `arecord` starts but writes nothing, then times out | The Pi is a clock consumer: no BCLK/LRCLK, no data. Check the stack is powered, J1 on 1–2, 3.3 V on J2.3, GPIO18/19 wiring |
+| One-density 0.000 or 1.000 | Data line stuck: J2.6 ↔ GPIO20, that channel's J21 shunt, the bus |
+| One channel fine, the other dead | That channel board or its J21 (left 1–2, right 2–3; pin 1 is the pin farthest from the bus) |
+| Audio present but sounds like noise | Word alignment differs from the I²S assumption: try `--swap`; if still wrong, keep the `.raw` file, it contains everything needed to fix the unpacking offline |

@@ -2,7 +2,7 @@
 
 [Assembly guide & bench log](https://vinyl-adc.madsrudolph.dev/) · [16 September bench plan](assembly/sessions/2026-09-16/README.md) · [6 September test handoff](assembly/sessions/2026-09-06/README.md)
 
-All four boards are now assembled: the rev B digital board with the on-board crystal Pierce oscillator replaces the rev A board that was bench-tested on 6 September with an external W1 clock, and both channels are fully populated. The power board's rails and references were reported working on the old fixture. The next step is the AD3 SDK screening in the order power → digital → left → right → full stack; the bench plan, fixture and commands are in the assembly guide. No complete-system audio performance is claimed by these assembly tests.
+All four boards are assembled and bench-screened with the AD3 (16–17 September): power, rev B digital with the on-board crystal Pierce, both channels and the full stack pass, after resoldering a crystal leg and swapping the reference op-amp U2 to an LM358 for output headroom on the charge-pump rail (design-notes §10b′). Next is the Raspberry Pi capture; wiring and setup are in [pi/README.md](pi/README.md). No complete-system audio performance is claimed by these assembly tests.
 
 <p align="center">
   <a href="https://madsrudolph.github.io/vinyl-adc/"><img src="https://img.shields.io/badge/🚀_Interactive_3D-Live_Web_Viewer-38bdf8?style=for-the-badge&logo=webgl&logoColor=white" alt="Live 3D Web Viewer"></a>

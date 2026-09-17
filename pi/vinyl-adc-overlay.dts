@@ -1,0 +1,54 @@
+// Vinyl ADC: capture-only I2S card with the Raspberry Pi as clock CONSUMER.
+// The ADC's digital board is the clock master (BCLK 3.072 MHz, LRCLK 48 kHz);
+// the Pi only listens on PCM_CLK (GPIO18), PCM_FS (GPIO19) and PCM_DIN (GPIO20).
+// Capture twin of the stock i2s-master-dac overlay: same clocking, but with the
+// S/PDIF *receiver* stub codec so ALSA exposes a recording device.
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2835";
+
+	fragment@0 {
+		target = <&i2s_clk_consumer>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			vinyl_adc_codec: vinyl_adc_codec {
+				compatible = "linux,spdif-dir";
+				#sound-dai-cells = <0>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&sound>;
+		__overlay__ {
+			compatible = "simple-audio-card";
+			i2s-controller = <&i2s_clk_consumer>;
+			status = "okay";
+
+			simple-audio-card,name = "vinyl-adc";
+			simple-audio-card,format = "i2s";
+
+			simple-audio-card,bitclock-master = <&snd_codec>;
+			simple-audio-card,frame-master = <&snd_codec>;
+
+			simple-audio-card,cpu {
+				sound-dai = <&i2s_clk_consumer>;
+				dai-tdm-slot-num = <2>;
+				dai-tdm-slot-width = <32>;
+			};
+
+			snd_codec: simple-audio-card,codec {
+				sound-dai = <&vinyl_adc_codec>;
+			};
+		};
+	};
+};

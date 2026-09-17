@@ -113,3 +113,15 @@ Two bench faults on the way: the left board first pulled MCLK's low to 2.06 V an
 The VREF_N failure is a design margin, not a build fault: with both channels loading the charge pump the rail is −3.79 V and the TL072 reference inverter U2B cannot swing below about −1.8 V. **Fix: swap power-board U2 for an LM358** (same pinout; see design-notes §10b′), then rerun `stack` from the references step.
 
 **Pi-side data, manual AD3 capture after the failed step** (full stack, both inputs shorted, AD3 V+ on J2.3): PI_BCLK 3.0729 MHz. PI_DIN toggles 0–3.3 V; its transitions sit 10 ns after the BCLK falling edge and 150 ns before the rising edge the Pi samples on (bit period 326 ns). Sampled on rising edges: one-density 0.615 in both channel slots, longest run of equal bits 6. Healthy interleaved modulator stream with the expected offset from the skewed VREF_N; expect ≈0.50 after the U2 swap. A 1× probe on PI_BCLK reads only 0.75–2.6 V because it loads the 74HC4049; use the 10× probe for the 3 MHz Pi signals.
+
+## 17 September: U2 swapped, full stack PASS
+
+Power-board U2 changed from TL072 to LM358. Stack current 73–74 mA (83 mA with the TL072). `stack` rerun continuing from the 16 September reports; final report `20260917T152701Z-stack-94703bd8`, **PASS** on all seven steps:
+
+| Step | Result |
+|---|---|
+| references | VREF_P +2.467 V, **VREF_N −2.430 V** (was −1.767 V), ratio error 0.1 %, ripple 34 mVpp |
+| pi-clocks | PI_BCLK 3.0727 MHz, PI_LRCLK 48.011 kHz, 3.3 V logic |
+| pi-data | PI_DIN 521 edges in the record, one-density **0.516** (was 0.615 with the skewed reference), 3.3 V logic |
+
+One intermediate failure (`20260917T152142Z`) was the probes one pin low on J2: scope 1 read LRCLK's 48.01 kHz and scope 2 the data stream's ≈0.79 MHz edge rate. The boards are now cleared for the Raspberry Pi: AD3 V+ off J2.3 first, the Pi supplies the 3.3 V from then on.
