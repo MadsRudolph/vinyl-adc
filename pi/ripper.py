@@ -24,7 +24,7 @@ import decimate as d
 
 FS=48000;BLOCK_FRAMES=24000;BLOCK_BYTES=BLOCK_FRAMES*8;CHUNK=4800           # 0.5 s blocks, 100 ms level chunks
 UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
-DEFAULTS={'start_db':-62.,'start_seconds':2.,'stop_db':-67.,'stop_seconds':15.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
+DEFAULTS={'start_db':-62.,'start_seconds':2.,'stop_db':-65.,'stop_seconds':30.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
           'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.}
 
 def db(x):return float(10*np.log10(x+1e-20))
@@ -195,7 +195,7 @@ class Ripper:
                 self.gap_run=0
         seconds=self.side['frames']/FS
         if self.manual=='stop':self.close_side('stopped from the dashboard')
-        elif len(self.still)==self.still.maxlen and sum(self.still)>=.85*len(self.still):self.quiet=cfg['stop_seconds'];self.close_side(f'{cfg["stop_seconds"]:.0f} s of silence')
+        elif len(self.still)==self.still.maxlen and sum(self.still)>=.8*len(self.still):self.quiet=cfg['stop_seconds'];self.close_side(f'{cfg["stop_seconds"]:.0f} s of silence')
         elif seconds>=cfg['max_side_seconds']:self.close_side('maximum side length reached')
         self.manual=None
     def open_side(self):
@@ -220,9 +220,21 @@ class Ripper:
         with self.lock:
             side=next(s for s in self.store['sides'] if s['id']==sid);album=self.store['albums'].get(side['album'] or '')
         if not album:self.log(f'Side {sid} waits for an album: search for the record in the dashboard and assign it');return
-        env=self.side_env(side);level=env[:,2];t=np.arange(len(level))*.1;music=np.flatnonzero(level>self.cfg['start_db'])
+        env=self.side_env(side);level=env[:,2];frac=lambda mask,n:np.convolve(mask.astype(float),np.ones(n)/n,'same')
+        music=np.flatnonzero(frac(level>self.cfg['start_db'],30)>=.5)      # windows, not single frames: one click in the run-out must not count as music
         if not len(music):return
-        t0=float(max(0.,t[music[0]]-.5));t1=float(min(side['seconds'],t[music[-1]]+1.5));T=t1-t0;first=album['next_track'] if first is None else int(first);rest=album['tracks'][first:]
+        # a fade-out sinks below the start threshold long before it is over: extend both ends to where the groove is really silent
+        silent=frac(level<self.cfg['stop_db'],30)>=.8;a,b=int(music[0]),int(music[-1])
+        while a>0 and not silent[a]:a-=1
+        while b<len(level)-1 and not silent[b]:b+=1
+        t0=float(max(0.,a*.1-.5));t1=float(min(side['seconds'],b*.1+3.));T=t1-t0
+        # gaps from the finished envelope, merged across the clicks that fragment them while recording
+        edge=np.diff(np.r_[0,(frac(level<self.cfg['gap_db'],15)>=.8).astype(int),0]);found=[]
+        for g0,g1 in zip(np.flatnonzero(edge==1)*.1,np.flatnonzero(edge==-1)*.1):
+            if found and g0-found[-1][1]<2.5:found[-1][1]=round(float(g1),1)
+            else:found.append([round(float(g0),1),round(float(g1),1)])
+        side['gaps']=[g for g in found if g[1]-g[0]>=self.cfg['gap_seconds'] and t0+20<(g[0]+g[1])/2<t1-20]
+        first=album['next_track'] if first is None else int(first);rest=album['tracks'][first:]
         if not rest:self.log(f'Album already complete; side {sid} left unassigned');return
         lengths=[x['length'] for x in rest]
         if all(lengths):
@@ -233,7 +245,10 @@ class Ripper:
         cuts=[]
         for e in expected:
             near=[g for g in side['gaps'] if abs((g[0]+g[1])/2-e)<=self.cfg['snap_seconds']]
-            cuts.append(float(np.mean(max(near,key=lambda g:g[1]-g[0]))) if near else e)
+            if near:cuts.append(float(np.mean(max(near,key=lambda g:g[1]-g[0]))))
+            else:                                       # tracks that run into each other: cut at the quietest second near the expected time
+                lo,hi=int(max(0,e-self.cfg['snap_seconds'])*10),int((e+self.cfg['snap_seconds'])*10);smooth=np.convolve(level[lo:hi],np.ones(10)/10,'valid')
+                cuts.append((lo+int(np.argmin(smooth))+5)*.1 if len(smooth) else e)
         edges=[t0]+cuts+[t1];tracks=[{'index':first+i,'start':round(edges[i],2),'end':round(edges[i+1],2),'snapped':i==0 or any(abs(edges[i]-(g[0]+g[1])/2)<.01 for g in side['gaps'])} for i in range(k)]
         with self.lock:
             side['tracks']=tracks;side['status']='split';self.recount(album);self.save()
@@ -280,6 +295,11 @@ class Ripper:
         if path.exists():return path.read_bytes() or None
         try:data=http_get(f'https://coverartarchive.org/release/{mbid}/front-500','image/jpeg')
         except Exception:data=b''
+        if not data:                                    # many pressings have no scan of their own: the release group's cover is the same artwork
+            try:
+                group=http_json(f'https://musicbrainz.org/ws/2/release/{mbid}?fmt=json&inc=release-groups')['release-group']['id']
+                data=http_get(f'https://coverartarchive.org/release-group/{group}/front-500','image/jpeg')
+            except Exception:data=b''
         path.write_bytes(data);return data or None        # an empty file remembers "no cover" so it is not asked for again and again
     def worker(self):
         while True:
