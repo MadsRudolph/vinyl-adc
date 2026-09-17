@@ -15,7 +15,7 @@ The audio path is: I2S words -> the two 1-bit modulator streams -> repair of stu
 marker, never produced by music) -> CIC + FIR decimation to 48 kHz (decimate.py) -> DC removal.
 Needs NumPy; `flac` and python3-mutagen for encoding and tagging.
 """
-import argparse,hashlib,json,queue,re,shutil,subprocess,threading,time,urllib.parse,urllib.request
+import argparse,collections,hashlib,json,queue,re,shutil,signal,subprocess,threading,time,urllib.error,urllib.parse,urllib.request
 from collections import deque
 from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
 from pathlib import Path
@@ -61,15 +61,30 @@ class Dsp:
                       'rms_db':[db(float((a**2).mean())) for a in audio],'peak_db':[db(float(np.abs(a).max())**2) for a in audio]}
 
 # ------------------------------------------------------------------ MusicBrainz
-def http_json(url):
-    req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'application/json'})
-    with urllib.request.urlopen(req,timeout=20) as r:return json.load(r)
+MB_LOCK=threading.Lock();MB_LAST=[0.]
+def http_get(url,accept='application/json'):
+    """MusicBrainz and the Cover Art Archive allow about one request per second per address and answer 503 when that is exceeded:
+    space the requests, retry a few times, and let a real failure surface as an error instead of as 'nothing found'."""
+    with MB_LOCK:
+        for attempt in range(4):
+            wait=1.1-(time.time()-MB_LAST[0])
+            if wait>0:time.sleep(wait)
+            MB_LAST[0]=time.time()
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':UA,'Accept':accept}),timeout=25) as r:return r.read()
+            except urllib.error.HTTPError as e:
+                if e.code not in (429,503) or attempt==3:raise
+                time.sleep(2*(attempt+1))
+def http_json(url):return json.loads(http_get(url))
 def mb_search(q):
-    data=http_json('https://musicbrainz.org/ws/2/release/?fmt=json&limit=15&query='+urllib.parse.quote(q));out=[]
+    data=http_json('https://musicbrainz.org/ws/2/release/?fmt=json&limit=25&dismax=true&query='+urllib.parse.quote(q));out=[]   # dismax: free text across artist, title and more
     for r in data.get('releases',[]):
         out.append({'mbid':r['id'],'title':r.get('title',''),'artist':''.join(a.get('name','')+a.get('joinphrase','') for a in r.get('artist-credit',[])),'date':r.get('date',''),
-                    'country':r.get('country',''),'tracks':r.get('track-count'),'formats':', '.join(sorted({m.get('format') or '?' for m in r.get('media',[])})),'score':r.get('score',0)})
-    out.sort(key=lambda r:(-r['score'],'Vinyl' not in r['formats']));return out
+                    'country':r.get('country',''),'tracks':r.get('track-count'),'score':r.get('score',0),'label':', '.join(sorted({(l.get('label') or {}).get('name','') for l in r.get('label-info',[])}-{''})),
+                    'formats':', '.join(f"{n}× {f}" if n>1 else f for f,n in sorted(collections.Counter(m.get('format') or '?' for m in r.get('media',[])).items()))})
+    words=set(re.findall(r'\w+',q.lower()))
+    for r in out:r['rank']=r['score']+(15 if set(re.findall(r'\w+',r['artist'].lower()))<=words else 0)      # the artist typed in full outranks tribute albums
+    out.sort(key=lambda r:(-r['rank'],'Vinyl' not in r['formats']));return out
 def mb_release(mbid):
     r=http_json(f'https://musicbrainz.org/ws/2/release/{mbid}?fmt=json&inc=recordings+artist-credits+media');tracks=[]
     for m in r.get('media',[]):
@@ -90,7 +105,29 @@ class Ripper:
             saved=json.loads(self.state_path.read_text());self.store.update(saved);self.store['config']={**DEFAULTS,**saved.get('config',{})}
         self.cfg=self.store['config'];self.dsp=Dsp(self.cfg)
         self.status='starting';self.message='Starting…';self.meters=None;self.recent=deque(maxlen=600)       # 60 s of (peakL,peakR,level)
+        self.stop=threading.Event();self.recover_orphans()
         self.pre=deque();self.side=None;self.loud=deque(maxlen=int(self.cfg['start_seconds']*10));self.still=deque(maxlen=int(self.cfg['stop_seconds']*10));self.quiet=0.;self.gap_run=0;self.events=deque(maxlen=40);self.seq=0;self.manual=None
+    def recover_orphans(self):
+        """A side file without a state entry means the process died while recording (power loss, kill). Rebuild its envelope and keep it."""
+        known={Path(x['file']).name for x in self.store['sides']}
+        for f in sorted((self.home/'sides').glob('*.s24')):
+            if f.name in known or f.stat().st_size<6*FS*10:continue
+            raw=np.memmap(f,dtype=np.uint8,mode='r');frames=len(raw)//6;peaks=[];level=[];last=np.zeros(2)
+            for a in range(0,frames-CHUNK+1,CHUNK*100):
+                u=np.asarray(raw[a*6:min(frames,a+CHUNK*100)*6]).reshape(-1,3).astype(np.int32);x=(u[:,0]|(u[:,1]<<8)|(u[:,2]<<16));x=(np.where(x>=1<<23,x-(1<<24),x)/2**23).reshape(-1,2)
+                n=len(x)//CHUNK;seg=x[:n*CHUNK].reshape(n,CHUNK,2);dx=np.diff(np.vstack((last,x[:n*CHUNK])),axis=0).reshape(n,CHUNK,2);last=x[n*CHUNK-1]
+                peaks+=[(float(p[0]),float(p[1])) for p in np.abs(seg).max(axis=1)];level+=[float(v) for v in 10*np.log10((dx**2).mean(axis=1).max(axis=1)+1e-20)]
+            gaps=[];run=0
+            for i,v in enumerate(level):
+                if v<self.store['config']['gap_db']:run+=1
+                else:
+                    if run*.1>=self.store['config']['gap_seconds']:gaps.append([round((i-run)*.1,1),round(i*.1,1)])
+                    run=0
+            np.save(f.with_suffix('.env.npy'),np.column_stack((np.array(peaks),np.array(level))))
+            sid=f.stem;started=time.mktime(time.strptime(sid,'%Y%m%d-%H%M%S')) if re.fullmatch(r'\d{8}-\d{6}',sid) else f.stat().st_mtime
+            self.store['sides'].append({'id':sid,'started':started,'file':str(f),'frames':frames,'gaps':gaps,'album':None,'status':'recorded','seconds':round(frames/FS,1),'peak':float(np.max(peaks)) if peaks else 0.,'tracks':[],'recovered':True})
+            print(f'Recovered an interrupted recording: {sid}, {frames/FS/60:.1f} min',flush=True)
+        self.store['sides'].sort(key=lambda x:x['started'])
     # ---- persistence and logging
     def save(self):
         with self.lock:tmp=self.state_path.with_suffix('.tmp');tmp.write_text(json.dumps(self.store,indent=1));tmp.replace(self.state_path)
@@ -124,7 +161,12 @@ class Ripper:
             q.put(None)
         threading.Thread(target=reader,daemon=True).start()
         while True:
-            raw=q.get()
+            try:raw=q.get(timeout=.5)
+            except queue.Empty:raw=b''
+            if self.stop.is_set():
+                if self.side:self.close_side('the ripper is shutting down',keep=True)
+                self.jobs.join();self.save();return
+            if raw==b'':continue
             if raw is None:
                 if self.side:self.close_side('end of the replay file')
                 self.jobs.join();self.log('Replay finished');return
@@ -163,9 +205,9 @@ class Ripper:
         self.pre.clear();self.loud.clear();self.still.clear();self.quiet=0.;self.gap_run=0;self.log(f'Recording started ({sid})')
     def write_block(self,block):
         pcm,peaks,level=block;s=self.side;s['fh'].write(pcm);s['frames']+=len(pcm)//6;s['peaks']+=peaks;s['level']+=level
-    def close_side(self,why):
+    def close_side(self,why,keep=False):
         s=self.side;self.side=None;s['fh'].close();s.pop('fh');seconds=s['frames']/FS;music=seconds-self.quiet;self.quiet=0.
-        if music<self.cfg['min_side_seconds']:
+        if music<self.cfg['min_side_seconds'] and not keep:
             Path(s['file']).unlink(missing_ok=True);self.log(f'Discarded a {music:.0f} s recording ({why}); shorter than {self.cfg["min_side_seconds"]:.0f} s');return
         np.save(Path(s['file']).with_suffix('.env.npy'),np.column_stack((np.array(s['peaks']),np.array(s['level']))))
         meta={k:s[k] for k in ('id','started','file','frames','gaps','album')};meta.update(status='recorded',seconds=round(seconds,1),peak=float(np.max(s['peaks'])),tracks=[])
@@ -173,13 +215,14 @@ class Ripper:
         self.log(f'Side {s["id"]} closed after {seconds/60:.1f} min ({why})');self.jobs.put(('split',meta['id']))
     # ---- track assignment
     def side_env(self,side):return np.load(Path(side['file']).with_suffix('.env.npy'))
-    def split_side(self,sid):
+    def split_side(self,arg):
+        sid,first=arg if isinstance(arg,tuple) else (arg,None)
         with self.lock:
             side=next(s for s in self.store['sides'] if s['id']==sid);album=self.store['albums'].get(side['album'] or '')
         if not album:self.log(f'Side {sid} waits for an album: search for the record in the dashboard and assign it');return
         env=self.side_env(side);level=env[:,2];t=np.arange(len(level))*.1;music=np.flatnonzero(level>self.cfg['start_db'])
         if not len(music):return
-        t0=max(0.,t[music[0]]-.5);t1=min(side['seconds'],t[music[-1]]+1.5);T=t1-t0;first=album['next_track'];rest=album['tracks'][first:]
+        t0=float(max(0.,t[music[0]]-.5));t1=float(min(side['seconds'],t[music[-1]]+1.5));T=t1-t0;first=album['next_track'] if first is None else int(first);rest=album['tracks'][first:]
         if not rest:self.log(f'Album already complete; side {sid} left unassigned');return
         lengths=[x['length'] for x in rest]
         if all(lengths):
@@ -193,9 +236,14 @@ class Ripper:
             cuts.append(float(np.mean(max(near,key=lambda g:g[1]-g[0]))) if near else e)
         edges=[t0]+cuts+[t1];tracks=[{'index':first+i,'start':round(edges[i],2),'end':round(edges[i+1],2),'snapped':i==0 or any(abs(edges[i]-(g[0]+g[1])/2)<.01 for g in side['gaps'])} for i in range(k)]
         with self.lock:
-            side['tracks']=tracks;side['status']='split';album['next_track']=first+k;album['status']='complete' if album['next_track']>=len(album['tracks']) else 'in progress';self.save()
+            side['tracks']=tracks;side['status']='split';self.recount(album);self.save()
         self.log(f'Side {sid}: tracks {first+1}–{first+k} of “{album["title"]}”'+(' — album complete' if album['status']=='complete' else ''))
         if album['status']=='complete':self.jobs.put(('finalize',album['mbid']))
+    def recount(self,album):
+        """What has been recorded decides where the album stands, so assigning, unassigning or re-cutting a side can never leave a stale counter."""
+        done={tr['index'] for s in self.store['sides'] if s['album']==album['mbid'] for tr in s['tracks']}
+        album['next_track']=max(done)+1 if done else 0
+        if album.get('status') not in ('encoding','ready','delivered'):album['status']='complete' if len(done)>=len(album['tracks']) else ('in progress' if done else 'selected')
     # ---- encoding
     def finalize(self,mbid):
         import mutagen.flac
@@ -205,12 +253,9 @@ class Ripper:
         peak=max(float(self.side_env(s)[int(tr['start']*10):int(tr['end']*10)+1,:2].max()) for s in sides for tr in s['tracks'])
         gain_db=min(self.cfg['max_gain_db'],self.cfg['target_peak_dbfs']-20*np.log10(peak+1e-9));gain=10**(gain_db/20)
         folder=self.home/'library'/safe(album['artist'])/safe(f"{album['title']} ({album['date'][:4]}) [Vinyl]" if album['date'] else f"{album['title']} [Vinyl]");folder.mkdir(parents=True,exist_ok=True)
-        cover=None
-        try:
-            req=urllib.request.Request(f'https://coverartarchive.org/release/{mbid}/front-500',headers={'User-Agent':UA})
-            with urllib.request.urlopen(req,timeout=30) as r:cover=r.read()
-            (folder/'cover.jpg').write_bytes(cover)
-        except Exception as e:self.log(f'No cover art: {e}')
+        cover=self.cover(mbid)
+        if cover:(folder/'cover.jpg').write_bytes(cover)
+        else:self.log('No cover art found for this release')
         files=[]
         for s in sides:
             raw=np.memmap(s['file'],dtype=np.uint8,mode='r')
@@ -230,6 +275,12 @@ class Ripper:
         manifest=[{'name':n,'size':(folder/n).stat().st_size,'sha256':hashlib.sha256((folder/n).read_bytes()).hexdigest()} for n in files+(['cover.jpg'] if cover else [])]
         with self.lock:album.update(status='ready',folder=str(folder.relative_to(self.home/'library')),files=manifest,gain_db=round(float(gain_db),1));self.save()
         self.log(f'“{album["title"]}” is ready for the media server: {len(files)} tracks, album gain {gain_db:+.1f} dB')
+    def cover(self,mbid):
+        path=self.home/'covers'/f'{mbid}.jpg';path.parent.mkdir(exist_ok=True)
+        if path.exists():return path.read_bytes() or None
+        try:data=http_get(f'https://coverartarchive.org/release/{mbid}/front-500','image/jpeg')
+        except Exception:data=b''
+        path.write_bytes(data);return data or None        # an empty file remembers "no cover" so it is not asked for again and again
     def worker(self):
         while True:
             kind,arg=self.jobs.get()
@@ -247,7 +298,8 @@ class Ripper:
                 e=env[:n].reshape(-1,step,3);wave.update(left=[round(float(v),4) for v in e[:,:,0].max(axis=1)],right=[round(float(v),4) for v in e[:,:,1].max(axis=1)],level=[round(float(v),1) for v in e[:,:,2].max(axis=1)])
             now=None
             if album:
-                now={'mbid':album['mbid'],'artist':album['artist'],'title':album['title'],'date':album['date'],'status':album['status'],'next_track':album['next_track'],'track_count':len(album['tracks'])}
+                now={'mbid':album['mbid'],'artist':album['artist'],'title':album['title'],'date':album['date'],'status':album['status'],'next_track':album['next_track'],'track_count':len(album['tracks']),
+                     'tracklist':[{'index':i,'label':f"{(str(x['disc'])+'-') if album['discs']>1 else ''}{x['number'] or x['position']} · {x['title']}"} for i,x in enumerate(album['tracks'])]}
                 if s:
                     rest=album['tracks'][album['next_track']:];t=max(0.,seconds-self.cfg['preroll_seconds']);acc=0.;idx=0
                     for i,tr in enumerate(rest):
@@ -257,7 +309,7 @@ class Ripper:
                     if rest:now['track']={**rest[idx],'elapsed':round(t-acc,1),'number_in_album':album['next_track']+idx+1};now['expected']=[round(float(v)+self.cfg['preroll_seconds'],1) for v in np.cumsum([x['length'] or 0 for x in rest])[:-1] if v]
             return {'seq':self.seq,'status':self.status,'message':self.message,'meters':self.meters,'recording':{'id':s['id'],'seconds':round(seconds,1),'quiet':round(sum(self.still)*.1,1)} if s else None,'wave':wave,'gaps':gaps,
                     'now':now,'config':self.cfg,'events':list(self.events),'albums':[{k:a.get(k) for k in ('mbid','artist','title','date','status','next_track','gain_db','folder')}|{'track_count':len(a['tracks'])} for a in self.store['albums'].values()],
-                    'sides':[{k:x.get(k) for k in ('id','started','seconds','status','album','tracks')} for x in self.store['sides'][-12:]],'current_album':self.store['current_album']}
+                    'sides':[{k:x.get(k) for k in ('id','started','seconds','status','album','tracks','recovered')} for x in self.store['sides'][-12:]],'current_album':self.store['current_album']}
 
 # ------------------------------------------------------------------ HTTP
 def make_handler(rip):
@@ -272,7 +324,10 @@ def make_handler(rip):
             try:
                 if url.path=='/':self.reply(page(),'text/html; charset=utf-8')
                 elif url.path=='/api/state':self.reply(rip.snapshot())
-                elif url.path=='/api/search':self.reply(mb_search(q.get('q',[''])[0]))
+                elif url.path=='/api/search':
+                    try:self.reply({'results':mb_search(q.get('q',[''])[0])})
+                    except urllib.error.HTTPError as e:self.reply({'error':f'MusicBrainz is busy (HTTP {e.code}). Wait a few seconds and search again.'})
+                    except Exception as e:self.reply({'error':f'Could not reach MusicBrainz: {e}'})
                 elif url.path=='/outbox.json':
                     with rip.lock:self.reply([{'album':a['mbid'],'folder':a['folder'],'files':a['files']} for a in rip.store['albums'].values() if a.get('status')=='ready'])
                 elif url.path.startswith('/outbox/'):
@@ -281,10 +336,11 @@ def make_handler(rip):
                     if not ok:return self.reply({'error':'not in the manifest'},code=404)
                     self.reply((rip.home/'library'/a['folder']/name).read_bytes(),'application/octet-stream')
                 elif url.path.startswith('/cover/'):
-                    with rip.lock:a=rip.store['albums'].get(url.path.split('/')[2])
-                    f=rip.home/'library'/a['folder']/'cover.jpg' if a and a.get('folder') else None
-                    if f and f.exists():self.reply(f.read_bytes(),'image/jpeg')
-                    else:self.send_response(302);self.send_header('Location',f'https://coverartarchive.org/release/{url.path.split("/")[2]}/front-250');self.end_headers()
+                    mbid=url.path.split('/')[2]
+                    if not re.fullmatch(r'[0-9a-f-]{36}',mbid):return self.reply({'error':'bad id'},code=400)
+                    data=rip.cover(mbid)
+                    if not data:return self.reply({'error':'no cover'},code=404)
+                    self.send_response(200);self.send_header('Content-Type','image/jpeg');self.send_header('Content-Length',str(len(data)));self.send_header('Cache-Control','public, max-age=604800');self.end_headers();self.wfile.write(data)
                 else:self.reply({'error':'not found'},code=404)
             except Exception as e:self.reply({'error':repr(e)},code=500)
         def do_POST(self):
@@ -295,12 +351,28 @@ def make_handler(rip):
                     with rip.lock:
                         rip.store['albums'].setdefault(album['mbid'],album);rip.store['current_album']=album['mbid']
                         if rip.side:rip.side['album']=album['mbid']
-                        waiting=[s['id'] for s in rip.store['sides'] if s['status']=='recorded' and not s['album']] if body.get('assign_waiting') else []
-                        for s in rip.store['sides']:
-                            if s['id'] in waiting:s['album']=album['mbid']
                         rip.save()
-                    for sid in waiting:rip.jobs.put(('split',sid))
                     rip.log(f'Album selected: {album["artist"]} — {album["title"]} ({len(album["tracks"])} tracks)');self.reply({'ok':True})
+                elif self.path=='/api/next_track':          # "this side starts at track N": for the side being recorded and the next ones
+                    with rip.lock:a=rip.store['albums'][body['mbid']];a['next_track']=max(0,min(len(a['tracks'])-1,int(body['index'])));rip.save()
+                    self.reply({'ok':True})
+                elif self.path=='/api/side/assign':         # attach a recorded side to an album from a given track, or detach it (mbid null); re-cuts it
+                    with rip.lock:
+                        side=next(s for s in rip.store['sides'] if s['id']==body['id']);old=rip.store['albums'].get(side['album'] or '')
+                        side.update(album=body.get('mbid'),tracks=[],status='recorded')
+                        if old:rip.recount(old)
+                        rip.save()
+                    if body.get('mbid'):rip.jobs.put(('split',(side['id'],int(body.get('first',0)))))
+                    self.reply({'ok':True})
+                elif self.path=='/api/side/trash':          # nothing is deleted: the files move to ~/vinyl/trash
+                    with rip.lock:
+                        side=next(s for s in rip.store['sides'] if s['id']==body['id']);old=rip.store['albums'].get(side['album'] or '');rip.store['sides'].remove(side)
+                        if old:rip.recount(old)
+                        rip.save()
+                    trash=rip.home/'trash';trash.mkdir(exist_ok=True)
+                    for f in (Path(side['file']),Path(side['file']).with_suffix('.env.npy')):
+                        if f.exists():shutil.move(str(f),str(trash/f.name))
+                    rip.log(f'Side {side["id"]} moved to the trash folder');self.reply({'ok':True})
                 elif self.path=='/api/clear':
                     with rip.lock:rip.store['current_album']=None;rip.save()
                     self.reply({'ok':True})
@@ -324,6 +396,9 @@ def main():
     p.add_argument('--port',type=int,default=8091);p.add_argument('--home',default='~/vinyl');p.add_argument('--replay');p.add_argument('--fast',action='store_true',help='with --replay: do not pace to real time')
     a=p.parse_args();rip=Ripper(a.home,a.replay,a.fast);threading.Thread(target=rip.worker,daemon=True).start()
     if a.replay and a.fast:rip.capture_loop();print(json.dumps({'sides':rip.store['sides'],'events':[e['text'] for e in rip.events]},indent=1)[:3000]);return
-    threading.Thread(target=rip.capture_loop,daemon=True).start();print(f'Vinyl ripper dashboard on port {a.port}',flush=True)
-    ThreadingHTTPServer(('0.0.0.0',a.port),make_handler(rip)).serve_forever()
+    loop=threading.Thread(target=rip.capture_loop);loop.start();print(f'Vinyl ripper dashboard on port {a.port}',flush=True)
+    server=ThreadingHTTPServer(('0.0.0.0',a.port),make_handler(rip));threading.Thread(target=server.serve_forever,daemon=True).start()
+    def shutdown(*_):rip.stop.set()
+    signal.signal(signal.SIGTERM,shutdown);signal.signal(signal.SIGINT,shutdown)
+    loop.join();server.shutdown()      # a restart or power-down closes the side being recorded instead of losing it
 if __name__=='__main__':main()
