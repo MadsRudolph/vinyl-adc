@@ -1,5 +1,7 @@
 # Bench plan — 16 September 2026 (rev B digital board, both channels populated)
 
+> The full narrative of these sessions, including the faults, the wrong hypotheses and the software that came out of them, is in [`docs/bringup-log-2026-09.md`](../../../docs/bringup-log-2026-09.md).
+
 This is a plan, not a record. No measurement has been taken on the rev B digital board or on either channel yet; the results section at the end stays empty until the runs happen. The 6 September readings were taken on the rev A digital board with an external W1 clock and do not transfer.
 
 ## What changed since 6 September
