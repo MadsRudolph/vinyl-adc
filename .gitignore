@@ -10,3 +10,4 @@ __pycache__/
 # Rebuilt static assembly publication
 assembly/site-dist/
 DebugErc.log
+sim/listen-out/
