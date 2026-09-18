@@ -11,7 +11,7 @@ Outputs are analysis of the recording - a spectrogram and a spectrum - and can b
 published; the recording itself cannot.
 """
 from pathlib import Path
-import base64, io, sys, wave
+import base64, io, json, sys, wave
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -120,7 +120,47 @@ def spectrogram_figure(x, out, seconds):
     o.append(f'<text class="a" x="{kx+kw}" y="{ky+22}" text-anchor="end">{hi:.0f} dBFS</text>')
     o.append(f'<text class="note" x="18" y="{H-34}">The electric piano’s chords are the horizontal bands; the bass is the bright floor under 100 Hz.</text>')
     o.append(f'<text class="note" x="18" y="{H-14}" fill="{MUTED}">This rip was made before the right-channel repair, so the ripper fell back to mono: left copied to both sides.</text>')
-    o.append('</svg>'); out.write_text('\n'.join(o) + '\n'); return out
+    o.append('</svg>'); out.write_text('\n'.join(o) + '\n')
+    return out, dict(img=img, rows_f=rows_f, hop=hop, n=n, lo=lo, hi=hi, cols=cols)
+
+# ------------------------------------------------- interactive export
+NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+def note_name(f):
+    m = int(round(69 + 12 * np.log2(f / 440.))); cents = int(round(1200 * np.log2(f / (440. * 2 ** ((m - 69) / 12)))))
+    return f"{NOTE_NAMES[m % 12]}{m // 12 - 1}", cents
+
+def interactive_export(x, sg, outdir, seconds):
+    """A grayscale PNG of the spectrogram's dB values and a JSON with axes, detected bands, and detected onsets."""
+    from PIL import Image
+    img, lo, hi = sg['img'], sg['lo'], sg['hi']
+    g = np.clip((img - lo) / (hi - lo), 0, 1)[::-1]            # top row = highest frequency, like the figure
+    Image.fromarray((g * 255).astype(np.uint8), mode='L').save(outdir / 'music-spectrogram-data.png', optimize=True)
+
+    # sustained bands: peaks of the time-averaged spectrum between 40 Hz and 1.5 kHz, with their notes
+    f, P = avg_spectrum(x, 4096); db = 10 * np.log10(P + 1e-30)
+    lo_i, hi_i = np.searchsorted(f, 40), np.searchsorted(f, 1500)
+    bands = []
+    for i in range(lo_i + 2, hi_i - 2):
+        if db[i] >= db[i-1] and db[i] >= db[i+1] and db[i] > db[i-2] and db[i] > db[i+2] and db[i] > np.median(db[lo_i:hi_i]) + 12:
+            # refine the peak by a parabolic fit across three bins
+            a, b, c = db[i-1], db[i], db[i+1]; d = 0.5 * (a - c) / (a - 2*b + c) if (a - 2*b + c) else 0.
+            fp = float(f[i] + d * (f[1] - f[0])); name, cents = note_name(fp)
+            bands.append(dict(hz=round(fp, 1), db=round(float(b), 1), note=name, cents=cents))
+    bands = sorted(bands, key=lambda z: -z['db'])[:10]
+
+    # onsets: positive spectral flux of the 2-8 kHz rows between neighbouring columns, peaks 150 ms apart
+    rows = sg['rows_f']; sel = (rows[:-1] >= 2000) & (rows[:-1] <= 8000)
+    flux = np.maximum(np.diff(img[sel], axis=1), 0).sum(axis=0); flux = np.concatenate(([0.], flux))
+    thr = flux.mean() + 2.0 * flux.std(); min_gap = int(0.15 * FS / sg['hop']); onsets = []; last = -min_gap
+    for c in range(1, len(flux) - 1):
+        if flux[c] > thr and flux[c] >= flux[c-1] and flux[c] >= flux[c+1] and c - last >= min_gap:
+            onsets.append(round(c * sg['hop'] / FS, 3)); last = c
+    meta = dict(seconds=round(seconds, 3), fmin=FMIN, fmax=FMAX, cols=int(sg['cols']), rows=int(img.shape[0]),
+                db_lo=lo, db_hi=hi, hop_s=sg['hop'] / FS, bands=bands, onsets=onsets)
+    (outdir / 'music-spectrogram-data.json').write_text(json.dumps(meta) + '\n')
+    print(f'  bands: ' + ', '.join(f"{b['hz']:.0f} Hz {b['note']}" for b in bands))
+    print(f'  onsets: {len(onsets)} between {onsets[0] if onsets else 0:.2f} and {onsets[-1] if onsets else 0:.2f} s')
+    return outdir / 'music-spectrogram-data.png', outdir / 'music-spectrogram-data.json'
 
 # ------------------------------------------------- music against the noise floor
 def floor_figure(music, idle, out):
@@ -165,8 +205,9 @@ def main():
     print(f'excerpt {seconds:.1f} s, L/R correlation {np.corrcoef(x[0], x[1])[0,1]:+.3f}')
     idle = idle_audio(raw)[0]
     print(f'idle {len(idle)/FS:.1f} s decimated, rms {20*np.log10(np.sqrt((idle**2).mean())):.1f} dBFS')
-    for p in (spectrogram_figure(music, outdir / 'music-spectrogram.svg', seconds),
-              floor_figure(music, idle, outdir / 'music-vs-floor.svg')):
+    fig, sg = spectrogram_figure(music, outdir / 'music-spectrogram.svg', seconds)
+    outs = [fig, floor_figure(music, idle, outdir / 'music-vs-floor.svg'), *interactive_export(music, sg, outdir, seconds)]
+    for p in outs:
         print(f'  wrote {p.relative_to(ROOT)}  ({p.stat().st_size/1024:.0f} kB)')
 
 if __name__ == '__main__':
