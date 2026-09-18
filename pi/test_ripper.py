@@ -44,11 +44,11 @@ def test_identify_selects_album_and_track():
         rip=make(tmp);f,_=side_file(rip,'s1',200)
         rip.side={'id':'s1','file':str(f),'album':None,'frames':200*R.FS}
         rip.identify(('s1',200.))
-        assert rip.store['current_album']=='rel-vinyl' and rip.side['first']==1 and rip.side['ident']['status']=='ok',rip.side
+        assert rip.store['current_album']=='rel-vinyl' and rip.side['anchor']['index']==1 and rip.side['ident']['status']=='ok',rip.side
         # a later side of the same record: the album in use is kept even though AcoustID ranks the CD first for it
         R.acoustid_lookup=lambda key,fp,dur:{'status':'ok','results':[{'score':.9,'id':'c','recordings':[{'id':'rec-anthem','title':'The National Anthem','releases':[release('rel-cd','Kid A',['a','b','The National Anthem'],fmt='CD')]}]}]}
         rip.side={'id':'s2','file':str(f),'album':None,'frames':200*R.FS};rip.identify(('s2',200.))
-        assert rip.side['album']=='rel-vinyl' and rip.side['first']==2,rip.side
+        assert rip.side['album']=='rel-vinyl' and rip.side['anchor']['index']==2,rip.side
         # a different record while an album is in progress: the old one is sent as it is
         rip.store['albums']['rel-vinyl']['status']='in progress'
         R.acoustid_lookup=lambda key,fp,dur:{'status':'ok','results':[{'score':.9,'id':'d','recordings':[{'id':'rec-new','title':'New','releases':[release('rel-new','New Album',['New'])]}]}]}
@@ -91,6 +91,16 @@ def test_split_uses_first_and_trashes_repeats():
         h,env3=side_file(rip,'s3',900);env3[2500:2540,2]=-80.;env3[5340:5380,2]=-80.;env3[8860:,2]=-80.;np.save(h.with_suffix('.env.npy'),env3)
         full={**side,'id':'s3','file':str(h),'frames':900*R.FS,'seconds':900.,'tracks':[],'first':0};rip.store['sides'].append(full);rip.split_side('s3')
         assert [t['index'] for t in full['tracks']]==[0,1,2] and side not in rip.store['sides'] and a['status']=='complete',(full['tracks'],a)
+
+def test_anchor_mid_side():
+    """The needle dropped in the middle of track 5; the fingerprint names track 6 at 226 s. Tracks before the anchor are counted back from it."""
+    with tempfile.TemporaryDirectory() as tmp:
+        rip=make(tmp);a=album('alb',['r%d'%i for i in range(8)],[136.,82.,282.,82.,286.,66.,310.,94.]);rip.store['albums']['alb']=a;rip.store['current_album']='alb'
+        f,env=side_file(rip,'s1',382);env[2234:2262,2]=-80.;env[2868:2877,2]=-80.;env[3578:,2]=-80.;np.save(f.with_suffix('.env.npy'),env)   # gaps at 223-226 and 287, silence from 358
+        side={'id':'s1','started':time.time(),'file':str(f),'frames':382*R.FS,'gaps':[],'album':'alb','status':'recorded','seconds':382.,'peak':.3,'tracks':[],'anchor':{'time':226.2,'index':5}}
+        rip.store['sides'].append(side);rip.split_side('s1')
+        got=[(t['index']+1,round(t['start']),round(t['end']),t['partial']) for t in side['tracks']];assert got==[(5,0,225,True),(6,225,287,False),(7,287,362,True)],got
+        assert a['next_track']==6 and a['status']=='in progress','only the whole track counts'
 
 if __name__=='__main__':
     for name,fn in list(globals().items()):

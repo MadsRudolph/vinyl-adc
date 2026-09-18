@@ -249,7 +249,7 @@ class Ripper:
         if music<self.cfg['min_side_seconds'] and not keep:
             Path(s['file']).unlink(missing_ok=True);self.log(f'Discarded a {music:.0f} s recording ({why}); shorter than {self.cfg["min_side_seconds"]:.0f} s');return
         np.save(Path(s['file']).with_suffix('.env.npy'),np.column_stack((np.array(s['peaks']),np.array(s['level']))))
-        meta={k:s[k] for k in ('id','started','file','frames','gaps','album')};meta.update(status='recorded',seconds=round(seconds,1),peak=float(np.max(s['peaks'])),tracks=[],first=s.get('first'),ident=s.get('ident'))
+        meta={k:s[k] for k in ('id','started','file','frames','gaps','album')};meta.update(status='recorded',seconds=round(seconds,1),peak=float(np.max(s['peaks'])),tracks=[],first=s.get('first'),anchor=s.get('anchor'),ident=s.get('ident'))
         with self.lock:self.store['sides'].append(meta);self.save()
         self.log(f'Side {s["id"]} closed after {seconds/60:.1f} min ({why})')
         if (meta['ident'] or {}).get('status') in (None,'pending','unknown','failed'):meta['ident']={'status':'pending'};self.jobs.put(('identify',(meta['id'],'closed')))
@@ -275,28 +275,41 @@ class Ripper:
             if found and g0-found[-1][1]<2.5:found[-1][1]=round(float(g1),1)
             else:found.append([round(float(g0),1),round(float(g1),1)])
         side['gaps']=[g for g in found if g[1]-g[0]>=self.cfg['gap_seconds'] and t0+20<(g[0]+g[1])/2<t1-20]
-        if first is None:first=side['first'] if side.get('first') is not None else album['next_track']
-        first=int(first);rest=album['tracks'][first:]
-        if not rest:self.log(f'Album already complete; side {sid} left unassigned');return
-        lengths=[x['length'] for x in rest]
-        if all(lengths):
-            sums=np.cumsum(lengths);k=int(np.argmin(np.abs(sums-T)))+1;scale=T/sums[k-1];expected=[t0+float(v)*scale for v in sums[:k-1]]
-            if abs(sums[k-1]-T)>max(45.,.08*T):self.log(f'Side {sid}: recorded {T/60:.1f} min but the closest run of tracks is {sums[k-1]/60:.1f} min; check the album choice')
-        else:
-            gaps=[g for g in side['gaps'] if t0+20<(g[0]+g[1])/2<t1-20];k=min(len(gaps)+1,len(rest));expected=[(g[0]+g[1])/2 for g in gaps[:k-1]]
-        cuts=[]
-        for e in expected:
+        def fit(lengths,span):
+            """How many tracks of these lengths fill `span` seconds, and where their boundaries fall (scaled to fit); gaps stand in when lengths are unknown."""
+            if lengths and all(lengths):
+                sums=np.cumsum(lengths);k=max(1,int(np.sum(sums<=span+20)))                        # complete tracks
+                if k<len(lengths) and span-sums[k-1]>45:return k+1,[float(v) for v in sums[:k]],-1.  # plus one the needle was lifted from (err -1 marks it partial)
+                return k,[float(v)*span/sums[k-1] for v in sums[:k-1]],float(abs(sums[k-1]-span))
+            return min(len(lengths),1),[],0.
+        def snap(e):
             near=[g for g in side['gaps'] if abs((g[0]+g[1])/2-e)<=self.cfg['snap_seconds']]
-            if near:cuts.append(float(np.mean(max(near,key=lambda g:g[1]-g[0]))))
-            else:                                       # tracks that run into each other: cut at the quietest second near the expected time
-                lo,hi=int(max(0,e-self.cfg['snap_seconds'])*10),int((e+self.cfg['snap_seconds'])*10);smooth=np.convolve(level[lo:hi],np.ones(10)/10,'valid')
-                cuts.append((lo+int(np.argmin(smooth))+5)*.1 if len(smooth) else e)
-        edges=[t0]+cuts+[t1];tracks=[{'index':first+i,'start':round(edges[i],2),'end':round(edges[i+1],2),'snapped':i==0 or any(abs(edges[i]-(g[0]+g[1])/2)<.01 for g in side['gaps'])} for i in range(k)]
+            if near:return float(np.mean(max(near,key=lambda g:g[1]-g[0])))
+            lo,hi=int(max(0,e-self.cfg['snap_seconds'])*10),int((e+self.cfg['snap_seconds'])*10);smooth=np.convolve(level[lo:hi],np.ones(10)/10,'valid')   # tracks that run into each other: the quietest second nearby
+            return (lo+int(np.argmin(smooth))+5)*.1 if len(smooth) else e
+        anchor=side.get('anchor') if first is None and side.get('first') is None else None
+        if anchor and anchor['time']-t0>=30:            # the fingerprint named the track that starts at anchor['time']; whatever came before it are the tracks just ahead of it
+            ta=snap(anchor['time']) if any(abs((g[0]+g[1])/2-anchor['time'])<=5 for g in side['gaps']) else float(anchor['time']);hit=int(anchor['index'])
+            m,back,err=fit([album['tracks'][i]['length'] for i in range(hit-1,-1,-1)],ta-t0);first=hit-m;partial=set()
+            if err>max(45.,.08*(ta-t0)) or err<0:partial.add(first);self.log(f'Side {sid}: the {(ta-t0)/60:.1f} min before “{album["tracks"][hit]["title"]}” is not a whole track (needle dropped mid-track); it will not be kept')
+            before=[snap(ta-v) for v in reversed(back)];rest=album['tracks'][hit:];k,fwd,err=fit([x['length'] for x in rest],t1-ta);after=[snap(ta+v) for v in fwd]
+            if not rest:self.log(f'Album already complete; side {sid} left unassigned');return
+            cuts=before+[ta]+after;k=m+k
+        else:
+            if first is None:first=anchor['index'] if anchor else side['first'] if side.get('first') is not None else album['next_track']
+            first=int(first);rest=album['tracks'][first:]
+            if not rest:self.log(f'Album already complete; side {sid} left unassigned');return
+            k,fwd,err=fit([x['length'] for x in rest],T);partial=set()
+            if err>max(45.,.08*T):self.log(f'Side {sid}: recorded {T/60:.1f} min, which does not match a whole number of tracks; check the album choice')
+            if not all(x['length'] for x in rest):gaps=[g for g in side['gaps'] if t0+20<(g[0]+g[1])/2<t1-20];k=min(len(gaps)+1,len(rest));fwd=[(g[0]+g[1])/2-t0 for g in gaps[:k-1]]
+            cuts=[snap(t0+v) for v in fwd]
+        if err<0:partial.add(first+k-1);self.log(f'Side {sid}: the needle was lifted during “{album["tracks"][first+k-1]["title"]}”; that track will not be kept')
+        edges=[t0]+cuts+[t1];tracks=[{'index':first+i,'start':round(edges[i],2),'end':round(edges[i+1],2),'snapped':i==0 or any(abs(edges[i]-(g[0]+g[1])/2)<.01 for g in side['gaps']),'partial':first+i in partial} for i in range(k)]
         with self.lock:
-            have={tr['index'] for s in self.store['sides'] if s is not side and s['album']==album['mbid'] for tr in s['tracks']}
-            if all(tr['index'] in have for tr in tracks):          # the same side played again: the library already has it
+            have={tr['index'] for s in self.store['sides'] if s is not side and s['album']==album['mbid'] for tr in s['tracks'] if not tr.get('partial')}
+            if all(tr['index'] in have for tr in tracks if not tr.get('partial')):          # the same side played again: the library already has it
                 self.log(f'Side {sid} is tracks {first+1}–{first+k} of “{album["title"]}” again; already recorded, so it goes to the trash');self.trash_side(side);return
-            mine={tr['index'] for tr in tracks}
+            mine={tr['index'] for tr in tracks if not tr.get('partial')}
             for other in self.store['sides']:                       # a fresh play of tracks an earlier, shorter side had (a restart from track 1): the new side wins them
                 if other is not side and other['album']==album['mbid'] and any(tr['index'] in mine for tr in other['tracks']):
                     other['tracks']=[tr for tr in other['tracks'] if tr['index'] not in mine];self.log(f'Side {other["id"]} loses its overlap with {sid}')
@@ -345,13 +358,14 @@ class Ripper:
                     candidates+=[c+d for c in candidates[:3] for d in (10,-10)]
                     seen=[];candidates=[c for c in candidates if c>=30 and not any(abs(c-x)<3 for x in seen) and not seen.append(c)][:8]
                 if not candidates:continue
-                fp,_=fingerprint(side['file'],start,min(120.,max(30.,candidates[0])))
+                fp,_=fingerprint(side['file'],start,min(120.,max(30.,candidates[0])));matched_start=start
                 for d in candidates:
                     if n:time.sleep(.4)                               # AcoustID allows three requests a second
                     res=acoustid_lookup(self.acoustid,fp,d);n+=1
                     if res.get('results'):break
                 if res.get('results'):break
         except Exception as e:side['ident']={'status':'failed','error':repr(e)};self.log(f'Identification failed: {e!r}');return
+        start=matched_start if res.get('results') else .5
         with self.lock:current=self.store['albums'].get(side['album'] or self.store['current_album'] or '')
         matches=rank_releases(res.get('results',[]),current['mbid'] if current else None)
         if not matches:side['ident']={'status':'unknown','tries':(side.get('ident') or {}).get('tries',1)};self.log('AcoustID does not know this track; trying again after the next one' if self.side is side else 'AcoustID does not know this record; choose the album in the dashboard');return
@@ -368,8 +382,8 @@ class Ripper:
             hit=next((i for i,t in enumerate(current['tracks']) if t['recording']==best['recording']),None)
             if hit is None:hit=next((i for i,t in enumerate(current['tracks']) if t['disc']==best['medium'] and t['position']==best['position']),0)
         with self.lock:
-            side['album']=current['mbid'];side['first']=hit;side['ident']={'status':'ok','title':best['title'],'artist':best['artist'],'score':round(best['score']%100,2)};self.save()
-        self.log(f'Side {sid} starts with track {hit+1}: {best["title"]}')
+            side['album']=current['mbid'];side['anchor']={'time':float(start),'index':hit};side['first']=None;side['ident']={'status':'ok','title':best['title'],'artist':best['artist'],'score':round(best['score']%100,2)};self.save()
+        self.log(f'Side {sid}: track {hit+1}, {best["title"]}, starts {start/60:.1f} min in')
     def housekeeping(self):
         """An album nobody has added to for a few hours is sent as it is: one side of a record still ends up in the library."""
         with self.lock:
@@ -406,13 +420,13 @@ class Ripper:
         self.save()
     def recount(self,album):
         """What has been recorded decides where the album stands, so assigning, unassigning or re-cutting a side can never leave a stale counter."""
-        done={tr['index'] for s in self.store['sides'] if s['album']==album['mbid'] for tr in s['tracks']}
+        done={tr['index'] for s in self.store['sides'] if s['album']==album['mbid'] for tr in s['tracks'] if not tr.get('partial')}
         album['next_track']=max(done)+1 if done else 0
         if album.get('status') not in ('encoding','ready','delivered'):album['status']='complete' if len(done)>=len(album['tracks']) else ('in progress' if done else 'selected')
     # ---- encoding
     def finalize(self,mbid):
         import mutagen.flac
-        with self.lock:album=self.store['albums'][mbid];sides=[s for s in self.store['sides'] if s['album']==mbid and s['tracks']]
+        with self.lock:album=self.store['albums'][mbid];sides=[{**s,'tracks':[t for t in s['tracks'] if not t.get('partial')]} for s in self.store['sides'] if s['album']==mbid];sides=[s for s in sides if s['tracks']]
         if not sides:self.log('Nothing recorded for this album yet');return
         with self.lock:album['status']='encoding'
         peak=max(float(self.side_env(s)[int(tr['start']*10):int(tr['end']*10)+1,:2].max()) for s in sides for tr in s['tracks'])
@@ -535,9 +549,10 @@ def make_handler(rip):
                     with rip.lock:
                         side=next(s for s in rip.store['sides'] if s['id']==body['id']);old=rip.store['albums'].get(side['album'] or '')
                         side.update(album=body.get('mbid'),tracks=[],status='recorded')
+                        if body.get('first') is not None:side['anchor']=None            # a chosen start track overrides what the fingerprint found
                         if old:rip.recount(old)
                         rip.save()
-                    if body.get('mbid'):rip.jobs.put(('split',(side['id'],int(body.get('first',0)))))
+                    if body.get('mbid'):rip.jobs.put(('split',(side['id'],int(body['first'])) if body.get('first') is not None else side['id']))
                     self.reply({'ok':True})
                 elif self.path=='/api/side/trash':          # nothing is deleted: the files move to ~/vinyl/trash
                     with rip.lock:side=next(s for s in rip.store['sides'] if s['id']==body['id'])
