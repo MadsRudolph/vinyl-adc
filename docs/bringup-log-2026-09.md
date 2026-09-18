@@ -268,6 +268,21 @@ The driver programs consumer mode in `hw_params`, not at probe. With the ADC pow
 
 Consequences: **boot the Pi first, then switch the ADC's 5 V on.** For the final build, where the Pi's 5 V powers the stack and the ADC therefore clocks during boot, about 470 Ω in series with PI_BCLK and PI_LRCLK limits the overlap to a few milliamps.
 
+### 6.3a The capture card can come up wedged, and only a re-probe clears it
+
+On one boot the card registered normally — `card 1: vinyladc`, `pcm0c` present, one free subdevice, `snd_soc_spdif_rx` and `snd_soc_bcm2835_i2s` loaded, DMA channel `dma0chan2 | fe203000.i2s:rx` allocated — but **every open of `/dev/snd/pcmC1D0c` failed with `EINVAL`**, for any format, including a bare `dd` on the node. `strace` put it at the `openat` itself, not at `hw_params`, and the kernel logged nothing at all. Headphone playback on card 0 worked, so ALSA at large was fine.
+
+It is not the missing clock: the same `EINVAL` appeared with the ADC powered and unpowered, and the honest "no clocks" failure looks different — the open succeeds and the *read* returns `EIO`, which is what `vinyl-adc-consumer.service` means by ending in an I/O error. `live.py` reports any failure as "No clocks from the ADC", which is what sent me looking at the hardware first.
+
+Re-probing the ASoC card clears it, no reboot needed:
+
+```
+echo soc:sound | sudo tee /sys/bus/platform/drivers/asoc-simple-card/unbind
+echo soc:sound | sudo tee /sys/bus/platform/drivers/asoc-simple-card/bind
+```
+
+After that the open succeeds and consumer mode is programmed as usual (`MODE_A=0x00f0fc20`, CLKM/FSM = 1). Later boots came up healthy, so it is intermittent rather than a configuration error. **Check `MODE_A` before blaming the hardware:** if it still reads `0x00000000` after something has opened the device, the card is wedged, not silent.
+
 ### 6.4 Wiring
 
 | J2 pin | Signal | Pi header |
@@ -390,9 +405,62 @@ Pressing the stack together moved the fault from the right board to the left boa
 | −5 V | {U20.4, U22.4, C26.2, C29.2} and **{J7.16} alone** | J7.16 → U22.4 |
 | +5 V | {U23.*, U24.14, C30, C31}, {J7.2, U21.8, C27, R37}, {U22.8, C28, R36}, {U20.8, C25} | J7.2 → U23.1, R36.1 → U23.10, C25.1 → C31.1 |
 
-The holes are not plated. **Bus pin J7.16 has no bottom-copper connection to anything; the whole board's negative rail depends on that header pin being soldered on the component side**, beside the connector body, where it is hardest to solder and is flexed every time the stack is pushed together. When it opens, both op-amps lose V−, the loop overloads (density near 0.6, no shaping). Static bench continuity read fine, because an unflexed marginal joint conducts.
+The holes are not plated. **Bus pin J7.16 has no bottom-copper connection to anything; the whole board's negative rail depends on that header pin being soldered on the component side** — and that is a joint no iron can reach. The `PinHeader_2x08_P2.54mm_Vertical` body outline runs −1.27 to 3.81 mm across rows whose pads sit at 0 and 2.54 mm, so both rows are *under* the plastic, clearing the pad edge by 0.42 mm. With the header seated, the only thing that can connect the pin to the top ring is solder that wicked 1.6 mm up the ~0.1 mm annulus between pin and hole wall, and that column of solder is compressed every time the stack is pushed together. It also explains why reflowing pin 16 from below never held: the joint being reflowed cannot be seen, and whether enough solder climbs back up is chance. When it opens, both op-amps lose V−, the loop overloads (density near 0.6, no shaping). Static bench continuity read fine, because an unflexed marginal joint conducts.
 
 Planned fix, both channel boards, underside: a wire from the J7.16 pad to U22 pin 4, and one from J7.2 to U23 pin 14. Reflowing pin 16 alone did not hold. **Open as of this log.**
+
+#### 8.4a Every joint on the board that carries current through the component side
+
+The same snapshot answers the general question, not just the one about −5 V. `boards.json` already stores each connected top-layer route with the pads that terminate it (`runs`), and a pad flagged `top` is one whose leg has to be soldered on the component side for that route to conduct. There are **ten such routes and twenty such joints**:
+
+| Net | Terminals | Reachable on the component side? |
+|---|---|---|
+| **−5 V** | **J7.16 ↔ U22.4** | J7.16 beside the header body — the fault in §8.4 |
+| **+5 V** | **J7.2 ↔ U23.1** | J7.2, same header, same problem |
+| +5 V | R36.1 ↔ U23.10 | resistor leg fine; U23.10 under the socket |
+| +5 V | C25.1 ↔ C31.1 | capacitor legs, both accessible |
+| VREF_N | R26.1 ↔ R30.1 | resistor legs |
+| CMP_L | R37.2 ↔ U23.2 | U23.2 under the socket |
+| DACP_L | R25.1 ↔ U24.4 | U24.4 under the socket |
+| C22 net | R24.1 ↔ U20.1 | U20.1 under the socket |
+| C24 net | C24.2 ↔ R31.1 | accessible |
+| R27 net | R27.1 ↔ R32.2 | resistor legs |
+
+Only the two header pins are both hard to solder *and* mechanically worked every time the stack is assembled, which is why they are the two to wire and the rest can stay as they are. The four socket pins are worth remembering if a signal fault ever appears at U23, U24 or U20 — the joint is under the socket body, so it cannot be reflowed without lifting the socket.
+
+The card that goes to the bench with this — the board drawn from the solder side, so the mirrored pin order is not something to work out with an iron in hand — is `docs/underside-wires.html`, generated by `assembly/underside_wires.py` from the same snapshot.
+
+### 8.6 The second fault: DACP_L shorted to ground (18 September, fixed)
+
+The §8.4 wires went on both boards and the right channel did not change: mean run 19.0, density 0.579, slope +3 dB/decade. So §8.4 was a real fault — and not the only one. Worth being clear about that, because the −5 V root cause was never actually tested until the fix was done.
+
+Ruling out the class first. Today's joint inventory (§8.4a) lists ten runs that exist only as component-side copper, and the right board had since been desoldered, resoldered and had the Pi's 5 V fed into a shorted stack. Each of those runs is a direct trace between two pads, so each **must** read ~0 Ω and no comparison with the left board is needed to judge it. All ten read 0 Ω. Both TL072s had V− (−3.87 V and −3.99 V; the difference and the hum on the first were probe contact, not a fault — the noise was mains harmonics, not the 42 kHz limit cycle or the 192 kHz pump). So every passive path was sound.
+
+That left the active side, and the AD3 comparing **the same node on the two boards** found it in three moves:
+
+| Node | Left | Right |
+|---|---|---|
+| U20.1, integrator 1 out | 1.63 V p-p | **6.83 V p-p** (−2.51…+4.32) |
+| U20.7, integrator 2 out | 1.89 V p-p | **6.79 V p-p** (−2.57…+4.22) |
+| **U24.4, DAC gate out (DACP_L)** | **0 → +4.63 V, 569 kHz** | **flat, 0.234 V swing, 41.5 kHz** |
+
+Integrator 1 railing meant the loop was open, not that one stage was sick, so walking downstream was pointless; the DAC output was the thing to look at. And the *level* named the failure mode: a 74HC04 driving into a dead short sources tens of milliamps and sits a couple of hundred millivolts above ground, which is exactly the 236 mV "high" measured. A dead chip floats or sits at a rail instead.
+
+U24 is socketed, so pulling it separated the two cases in one move: socket pin 4 still read short to ground, so the fault was the board's copper, not the chip. DACP_L is three pads (U24.4, R25.1, R34.1), 33 mm of component-side copper and ~45 mm of solder-side trace that the ground pour flanks at 0.5 mm with no mask anywhere. The short was found and cleared there.
+
+**Result, both channels on the bench, inputs live:**
+
+| | Left | Right |
+|---|---|---|
+| Mean run (max) | 1.35 (3) | 1.36 (3) |
+| One-density | 0.4957 | 0.4957 |
+| Shaping 30→80 kHz | +69.5 dB/dec | +68.5 dB/dec |
+| In-band noise | −74.8 dBFS | −75.7 dBFS |
+| Floor at 1 kHz | −124.5 dBFS/Hz | −125.5 dBFS/Hz |
+
+Both verdicts read *third-order shaping*, the two spectra lie on top of each other, and the right channel is marginally the quieter of the two. **That is stereo working for the first time**, and it closes open item 1.
+
+Two process notes. The 42.7 kHz the left channel showed throughout was the right channel's limit cycle coupling through the shared rails, exactly as §8.2 described — so a "fault" visible on the good board was really the bad one bleeding in. And the load argument I tried on the way (rail at −4.00 V against the −3.79 V of §13, therefore one channel not drawing) was worthless: a limit-cycling channel does not draw what a working one draws, so the comparison cannot separate the two cases.
 
 ### 8.5 Supply noise goes straight into the signal
 
@@ -550,6 +618,27 @@ The wrong delivery was moved to `/srv/media/.vinyl-replaced/` on the server (not
 
 Not yet measured: THD and SNR with a calibrated tone, frequency response, crosstalk, anything on the right channel.
 
+## 13a. Audio performance, measured (18 September)
+
+First run of the `audio` plan on hardware, left channel, W1 into J20, stack on the Korad, capture from the ripper's decimated 48 kHz output. Run `20260918T093339Z-audio-a485477f`.
+
+| Quantity | Value |
+|---|---|
+| Full-scale input | 10.41 Vpk (7.362 Vrms) |
+| Frequency response, 20 Hz–20 kHz | **0.119 dB peak-to-peak** over 31 third-octave points (−0.047 dB at 20 Hz, +0.072 dB at 16.3 kHz) |
+| Dynamic range (AES17, −60 dBFS tone, A-weighted) | 67.9 dB |
+| SNR (0 dBFS re idle noise, A-weighted) | 67.7 dB |
+| Idle noise, generator connected | −66.2 dBFS, −67.7 dBFS(A) |
+| Crosstalk into the right channel | −92.4 dB |
+| THD at −6 / −20 dBFS | 0.028 % / 0.032 % (2nd −75.8 dBc, 3rd −83.7 dBc) |
+| IMD CCIF 19+20 kHz | −82 dB |
+| IMD SMPTE 60 Hz + 7 kHz (4:1) | 0.139 % |
+| Hum, 50 Hz | −99.5 dBFS |
+
+Four things to read carefully. **−82 dB CCIF is the AD3's generator, not the converter** — the plan says as much, and anything near −80 dB is the instrument. **THD at −40 and −60 dBFS (1.6 %, 2.3 %) is noise, not distortion**, the tone being near the floor. **−3 dBFS was never reached**: full scale is 10.41 Vpk, so it needs 7.4 Vpk and W1 stops near ±5 V, which is why the −3 and −6 requests both landed at −6.37 dBFS. And the idle-noise figure is **not** comparable with the −76.8 dBFS the live view reports for a shorted input, because here the generator is wired to the input and contributing.
+
+Against the plan's own reference points, 67.9 dB of dynamic range sits inside the 60–70 dB a good pressing delivers, which is the benchmark that matters here.
+
 ## 14. What I got wrong, and what caught it
 
 | Claim | Reality | Caught by |
@@ -563,19 +652,21 @@ Not yet measured: THD and SNR with a calibrated tone, frequency response, crosst
 | Sliced bitstreams can be concatenated | Seams break the noise shaping (33 dB) | A tone SNR check before trusting the audio |
 | Treble spikes are clicks | Mostly cymbals (24 % flagged) | The patch percentage |
 | A run of quiet chunks detects silence | Clicks reset it forever | The offline fake-side test |
+| A ±4-bin window finds the test tone | The ADC clocks itself: LRCLK is 48009 Hz, so a tone lands ~190 ppm low and walks out of the window in proportion to frequency — 35 dB lost at 8 kHz, 70 dB at 19 kHz | A "frequency response" far too steep for any analogue filter (−51 dB at 8 kHz), then reading where the peak really was |
+| An 8 s capture after a 5 s settle is clean | The ripper serves the *last* 8 s, so 3 s of the window predates the change and still holds the previous step's tone | A-weighted and unweighted "idle noise" agreeing to four figures — which only happens if the noise *is* a 1 kHz tone |
 | Sampling PI_DIN on the falling BCLK edge | That is where the data changes | Transition timing relative to both edges |
 
 Process lessons: compare two boards rather than reasoning about one; let the hardware's own bitstream say what is wrong; every new analysis gets a synthetic test with a known answer before it is believed; and twice my wait loops never ended because `pgrep`/`pkill` patterns matched their own command line.
 
 ## 15. Open items
 
-1. **Channel boards:** underside wires J7.16 → U22.4 and J7.2 → U23.14 on both boards. Then confirm stereo on the dashboard and re-measure the right channel.
+1. ~~**Channel boards:** underside wires J7.16 → U22.4 and J7.2 → U23.14 on both boards.~~ **Done 18 September**, along with the DACP_L short that was the second fault (§8.6). Both channels now read third-order shaping and match to within 1 dB. Bench card: `docs/underside-wires.html`. Still to do: re-measure the right channel with the input shorted at J20, for a figure comparable to §13's −79.6 dBFS.
 2. **Order and fit the 74HCU04** in the digital board's U9.
 3. **Hum:** turntable ground to the chassis post, enclosure, shielded input leads. Currently −39 dBFS at 50 Hz.
 4. **Supply noise:** filter the 5 V feeding the DAC gates before running the stack from the Pi (6–11 dB worse than the bench supply today); fit 470 Ω in PI_BCLK and PI_LRCLK for that configuration.
 5. **Decimator:** steeper final stage to remove the 20–24 kHz shaped noise (−62 dBFS unweighted).
 6. **Ripper:** tune thresholds on full sides with real groove noise; register an AcoustID application key and put it in `~/vinyl/acoustid.key`; a DHCP reservation for the Pi, whose address is configured on the server.
-7. **Performance measurements:** run `assembly/bench/run.py audio` on the hardware for the baseline, again after each fix (§12d).
+7. ~~**Performance measurements:** run `assembly/bench/run.py audio` on the hardware for the baseline.~~ **Done 18 September for the left channel** (§13a), after fixing two bugs the run itself exposed (§14). Still to do: the right channel, and a Pi-powered run to quantify what the unfiltered 5 V costs (open item 4). Note the bench GUI holds the AD3 until its process exits, so a second run needs it restarted; and it imports `run.py`/`audio.py` at start, so edits need a restart to take effect.
 8. The hosted guide (`vinyl-adc.madsrudolph.dev`) was last deployed from commit `c99fa82`; the `gh` CLI on the PC hangs behind a mise shim, so later deploy dispatches did not go out.
 
 ## 16. Software written in these three days
@@ -594,3 +685,4 @@ Process lessons: compare two boards rather than reasoning about one; let the har
 | `assembly/bench/audio.py` | Audio performance analysis (THD+N, SNR, DR, response, IMD) for the `audio` plan |
 | `server/vinyl-pull.py`, `.service`, `.timer` | Delivery into the Jellyfin library |
 | `sim/listen.py` | Audio through the modulator model and the real decimator |
+| `assembly/underside_wires.py` | Solder-side bench card for the two supply wires, drawn from `boards.json` |

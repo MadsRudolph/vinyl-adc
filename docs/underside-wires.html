@@ -1,0 +1,1319 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Underside Supply Wires</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0e1413; --panel:#19211f; --panel-2:#141c1a; --line:#2c3833; --line-soft:#212b28;
+  --text:#e8efe7; --text-2:#b6c6bb; --muted:#8fa298;
+  --accent:#bef58b; --amber:#ffc477;
+  --fr4:#1b2522; --copper:#c08f5c; --pad:#c9a678; --edge:#3c4b45;
+  --wire-neg:#ffc477; --wire-pos:#79cfe4;
+  --ok:#8fd46a; --bad:#e8734d;
+  --xsub:#2e2a24; --xmetal:#aab6b1; --xbody:#34383a; --xsolder:#8d979b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.55}
+code,.mono,.ref,.callout,.edge{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+.wrap{max-width:1180px;margin:0 auto;padding-block:26px 56px;padding-left:20px;padding-right:20px}
+
+header.top{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:26px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:2.4px;text-transform:uppercase;
+  color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(25px,4.4vw,36px);font-weight:600;letter-spacing:-0.7px;margin:0 0 8px;text-wrap:balance}
+.standfirst{color:var(--text-2);max-width:66ch;margin:0}
+
+.layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+figure.board{margin:0;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px}
+figure.board svg{display:block;width:100%;height:auto;max-width:100%}
+svg .ref{font-size:2.5px;fill:var(--muted)}
+svg .callout{font-size:3.6px;font-weight:600;paint-order:stroke;stroke:var(--fr4);stroke-width:1px;stroke-linejoin:round}
+svg .edge{font-size:2.9px;fill:var(--muted)}
+figcaption{color:var(--muted);font-size:12.5px;margin-top:10px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.key{display:inline-flex;align-items:center;gap:6px}
+.key i{width:16px;height:3px;border-radius:2px;display:inline-block}
+.key i.dash{background:none;border-top:2px dashed var(--wire-neg);height:0}
+
+h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-0.2px}
+h2 .n{font-family:"IBM Plex Mono",monospace;color:var(--accent);margin-right:8px;font-size:15px}
+section+section{margin-top:26px}
+p{margin:0 0 12px;max-width:66ch}
+
+.wires{display:grid;gap:12px;margin:0 0 22px}
+.wire{border:1px solid var(--line);border-left:3px solid var(--w);border-radius:9px;padding:13px 15px;background:var(--panel)}
+.wire h3{margin:0 0 4px;font-size:15px;font-weight:600;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.wire .path{font-family:"IBM Plex Mono",monospace;color:var(--w);font-size:15px}
+.wire .len{margin-left:auto;color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+.wire p{margin:0;color:var(--text-2);font-size:13.5px}
+
+ol.steps{list-style:none;counter-reset:s;margin:0;padding:0}
+ol.steps li{counter-increment:s;position:relative;padding:0 0 14px 34px;margin:0}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:22px;height:22px;border-radius:6px;
+  background:var(--panel);border:1px solid var(--line);color:var(--accent);
+  font-family:"IBM Plex Mono",monospace;font-size:12px;display:grid;place-items:center}
+ol.steps li strong{font-weight:600}
+ol.steps li span{display:block;color:var(--text-2);font-size:13.5px;margin-top:2px}
+
+.warn{background:#2a2113;border:1px solid #6b5031;border-left:3px solid var(--amber);border-radius:9px;
+  padding:14px 16px;margin:0 0 20px}
+.warn strong{color:var(--amber);display:block;margin-bottom:4px}
+p.aside{color:var(--text-2);font-size:13.5px;border-left:2px solid var(--line);padding-left:13px;margin:0 0 16px}
+ol.steps+p.aside{margin-top:6px}
+.warn p{color:#f3ddb6;margin:0;font-size:13.5px}
+figure.xsec{margin:18px 0 0;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:16px 16px 12px;max-width:820px}
+figure.xsec svg{display:block;width:100%;height:auto}
+svg .xl{font-family:"IBM Plex Mono",monospace;font-size:6px}
+section.why h2{margin-bottom:10px}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-soft)}
+th{color:var(--muted);font-weight:500;font-size:12px;letter-spacing:0.4px;text-transform:uppercase}
+td.num{text-align:right}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+
+pre.cmd{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+  font-family:"IBM Plex Mono",monospace;font-size:13px;overflow-x:auto;margin:0 0 12px;color:var(--text-2)}
+pre.cmd b{color:var(--accent);font-weight:400}
+
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+footer code{color:var(--text-2)}
+</style></head>
+<body><div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Vinyl ADC &middot; channel board &middot; open item 1</p>
+  <h1>Take both rails off their single header joint</h1>
+  <p class="standfirst">The right channel's loop is not wrong. Its negative rail arrives through solder that has
+  wicked up one unplated hole at bus pin J7.16 &mdash; under the header body, where no iron reaches &mdash; and
+  that joint lets go when the stack is pressed together. Two insulated wires on the solder side make both rails
+  independent of it &mdash; on <strong>both</strong> channel boards, four wires in all.</p>
+</header>
+
+<div class="layout">
+  <figure class="board">
+    <svg viewBox="10.95 10.95 118.1 122.1" role="img" aria-label="Channel board seen from below">
+<rect x="19.95" y="19.95" width="100.1" height="100.1" rx="2.5" fill="var(--fr4)" stroke="var(--edge)" stroke-width="0.6"/>
+<g stroke="var(--copper)" stroke-width="0.85" stroke-linecap="round" opacity="0.5" fill="none">
+<path d="M39.01 92.205 L40.2 93.395"/>
+<path d="M33.2 92.205 L39.01 92.205"/>
+<path d="M46.2 104.6533 L46.2 100.705"/>
+<path d="M40.51 100.705 L40.2 101.015"/>
+<path d="M46.2 100.705 L40.51 100.705"/>
+<path d="M47.86 108.415 L47.86 106.3133"/>
+<path d="M47.86 106.3133 L46.2 104.6533"/>
+<path d="M40.962 42.9667 L37.39 39.395"/>
+<path d="M81.142 52.22 L82.032 52.22"/>
+<path d="M53.784 71.395 L53.58 71.395"/>
+<path d="M84.406 49.3382 L84.748 49.68"/>
+<path d="M92.353 65.78 L93.138 65.78"/>
+<path d="M82.032 55.4587 L92.353 65.78"/>
+<path d="M43.376 44.395 L41.128 44.395"/>
+<path d="M82.032 52.22 L82.032 55.4587"/>
+<path d="M78.354 42.06 L79.58 42.06"/>
+<path d="M75.58 94.395 L78.032 94.395"/>
+<path d="M82.935 45.5037 L86.379 42.06"/>
+<path d="M78.354 42.06 L77.128 42.06"/>
+<path d="M78.032 90.3467 L76.89 89.205"/>
+<path d="M41.128 42.9667 L41.128 44.395"/>
+<path d="M55.461 63.9441 L55.461 67.205"/>
+<path d="M77.128 42.18 L74.39 42.18"/>
+<path d="M84.024 46.5921 L82.935 45.5037"/>
+<path d="M56.032 67.7758 L55.461 67.205"/>
+<path d="M77.128 42.06 L77.128 42.18"/>
+<path d="M80.806 52.22 L81.142 52.22"/>
+<path d="M84.024 49.3382 L84.024 46.5921"/>
+<path d="M41.128 42.9667 L40.962 42.9667"/>
+<path d="M65.2 54.205 L55.461 63.9441"/>
+<path d="M93.138 65.78 L90.4 68.5183"/>
+<path d="M55.461 67.205 L54.89 67.205"/>
+<path d="M95.59 65.78 L93.138 65.78"/>
+<path d="M84.024 49.3382 L84.406 49.3382"/>
+<path d="M81.142 52.22 L84.024 49.3382"/>
+<path d="M90.4 68.5183 L90.4 72.6"/>
+<path d="M77.128 42.18 L77.128 44.6"/>
+<path d="M86.441 49.68 L84.748 49.68"/>
+<path d="M86.379 42.06 L87.2 42.06"/>
+<path d="M82.935 45.5037 L82.032 44.6"/>
+<path d="M78.032 94.395 L78.032 90.3467"/>
+<path d="M53.784 71.395 L56.032 71.395"/>
+<path d="M79.58 44.6 L77.128 44.6"/>
+<path d="M43.376 44.395 L43.58 44.395"/>
+<path d="M44.89 39.205 L41.128 42.9667"/>
+<path d="M56.032 71.395 L56.032 67.7758"/>
+<path d="M51.555 32.54 L44.89 39.205"/>
+<path d="M61.11 32.54 L51.555 32.54"/>
+<path d="M79.58 44.6 L82.032 44.6"/>
+<path d="M86.441 49.68 L87.2 49.68"/>
+<path d="M79.58 52.22 L80.806 52.22"/>
+<path d="M85.85 96.935 L83.2 96.935"/>
+<path d="M91.89 90.895 L91.89 90.205"/>
+<path d="M88.58 94.205 L85.85 96.935"/>
+<path d="M88.58 99.665 L88.58 102.205"/>
+<path d="M89.58 93.205 L91.89 90.895"/>
+<path d="M94.58 98.205 L89.58 93.205"/>
+<path d="M85.85 96.935 L88.58 99.665"/>
+<path d="M88.58 94.205 L89.58 93.205"/>
+<path d="M83.2 94.395 L86.89 90.705"/>
+<path d="M86.89 90.705 L86.89 90.205"/>
+<path d="M62.681 94.7155 L64.333 96.3672"/>
+<path d="M64.333 107.6044 L66.998 110.2695"/>
+<path d="M59.89 84.205 L62.681 86.9964"/>
+<path d="M58.748 79.015 L58.748 83.0633"/>
+<path d="M62.681 86.9964 L62.681 94.7155"/>
+<path d="M79.826 110.2695 L81.89 108.205"/>
+<path d="M66.998 110.2695 L79.826 110.2695"/>
+<path d="M80.748 107.0633 L81.89 108.205"/>
+<path d="M58.748 83.0633 L59.89 84.205"/>
+<path d="M83.2 102.015 L80.748 102.015"/>
+<path d="M64.333 96.3672 L64.333 107.6044"/>
+<path d="M61.2 79.015 L58.748 79.015"/>
+<path d="M80.748 102.015 L80.748 107.0633"/>
+<path d="M66.331 111.9563 L61.255 106.8804"/>
+<path d="M86.449 111.9563 L66.331 111.9563"/>
+<path d="M61.255 106.8804 L61.255 106.205"/>
+<path d="M75.4 66.02 L74.22 67.2"/>
+<path d="M61.255 106.205 L60.58 106.205"/>
+<path d="M71.1 48.4382 L75.4 52.7382"/>
+<path d="M66.19 32.54 L66.19 38.2959"/>
+<path d="M66.19 38.2959 L71.1 43.2059"/>
+<path d="M96.2 102.205 L86.449 111.9563"/>
+<path d="M75.4 52.7382 L75.4 66.02"/>
+<path d="M71.1 43.2059 L71.1 48.4382"/>
+<path d="M67.89 90.895 L67.89 87.205"/>
+<path d="M68.2 106.205 L69.347 105.0583"/>
+<path d="M75.58 99.475 L69.347 99.475"/>
+<path d="M70.4 84.695 L67.89 87.205"/>
+<path d="M68.21 98.3383 L68.2 98.3283"/>
+<path d="M68.2 98.3283 L68.2 91.205"/>
+<path d="M69.347 99.475 L68.21 98.3383"/>
+<path d="M69.347 105.0583 L69.347 99.475"/>
+<path d="M68.2 91.205 L67.89 90.895"/>
+<path d="M70.4 83.2 L70.4 84.695"/>
+<path d="M105.662 81.9535 L105.662 68.32"/>
+<path d="M98.325 89.2902 L105.662 81.9535"/>
+<path d="M81.635 72.6 L98.325 89.2902"/>
+<path d="M74.22 72.6 L81.635 72.6"/>
+<path d="M103.21 68.32 L105.662 68.32"/>
+<path d="M102.2 93.1652 L102.2 98.205"/>
+<path d="M98.325 89.2902 L102.2 93.1652"/>
+<path d="M54.591 45.9962 L53.652 46.935"/>
+<path d="M63.65 34.9829 L63.65 34.9829"/>
+<path d="M61.198 38.8029 L61.198 37.4345"/>
+<path d="M62.6 40.205 L61.198 38.8029"/>
+<path d="M56.746 38.1187 L54.591 40.2738"/>
+<path d="M63.65 34.9829 L63.65 32.54"/>
+<path d="M51.2 46.935 L53.652 46.935"/>
+<path d="M61.198 38.1187 L56.746 38.1187"/>
+<path d="M65.2 40.205 L62.6 40.205"/>
+<path d="M61.198 37.4345 L63.65 34.9829"/>
+<path d="M54.591 40.2738 L54.591 45.9962"/>
+<path d="M57.58 49.5383 L57.58 54.205"/>
+<path d="M57.58 49.5383 L57.58 44.8717"/>
+<path d="M57.58 44.8717 L57.58 40.205"/>
+<path d="M51.2 49.475 L57.517 49.475"/>
+<path d="M57.517 49.475 L57.58 49.5383"/>
+<path d="M37.39 47.015 L37.47 46.935"/>
+<path d="M37.47 46.935 L43.58 46.935"/>
+<path d="M98.37 37.86 L97.4 37.86"/>
+<path d="M99.504 52.22 L99.504 38.9945"/>
+<path d="M99.504 52.22 L87.2 52.22"/>
+<path d="M103.21 55.9259 L99.504 52.22"/>
+<path d="M99.504 38.9945 L98.37 37.86"/>
+<path d="M103.21 65.78 L103.21 55.9259"/>
+<path d="M103.21 70.86 L100.758 70.86"/>
+<path d="M100.225 64.6914 L90.294 54.76"/>
+<path d="M100.225 70.3271 L100.225 64.6914"/>
+<path d="M90.294 54.76 L87.2 54.76"/>
+<path d="M100.758 70.86 L100.225 70.3271"/>
+<path d="M78.02 79.82 L78.02 83.2"/>
+<path d="M69.9 76.9 L69.9 68.6209"/>
+<path d="M69.9 76.9 L75.1 76.9"/>
+<path d="M65.2 44.8717 L73.37 53.0417"/>
+<path d="M69.9 68.6209 L73.37 65.1509"/>
+<path d="M73.37 53.0417 L73.37 65.1509"/>
+<path d="M75.1 76.9 L78.02 79.82"/>
+<path d="M67.293 60.6173 L65.91 62.0"/>
+<path d="M65.217 51.2866 L67.293 53.3626"/>
+<path d="M61.972 65.9385 L61.972 70.6235"/>
+<path d="M61.972 70.6235 L61.2 71.395"/>
+<path d="M65.91 62.0 L61.972 65.9385"/>
+<path d="M65.217 51.2866 L65.217 51.2866"/>
+<path d="M65.217 51.2866 L65.217 49.5551"/>
+<path d="M67.293 53.3626 L67.293 60.6173"/>
+<path d="M65.217 49.5551 L65.2 49.5383"/>
+<path d="M65.265 73.935 L66.6 72.6"/>
+<path d="M61.2 73.935 L65.265 73.935"/>
+<path d="M66.6 66.31 L70.91 62.0"/>
+<path d="M66.6 72.6 L66.6 67.2"/>
+<path d="M65.265 73.935 L66.6 75.27"/>
+<path d="M66.6 75.27 L66.6 79.0"/>
+<path d="M66.6 67.2 L66.6 66.31"/>
+<path d="M53.58 76.475 L42.47 76.475"/>
+<path d="M42.47 76.475 L42.47 76.935"/>
+<path d="M42.47 76.475 L40.2 74.205"/>
+<path d="M42.47 76.935 L40.2 79.205"/>
+<path d="M48.09 73.935 L47.82 74.205"/>
+<path d="M51.092 73.935 L48.09 73.935"/>
+<path d="M53.58 73.935 L51.092 73.935"/>
+<path d="M24.2 100.745 L31.74 100.745"/>
+<path d="M31.74 100.745 L33.2 102.205"/>
+<path d="M91.357 45.4347 L91.357 40.2487"/>
+<path d="M68.73 32.9887 L68.73 32.54"/>
+<path d="M91.357 40.2487 L89.201 38.0926"/>
+<path d="M87.2 47.14 L89.652 47.14"/>
+<path d="M89.201 38.0926 L73.834 38.0926"/>
+<path d="M89.652 47.14 L91.357 45.4347"/>
+<path d="M73.834 38.0926 L68.73 32.9887"/>
+<path d="M93.961 40.4 L90.001 36.4409"/>
+<path d="M97.4 40.4 L93.961 40.4"/>
+<path d="M77.204 36.4409 L73.81 33.0467"/>
+<path d="M90.001 36.4409 L77.204 36.4409"/>
+<path d="M73.81 33.0467 L73.81 32.54"/>
+<path d="M97.4 35.32 L96.868 34.7877"/>
+<path d="M78.163 34.7877 L76.35 32.9745"/>
+<path d="M76.35 32.9745 L76.35 32.54"/>
+<path d="M96.868 34.7877 L78.163 34.7877"/>
+<path d="M50.4 108.9213 L50.4 108.415"/>
+<path d="M98.267 96.2724 L98.267 103.091"/>
+<path d="M98.267 103.091 L87.697 113.6613"/>
+<path d="M96.2 94.205 L98.267 96.2724"/>
+<path d="M55.14 113.6613 L50.4 108.9213"/>
+<path d="M87.697 113.6613 L55.14 113.6613"/>
+<path d="M73.128 96.935 L73.128 87.4433"/>
+<path d="M73.128 87.4433 L72.89 87.205"/>
+<path d="M75.58 96.935 L73.128 96.935"/>
+<path d="M72.89 80.33 L74.22 79.0"/>
+<path d="M72.89 87.205 L72.89 80.33"/>
+</g>
+<path d="M84.076 63.7298 L89.725 58.0811" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M89.725 58.0811 L89.725 40.8998" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M68.701 73.9654 L68.701 69.8005" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M68.701 69.8005 L74.772 63.7298" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M81.365 32.54 L78.89 32.54" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M61.2 79.015 L63.652 79.015" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M74.772 63.7298 L84.076 63.7298" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M89.725 40.8998 L81.365 32.54" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M63.652 79.015 L68.701 73.9654" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M76.89 89.205 L75.958 88.2727" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M61.11 33.0468 L63.978 35.9145" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M61.11 32.54 L61.11 33.0468" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M85.674 72.6 L90.4 72.6" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M79.58 52.22 L67.185 52.22" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M75.958 88.2727 L75.958 82.3165" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M75.958 82.3165 L85.674 72.6" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M67.185 52.22 L65.2 54.205" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M63.978 35.9145 L81.054 35.9145" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M81.054 35.9145 L87.2 42.06" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<g fill="var(--pad)">
+<circle cx="33.2" cy="102.205" r="0.82"/>
+<circle cx="33.2" cy="92.205" r="0.82"/>
+<circle cx="46.2" cy="100.705" r="0.82"/>
+<circle cx="46.2" cy="95.705" r="0.82"/>
+<circle cx="91.89" cy="90.205" r="0.82"/>
+<circle cx="86.89" cy="90.205" r="0.82"/>
+<circle cx="67.89" cy="87.205" r="0.82"/>
+<circle cx="72.89" cy="87.205" r="0.82"/>
+<circle cx="70.91" cy="62.0" r="0.82"/>
+<circle cx="65.91" cy="62.0" r="0.82"/>
+<circle cx="76.89" cy="89.205" r="0.82"/>
+<circle cx="81.89" cy="89.205" r="0.82"/>
+<circle cx="76.89" cy="108.205" r="0.82"/>
+<circle cx="81.89" cy="108.205" r="0.82"/>
+<circle cx="44.89" cy="39.205" r="0.82"/>
+<circle cx="49.89" cy="39.205" r="0.82"/>
+<circle cx="54.89" cy="67.205" r="0.82"/>
+<circle cx="59.89" cy="67.205" r="0.82"/>
+<circle cx="54.89" cy="84.205" r="0.82"/>
+<circle cx="59.89" cy="84.205" r="0.82"/>
+<circle cx="74.39" cy="42.18" r="0.82"/>
+<circle cx="74.39" cy="47.18" r="0.82"/>
+<circle cx="90.4" cy="72.6" r="0.82"/>
+<circle cx="90.4" cy="77.6" r="0.82"/>
+<circle cx="114.0" cy="26.0" r="0.82"/>
+<circle cx="26.0" cy="26.0" r="0.82"/>
+<circle cx="114.0" cy="114.0" r="0.82"/>
+<circle cx="26.0" cy="114.0" r="0.82"/>
+<circle cx="61.11" cy="30.0" r="0.82"/>
+<circle cx="61.11" cy="32.54" r="0.82"/>
+<circle cx="63.65" cy="30.0" r="0.82"/>
+<circle cx="63.65" cy="32.54" r="0.82"/>
+<circle cx="66.19" cy="30.0" r="0.82"/>
+<circle cx="66.19" cy="32.54" r="0.82"/>
+<circle cx="68.73" cy="30.0" r="0.82"/>
+<circle cx="68.73" cy="32.54" r="0.82"/>
+<circle cx="71.27" cy="30.0" r="0.82"/>
+<circle cx="71.27" cy="32.54" r="0.82"/>
+<circle cx="73.81" cy="30.0" r="0.82"/>
+<circle cx="73.81" cy="32.54" r="0.82"/>
+<circle cx="76.35" cy="30.0" r="0.82"/>
+<circle cx="76.35" cy="32.54" r="0.82"/>
+<circle cx="78.89" cy="30.0" r="0.82"/>
+<circle cx="78.89" cy="32.54" r="0.82"/>
+<circle cx="24.2" cy="100.745" r="0.82"/>
+<circle cx="24.2" cy="95.665" r="0.82"/>
+<circle cx="97.4" cy="40.4" r="0.82"/>
+<circle cx="97.4" cy="37.86" r="0.82"/>
+<circle cx="97.4" cy="35.32" r="0.82"/>
+<circle cx="40.2" cy="93.395" r="0.82"/>
+<circle cx="40.2" cy="101.015" r="0.82"/>
+<circle cx="96.2" cy="94.205" r="0.82"/>
+<circle cx="88.58" cy="94.205" r="0.82"/>
+<circle cx="102.2" cy="98.205" r="0.82"/>
+<circle cx="94.58" cy="98.205" r="0.82"/>
+<circle cx="96.2" cy="102.205" r="0.82"/>
+<circle cx="88.58" cy="102.205" r="0.82"/>
+<circle cx="60.59" cy="98.3383" r="0.82"/>
+<circle cx="68.21" cy="98.3383" r="0.82"/>
+<circle cx="78.02" cy="83.2" r="0.82"/>
+<circle cx="70.4" cy="83.2" r="0.82"/>
+<circle cx="60.58" cy="106.205" r="0.82"/>
+<circle cx="68.2" cy="106.205" r="0.82"/>
+<circle cx="60.58" cy="91.205" r="0.82"/>
+<circle cx="68.2" cy="91.205" r="0.82"/>
+<circle cx="74.22" cy="79.0" r="0.82"/>
+<circle cx="66.6" cy="79.0" r="0.82"/>
+<circle cx="74.22" cy="72.6" r="0.82"/>
+<circle cx="66.6" cy="72.6" r="0.82"/>
+<circle cx="74.22" cy="67.2" r="0.82"/>
+<circle cx="66.6" cy="67.2" r="0.82"/>
+<circle cx="47.82" cy="79.205" r="0.82"/>
+<circle cx="40.2" cy="79.205" r="0.82"/>
+<circle cx="40.2" cy="74.205" r="0.82"/>
+<circle cx="47.82" cy="74.205" r="0.82"/>
+<circle cx="65.2" cy="49.5383" r="0.82"/>
+<circle cx="57.58" cy="49.5383" r="0.82"/>
+<circle cx="65.2" cy="44.8717" r="0.82"/>
+<circle cx="57.58" cy="44.8717" r="0.82"/>
+<circle cx="65.2" cy="40.205" r="0.82"/>
+<circle cx="57.58" cy="40.205" r="0.82"/>
+<circle cx="65.2" cy="54.205" r="0.82"/>
+<circle cx="57.58" cy="54.205" r="0.82"/>
+<circle cx="37.39" cy="39.395" r="0.82"/>
+<circle cx="37.39" cy="47.015" r="0.82"/>
+<circle cx="47.86" cy="108.415" r="0.82"/>
+<circle cx="50.4" cy="108.415" r="0.82"/>
+<circle cx="52.94" cy="108.415" r="0.82"/>
+<circle cx="83.2" cy="94.395" r="0.82"/>
+<circle cx="83.2" cy="96.935" r="0.82"/>
+<circle cx="83.2" cy="99.475" r="0.82"/>
+<circle cx="83.2" cy="102.015" r="0.82"/>
+<circle cx="75.58" cy="102.015" r="0.82"/>
+<circle cx="75.58" cy="99.475" r="0.82"/>
+<circle cx="75.58" cy="96.935" r="0.82"/>
+<circle cx="75.58" cy="94.395" r="0.82"/>
+<circle cx="51.2" cy="44.395" r="0.82"/>
+<circle cx="51.2" cy="46.935" r="0.82"/>
+<circle cx="51.2" cy="49.475" r="0.82"/>
+<circle cx="51.2" cy="52.015" r="0.82"/>
+<circle cx="43.58" cy="52.015" r="0.82"/>
+<circle cx="43.58" cy="49.475" r="0.82"/>
+<circle cx="43.58" cy="46.935" r="0.82"/>
+<circle cx="43.58" cy="44.395" r="0.82"/>
+<circle cx="61.2" cy="71.395" r="0.82"/>
+<circle cx="61.2" cy="73.935" r="0.82"/>
+<circle cx="61.2" cy="76.475" r="0.82"/>
+<circle cx="61.2" cy="79.015" r="0.82"/>
+<circle cx="53.58" cy="79.015" r="0.82"/>
+<circle cx="53.58" cy="76.475" r="0.82"/>
+<circle cx="53.58" cy="73.935" r="0.82"/>
+<circle cx="53.58" cy="71.395" r="0.82"/>
+<circle cx="87.2" cy="42.06" r="0.82"/>
+<circle cx="87.2" cy="44.6" r="0.82"/>
+<circle cx="87.2" cy="47.14" r="0.82"/>
+<circle cx="87.2" cy="49.68" r="0.82"/>
+<circle cx="87.2" cy="52.22" r="0.82"/>
+<circle cx="87.2" cy="54.76" r="0.82"/>
+<circle cx="87.2" cy="57.3" r="0.82"/>
+<circle cx="79.58" cy="57.3" r="0.82"/>
+<circle cx="79.58" cy="54.76" r="0.82"/>
+<circle cx="79.58" cy="52.22" r="0.82"/>
+<circle cx="79.58" cy="49.68" r="0.82"/>
+<circle cx="79.58" cy="47.14" r="0.82"/>
+<circle cx="79.58" cy="44.6" r="0.82"/>
+<circle cx="79.58" cy="42.06" r="0.82"/>
+<circle cx="103.21" cy="65.78" r="0.82"/>
+<circle cx="103.21" cy="68.32" r="0.82"/>
+<circle cx="103.21" cy="70.86" r="0.82"/>
+<circle cx="103.21" cy="73.4" r="0.82"/>
+<circle cx="103.21" cy="75.94" r="0.82"/>
+<circle cx="103.21" cy="78.48" r="0.82"/>
+<circle cx="103.21" cy="81.02" r="0.82"/>
+<circle cx="95.59" cy="81.02" r="0.82"/>
+<circle cx="95.59" cy="78.48" r="0.82"/>
+<circle cx="95.59" cy="75.94" r="0.82"/>
+<circle cx="95.59" cy="73.4" r="0.82"/>
+<circle cx="95.59" cy="70.86" r="0.82"/>
+<circle cx="95.59" cy="68.32" r="0.82"/>
+<circle cx="95.59" cy="65.78" r="0.82"/>
+</g><g fill="var(--fr4)">
+<circle cx="33.2" cy="102.205" r="0.4"/>
+<circle cx="33.2" cy="92.205" r="0.4"/>
+<circle cx="46.2" cy="100.705" r="0.4"/>
+<circle cx="46.2" cy="95.705" r="0.4"/>
+<circle cx="91.89" cy="90.205" r="0.4"/>
+<circle cx="86.89" cy="90.205" r="0.4"/>
+<circle cx="67.89" cy="87.205" r="0.4"/>
+<circle cx="72.89" cy="87.205" r="0.4"/>
+<circle cx="70.91" cy="62.0" r="0.4"/>
+<circle cx="65.91" cy="62.0" r="0.4"/>
+<circle cx="76.89" cy="89.205" r="0.4"/>
+<circle cx="81.89" cy="89.205" r="0.4"/>
+<circle cx="76.89" cy="108.205" r="0.4"/>
+<circle cx="81.89" cy="108.205" r="0.4"/>
+<circle cx="44.89" cy="39.205" r="0.4"/>
+<circle cx="49.89" cy="39.205" r="0.4"/>
+<circle cx="54.89" cy="67.205" r="0.4"/>
+<circle cx="59.89" cy="67.205" r="0.4"/>
+<circle cx="54.89" cy="84.205" r="0.4"/>
+<circle cx="59.89" cy="84.205" r="0.4"/>
+<circle cx="74.39" cy="42.18" r="0.4"/>
+<circle cx="74.39" cy="47.18" r="0.4"/>
+<circle cx="90.4" cy="72.6" r="0.4"/>
+<circle cx="90.4" cy="77.6" r="0.4"/>
+<circle cx="114.0" cy="26.0" r="0.4"/>
+<circle cx="26.0" cy="26.0" r="0.4"/>
+<circle cx="114.0" cy="114.0" r="0.4"/>
+<circle cx="26.0" cy="114.0" r="0.4"/>
+<circle cx="61.11" cy="30.0" r="0.4"/>
+<circle cx="61.11" cy="32.54" r="0.4"/>
+<circle cx="63.65" cy="30.0" r="0.4"/>
+<circle cx="63.65" cy="32.54" r="0.4"/>
+<circle cx="66.19" cy="30.0" r="0.4"/>
+<circle cx="66.19" cy="32.54" r="0.4"/>
+<circle cx="68.73" cy="30.0" r="0.4"/>
+<circle cx="68.73" cy="32.54" r="0.4"/>
+<circle cx="71.27" cy="30.0" r="0.4"/>
+<circle cx="71.27" cy="32.54" r="0.4"/>
+<circle cx="73.81" cy="30.0" r="0.4"/>
+<circle cx="73.81" cy="32.54" r="0.4"/>
+<circle cx="76.35" cy="30.0" r="0.4"/>
+<circle cx="76.35" cy="32.54" r="0.4"/>
+<circle cx="78.89" cy="30.0" r="0.4"/>
+<circle cx="78.89" cy="32.54" r="0.4"/>
+<circle cx="24.2" cy="100.745" r="0.4"/>
+<circle cx="24.2" cy="95.665" r="0.4"/>
+<circle cx="97.4" cy="40.4" r="0.4"/>
+<circle cx="97.4" cy="37.86" r="0.4"/>
+<circle cx="97.4" cy="35.32" r="0.4"/>
+<circle cx="40.2" cy="93.395" r="0.4"/>
+<circle cx="40.2" cy="101.015" r="0.4"/>
+<circle cx="96.2" cy="94.205" r="0.4"/>
+<circle cx="88.58" cy="94.205" r="0.4"/>
+<circle cx="102.2" cy="98.205" r="0.4"/>
+<circle cx="94.58" cy="98.205" r="0.4"/>
+<circle cx="96.2" cy="102.205" r="0.4"/>
+<circle cx="88.58" cy="102.205" r="0.4"/>
+<circle cx="60.59" cy="98.3383" r="0.4"/>
+<circle cx="68.21" cy="98.3383" r="0.4"/>
+<circle cx="78.02" cy="83.2" r="0.4"/>
+<circle cx="70.4" cy="83.2" r="0.4"/>
+<circle cx="60.58" cy="106.205" r="0.4"/>
+<circle cx="68.2" cy="106.205" r="0.4"/>
+<circle cx="60.58" cy="91.205" r="0.4"/>
+<circle cx="68.2" cy="91.205" r="0.4"/>
+<circle cx="74.22" cy="79.0" r="0.4"/>
+<circle cx="66.6" cy="79.0" r="0.4"/>
+<circle cx="74.22" cy="72.6" r="0.4"/>
+<circle cx="66.6" cy="72.6" r="0.4"/>
+<circle cx="74.22" cy="67.2" r="0.4"/>
+<circle cx="66.6" cy="67.2" r="0.4"/>
+<circle cx="47.82" cy="79.205" r="0.4"/>
+<circle cx="40.2" cy="79.205" r="0.4"/>
+<circle cx="40.2" cy="74.205" r="0.4"/>
+<circle cx="47.82" cy="74.205" r="0.4"/>
+<circle cx="65.2" cy="49.5383" r="0.4"/>
+<circle cx="57.58" cy="49.5383" r="0.4"/>
+<circle cx="65.2" cy="44.8717" r="0.4"/>
+<circle cx="57.58" cy="44.8717" r="0.4"/>
+<circle cx="65.2" cy="40.205" r="0.4"/>
+<circle cx="57.58" cy="40.205" r="0.4"/>
+<circle cx="65.2" cy="54.205" r="0.4"/>
+<circle cx="57.58" cy="54.205" r="0.4"/>
+<circle cx="37.39" cy="39.395" r="0.4"/>
+<circle cx="37.39" cy="47.015" r="0.4"/>
+<circle cx="47.86" cy="108.415" r="0.4"/>
+<circle cx="50.4" cy="108.415" r="0.4"/>
+<circle cx="52.94" cy="108.415" r="0.4"/>
+<circle cx="83.2" cy="94.395" r="0.4"/>
+<circle cx="83.2" cy="96.935" r="0.4"/>
+<circle cx="83.2" cy="99.475" r="0.4"/>
+<circle cx="83.2" cy="102.015" r="0.4"/>
+<circle cx="75.58" cy="102.015" r="0.4"/>
+<circle cx="75.58" cy="99.475" r="0.4"/>
+<circle cx="75.58" cy="96.935" r="0.4"/>
+<circle cx="75.58" cy="94.395" r="0.4"/>
+<circle cx="51.2" cy="44.395" r="0.4"/>
+<circle cx="51.2" cy="46.935" r="0.4"/>
+<circle cx="51.2" cy="49.475" r="0.4"/>
+<circle cx="51.2" cy="52.015" r="0.4"/>
+<circle cx="43.58" cy="52.015" r="0.4"/>
+<circle cx="43.58" cy="49.475" r="0.4"/>
+<circle cx="43.58" cy="46.935" r="0.4"/>
+<circle cx="43.58" cy="44.395" r="0.4"/>
+<circle cx="61.2" cy="71.395" r="0.4"/>
+<circle cx="61.2" cy="73.935" r="0.4"/>
+<circle cx="61.2" cy="76.475" r="0.4"/>
+<circle cx="61.2" cy="79.015" r="0.4"/>
+<circle cx="53.58" cy="79.015" r="0.4"/>
+<circle cx="53.58" cy="76.475" r="0.4"/>
+<circle cx="53.58" cy="73.935" r="0.4"/>
+<circle cx="53.58" cy="71.395" r="0.4"/>
+<circle cx="87.2" cy="42.06" r="0.4"/>
+<circle cx="87.2" cy="44.6" r="0.4"/>
+<circle cx="87.2" cy="47.14" r="0.4"/>
+<circle cx="87.2" cy="49.68" r="0.4"/>
+<circle cx="87.2" cy="52.22" r="0.4"/>
+<circle cx="87.2" cy="54.76" r="0.4"/>
+<circle cx="87.2" cy="57.3" r="0.4"/>
+<circle cx="79.58" cy="57.3" r="0.4"/>
+<circle cx="79.58" cy="54.76" r="0.4"/>
+<circle cx="79.58" cy="52.22" r="0.4"/>
+<circle cx="79.58" cy="49.68" r="0.4"/>
+<circle cx="79.58" cy="47.14" r="0.4"/>
+<circle cx="79.58" cy="44.6" r="0.4"/>
+<circle cx="79.58" cy="42.06" r="0.4"/>
+<circle cx="103.21" cy="65.78" r="0.4"/>
+<circle cx="103.21" cy="68.32" r="0.4"/>
+<circle cx="103.21" cy="70.86" r="0.4"/>
+<circle cx="103.21" cy="73.4" r="0.4"/>
+<circle cx="103.21" cy="75.94" r="0.4"/>
+<circle cx="103.21" cy="78.48" r="0.4"/>
+<circle cx="103.21" cy="81.02" r="0.4"/>
+<circle cx="95.59" cy="81.02" r="0.4"/>
+<circle cx="95.59" cy="78.48" r="0.4"/>
+<circle cx="95.59" cy="75.94" r="0.4"/>
+<circle cx="95.59" cy="73.4" r="0.4"/>
+<circle cx="95.59" cy="70.86" r="0.4"/>
+<circle cx="95.59" cy="68.32" r="0.4"/>
+<circle cx="95.59" cy="65.78" r="0.4"/>
+</g>
+<circle cx="114.0" cy="26.0" r="1.6" fill="none" stroke="var(--edge)" stroke-width="0.4"/>
+<circle cx="26.0" cy="26.0" r="1.6" fill="none" stroke="var(--edge)" stroke-width="0.4"/>
+<circle cx="114.0" cy="114.0" r="1.6" fill="none" stroke="var(--edge)" stroke-width="0.4"/>
+<circle cx="26.0" cy="114.0" r="1.6" fill="none" stroke="var(--edge)" stroke-width="0.4"/>
+<g class="ref">
+<text x="70.00" y="31.27" text-anchor="middle" dominant-baseline="central">J7</text>
+<text x="24.20" y="98.21" text-anchor="middle" dominant-baseline="central">J20</text>
+<text x="97.40" y="37.86" text-anchor="middle" dominant-baseline="central">J21</text>
+<text x="50.40" y="108.42" text-anchor="middle" dominant-baseline="central">RV20</text>
+<text x="79.39" y="98.20" text-anchor="middle" dominant-baseline="central">U20</text>
+<text x="47.39" y="48.20" text-anchor="middle" dominant-baseline="central">U21</text>
+<text x="57.39" y="75.20" text-anchor="middle" dominant-baseline="central">U22</text>
+<text x="83.39" y="49.68" text-anchor="middle" dominant-baseline="central">U23</text>
+<text x="99.40" y="73.40" text-anchor="middle" dominant-baseline="central">U24</text>
+</g>
+<path d="M78.89 32.54 L61.2 79.015" stroke="var(--wire-neg)" stroke-width="1.9" stroke-linecap="round" fill="none" opacity="0.92"/>
+<circle cx="78.89" cy="32.54" r="2.4" fill="none" stroke="var(--wire-neg)" stroke-width="0.7"/>
+<circle cx="61.2" cy="79.015" r="2.4" fill="none" stroke="var(--wire-neg)" stroke-width="0.7"/>
+<path d="M61.11 32.54 L79.58 42.06" stroke="var(--wire-pos)" stroke-width="1.9" stroke-linecap="round" fill="none" opacity="0.92"/>
+<circle cx="61.11" cy="32.54" r="2.4" fill="none" stroke="var(--wire-pos)" stroke-width="0.7"/>
+<circle cx="79.58" cy="42.06" r="2.4" fill="none" stroke="var(--wire-pos)" stroke-width="0.7"/>
+<text class="callout" x="78.89" y="28.34" text-anchor="middle" fill="var(--wire-neg)">J7.16</text>
+<text class="callout" x="61.20" y="84.42" text-anchor="middle" fill="var(--wire-neg)">U22.4</text>
+<text class="callout" x="61.11" y="28.34" text-anchor="middle" fill="var(--wire-pos)">J7.2</text>
+<text class="callout" x="83.98" y="43.26" text-anchor="start" fill="var(--wire-pos)">U23.14</text>
+<text class="edge" x="70.0" y="16.55" text-anchor="middle">bus header J7 — this edge plugs into the stack</text>
+<text class="edge" x="70.0" y="126.45" text-anchor="middle">viewed from the solder side &#8212; LINE IN is at the far left</text>
+</svg>
+    <figcaption>
+      <span class="key"><i style="background:var(--wire-neg)"></i>&minus;5 V wire</span>
+      <span class="key"><i style="background:var(--wire-pos)"></i>+5 V wire</span>
+      <span class="key"><i class="dash"></i>the top-side run it bypasses</span>
+      <span class="key"><i style="background:var(--copper)"></i>bottom copper</span>
+    </figcaption>
+  </figure>
+
+  <div>
+    <section>
+      <h2><span class="n">01</span>The two wires</h2>
+      <div class="wires"><div class="wire" style="--w:var(--wire-neg)">
+  <h3><span class="path">J7.16 &rarr; U22.4</span>
+      <span class="len">-5V &middot; 50 mm apart</span></h3>
+  <p>The entire negative rail enters here. Its only copper is a component-side trace to U22 pin 4, reached through an unplated hole under the header body, and the stack flexes that joint every time it is pushed together.</p>
+</div>
+<div class="wire" style="--w:var(--wire-pos)">
+  <h3><span class="path">J7.2 &rarr; U23.14</span>
+      <span class="len">+5V &middot; 21 mm apart</span></h3>
+  <p>The same arrangement on the positive rail: one component-side joint feeds U21, C27 and R37. It has not failed yet, and it is the same joint.</p>
+</div></div>
+    </section>
+
+    <section>
+      <div class="warn">
+        <strong>The whole solder side is a bare ground pour</strong>
+        <p>These boards are milled, so there is no solder mask: an uninsulated wire lying across the underside
+        shorts the rail it carries straight to ground. Use insulated wire &mdash; 30 AWG Kynar or any thin
+        stranded hook-up wire &mdash; and strip only the last 2 mm at each end.</p>
+      </div>
+
+      <h2><span class="n">02</span>Fitting them</h2>
+      <p class="aside">With the bus header off the board, these pads are completely clear &mdash; this is the
+      easiest moment to do it, so fit the wires before the header goes back.</p>
+      <ol class="steps">
+        <li><strong>Work on the board alone, solder side up.</strong>
+            <span>If the header is still fitted, unplug the board from the stack and leave the header in place;
+            the pads are reachable from below either way.</span></li>
+        <li><strong>Cut the &minus;5 V wire about 60 mm long, the +5 V wire about 30 mm.</strong>
+            <span>Straight-line spans are 50 mm and 21 mm; the extra is slack for routing.</span></li>
+        <li><strong>Tin the four pads and both wire ends first.</strong>
+            <span>The header pins take heat well from below; the socket pins need a moment longer.</span></li>
+        <li><strong>Solder the &minus;5 V wire: J7 pin 16 to U22 pin 4.</strong>
+            <span>In the view at left, J7 pin 16 is the corner pin at the right-hand end of the header's inner row.</span></li>
+        <li><strong>Solder the +5 V wire: J7 pin 2 to U23 pin 14.</strong>
+            <span>U23 pin 14 is the corner of the 74HC74 nearest the header.</span></li>
+        <li><strong>Press the wires flat and tack them down.</strong>
+            <span>They must not stand proud enough to touch the neighbouring board in the stack.</span></li>
+        <li><strong>If the header came off, refit it and solder all 16 pins from the solder side only.</strong>
+            <span>Check the sixteen copper rings on the solder side first &mdash; a ring that lifted during
+            desoldering breaks whatever it fed, and pins 4 to 14 each carry a reference or a clock.</span></li>
+        <li><strong>Repeat all of it on the other channel board.</strong></li>
+      </ol>
+      <p class="aside"><strong>Nothing on this header needs soldering on the component side once the wires are in.</strong>
+      Fourteen of the sixteen pins never did: the eight ground pins meet the pour, and pins 4, 6, 8, 10, 12 and 14
+      each reach their destination through bottom copper. Only pins 2 and 16 were carried by a top-side joint, and
+      that is what the two wires replace.</p>
+    </section>
+  </div>
+</div>
+
+<section class="why">
+  <p class="eyebrow">Why a wire, when the trace is already there</p>
+  <h2>The trace was never the problem</h2>
+  <p>Copper is copper: the run from J7.16 to U22.4 carries the rail perfectly well. The question is how the
+  current gets from the header pin into that copper at all &mdash; and on this board there is only one answer,
+  and it is a bad one.</p>
+  <p>These holes are drilled, not plated. Nothing joins the two faces of the board. The solder-side ring at
+  J7.16 is an island connected to nothing, and the trace leaves from the component-side ring, which the header
+  body covers: the body outline clears the pad by 0.42 mm, so once the header is seated there is no reaching
+  that joint with an iron. What has been carrying the negative rail all along is solder that wicked 1.6 mm up
+  the 0.1 mm gap between the pin and the hole wall &mdash; invisible, unverifiable, and squeezed every time the
+  stack is pressed together. That is why reflowing pin 16 from below never held: it was reflowing a joint it
+  could not see.</p>
+  <figure class="xsec">
+    <svg viewBox="-12 36 320 120" role="img" aria-label="Section through bus pin J7.16 showing the unplated hole, the component-side trace and the new wire">
+<rect x="92" y="56" width="58" height="30" rx="2" fill="var(--xbody)"/>
+<text class="xl" x="121" y="50" text-anchor="middle" fill="var(--muted)">bus header body &#8212; it covers the pads</text>
+<rect x="-8" y="90" width="113" height="16" fill="var(--xsub)"/>
+<rect x="115" y="90" width="185" height="16" fill="var(--xsub)"/>
+<rect x="101.5" y="86" width="3.5" height="4" fill="var(--copper)"/>
+<rect x="115" y="86" width="185" height="4" fill="var(--copper)"/>
+<rect x="101.5" y="106" width="3.5" height="4" fill="var(--copper)"/>
+<rect x="115" y="106" width="3.5" height="4" fill="var(--copper)"/>
+<rect x="106.8" y="60" width="6.4" height="52" fill="var(--xmetal)"/>
+<rect x="105" y="86" width="1.8" height="20" fill="var(--bad)" opacity="0.85"/>
+<rect x="113.2" y="86" width="1.8" height="20" fill="var(--bad)" opacity="0.85"/>
+<ellipse cx="110" cy="111" rx="9" ry="5" fill="var(--xsolder)"/>
+<path d="M110 113 L72 121 L-10 121" stroke="var(--wire-neg)" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="102.6" y="83" width="14.8" height="26" rx="2.5" fill="none" stroke="var(--bad)" stroke-width="0.7" opacity="0.65"/>
+<text class="xl" x="298" y="80" text-anchor="end" fill="var(--muted)">top copper &#8594; U22.4</text>
+<text class="xl" x="30" y="134" text-anchor="middle" fill="var(--wire-neg)">the new wire &#8594; U22.4</text>
+<path d="M170 131 L136 114 L118 109.5" stroke="var(--bad)" stroke-width="0.8" fill="none" opacity="0.75"/>
+<text class="xl" x="205" y="134" text-anchor="middle" fill="var(--bad)">the hole is unplated:</text>
+<text class="xl" x="205" y="143" text-anchor="middle" fill="var(--bad)">only wicked solder joins pin to trace</text>
+</svg>
+    <figcaption>A section through J7.16, drawn to the footprint's own dimensions. The wire does not replace the
+    trace &mdash; it replaces the wicked solder, giving the pin a second route into the board on the one face an
+    iron can reach.</figcaption>
+  </figure>
+  <p>Bridging the pin to the trace on the component side would be electrically sound, and it would still need a
+  joint on that pin, on that face, under that body, taking that same flex &mdash; and whatever you leave standing
+  up there is what the next board in the stack presses against.</p>
+</section>
+
+<section class="why">
+  <p class="eyebrow">18 September &middot; hunting the DACP_L short</p>
+  <h2>Where a short to ground can hide on this net</h2>
+  <p>With U24 out of its socket, socket pin 4 still reads short to ground, so the fault is in the board's own
+  copper. DACP_L is only three pads and two runs, but the solder-side half is about 45 mm of bare trace with the
+  ground pour 0.5 mm away along both edges and no mask in between. Solid red is solder-side copper, dashed is
+  component-side.</p>
+  <figure class="board" style="max-width:640px">
+    <svg viewBox="10.95 10.95 118.1 122.1" role="img" aria-label="Channel board seen from below">
+<rect x="19.95" y="19.95" width="100.1" height="100.1" rx="2.5" fill="var(--fr4)" stroke="var(--edge)" stroke-width="0.6"/>
+<g stroke="var(--copper)" stroke-width="0.85" stroke-linecap="round" opacity="0.5" fill="none">
+<path d="M39.01 92.205 L40.2 93.395"/>
+<path d="M33.2 92.205 L39.01 92.205"/>
+<path d="M46.2 104.6533 L46.2 100.705"/>
+<path d="M40.51 100.705 L40.2 101.015"/>
+<path d="M46.2 100.705 L40.51 100.705"/>
+<path d="M47.86 108.415 L47.86 106.3133"/>
+<path d="M47.86 106.3133 L46.2 104.6533"/>
+<path d="M40.962 42.9667 L37.39 39.395"/>
+<path d="M81.142 52.22 L82.032 52.22"/>
+<path d="M53.784 71.395 L53.58 71.395"/>
+<path d="M84.406 49.3382 L84.748 49.68"/>
+<path d="M92.353 65.78 L93.138 65.78"/>
+<path d="M82.032 55.4587 L92.353 65.78"/>
+<path d="M43.376 44.395 L41.128 44.395"/>
+<path d="M82.032 52.22 L82.032 55.4587"/>
+<path d="M78.354 42.06 L79.58 42.06"/>
+<path d="M75.58 94.395 L78.032 94.395"/>
+<path d="M82.935 45.5037 L86.379 42.06"/>
+<path d="M78.354 42.06 L77.128 42.06"/>
+<path d="M78.032 90.3467 L76.89 89.205"/>
+<path d="M41.128 42.9667 L41.128 44.395"/>
+<path d="M55.461 63.9441 L55.461 67.205"/>
+<path d="M77.128 42.18 L74.39 42.18"/>
+<path d="M84.024 46.5921 L82.935 45.5037"/>
+<path d="M56.032 67.7758 L55.461 67.205"/>
+<path d="M77.128 42.06 L77.128 42.18"/>
+<path d="M80.806 52.22 L81.142 52.22"/>
+<path d="M84.024 49.3382 L84.024 46.5921"/>
+<path d="M41.128 42.9667 L40.962 42.9667"/>
+<path d="M65.2 54.205 L55.461 63.9441"/>
+<path d="M93.138 65.78 L90.4 68.5183"/>
+<path d="M55.461 67.205 L54.89 67.205"/>
+<path d="M95.59 65.78 L93.138 65.78"/>
+<path d="M84.024 49.3382 L84.406 49.3382"/>
+<path d="M81.142 52.22 L84.024 49.3382"/>
+<path d="M90.4 68.5183 L90.4 72.6"/>
+<path d="M77.128 42.18 L77.128 44.6"/>
+<path d="M86.441 49.68 L84.748 49.68"/>
+<path d="M86.379 42.06 L87.2 42.06"/>
+<path d="M82.935 45.5037 L82.032 44.6"/>
+<path d="M78.032 94.395 L78.032 90.3467"/>
+<path d="M53.784 71.395 L56.032 71.395"/>
+<path d="M79.58 44.6 L77.128 44.6"/>
+<path d="M43.376 44.395 L43.58 44.395"/>
+<path d="M44.89 39.205 L41.128 42.9667"/>
+<path d="M56.032 71.395 L56.032 67.7758"/>
+<path d="M51.555 32.54 L44.89 39.205"/>
+<path d="M61.11 32.54 L51.555 32.54"/>
+<path d="M79.58 44.6 L82.032 44.6"/>
+<path d="M86.441 49.68 L87.2 49.68"/>
+<path d="M79.58 52.22 L80.806 52.22"/>
+<path d="M85.85 96.935 L83.2 96.935"/>
+<path d="M91.89 90.895 L91.89 90.205"/>
+<path d="M88.58 94.205 L85.85 96.935"/>
+<path d="M88.58 99.665 L88.58 102.205"/>
+<path d="M89.58 93.205 L91.89 90.895"/>
+<path d="M94.58 98.205 L89.58 93.205"/>
+<path d="M85.85 96.935 L88.58 99.665"/>
+<path d="M88.58 94.205 L89.58 93.205"/>
+<path d="M83.2 94.395 L86.89 90.705"/>
+<path d="M86.89 90.705 L86.89 90.205"/>
+<path d="M62.681 94.7155 L64.333 96.3672"/>
+<path d="M64.333 107.6044 L66.998 110.2695"/>
+<path d="M59.89 84.205 L62.681 86.9964"/>
+<path d="M58.748 79.015 L58.748 83.0633"/>
+<path d="M62.681 86.9964 L62.681 94.7155"/>
+<path d="M79.826 110.2695 L81.89 108.205"/>
+<path d="M66.998 110.2695 L79.826 110.2695"/>
+<path d="M80.748 107.0633 L81.89 108.205"/>
+<path d="M58.748 83.0633 L59.89 84.205"/>
+<path d="M83.2 102.015 L80.748 102.015"/>
+<path d="M64.333 96.3672 L64.333 107.6044"/>
+<path d="M61.2 79.015 L58.748 79.015"/>
+<path d="M80.748 102.015 L80.748 107.0633"/>
+<path d="M66.331 111.9563 L61.255 106.8804"/>
+<path d="M86.449 111.9563 L66.331 111.9563"/>
+<path d="M61.255 106.8804 L61.255 106.205"/>
+<path d="M75.4 66.02 L74.22 67.2"/>
+<path d="M61.255 106.205 L60.58 106.205"/>
+<path d="M71.1 48.4382 L75.4 52.7382"/>
+<path d="M66.19 32.54 L66.19 38.2959"/>
+<path d="M66.19 38.2959 L71.1 43.2059"/>
+<path d="M96.2 102.205 L86.449 111.9563"/>
+<path d="M75.4 52.7382 L75.4 66.02"/>
+<path d="M71.1 43.2059 L71.1 48.4382"/>
+<path d="M67.89 90.895 L67.89 87.205"/>
+<path d="M68.2 106.205 L69.347 105.0583"/>
+<path d="M75.58 99.475 L69.347 99.475"/>
+<path d="M70.4 84.695 L67.89 87.205"/>
+<path d="M68.21 98.3383 L68.2 98.3283"/>
+<path d="M68.2 98.3283 L68.2 91.205"/>
+<path d="M69.347 99.475 L68.21 98.3383"/>
+<path d="M69.347 105.0583 L69.347 99.475"/>
+<path d="M68.2 91.205 L67.89 90.895"/>
+<path d="M70.4 83.2 L70.4 84.695"/>
+<path d="M105.662 81.9535 L105.662 68.32"/>
+<path d="M98.325 89.2902 L105.662 81.9535"/>
+<path d="M81.635 72.6 L98.325 89.2902"/>
+<path d="M74.22 72.6 L81.635 72.6"/>
+<path d="M103.21 68.32 L105.662 68.32"/>
+<path d="M102.2 93.1652 L102.2 98.205"/>
+<path d="M98.325 89.2902 L102.2 93.1652"/>
+<path d="M54.591 45.9962 L53.652 46.935"/>
+<path d="M63.65 34.9829 L63.65 34.9829"/>
+<path d="M61.198 38.8029 L61.198 37.4345"/>
+<path d="M62.6 40.205 L61.198 38.8029"/>
+<path d="M56.746 38.1187 L54.591 40.2738"/>
+<path d="M63.65 34.9829 L63.65 32.54"/>
+<path d="M51.2 46.935 L53.652 46.935"/>
+<path d="M61.198 38.1187 L56.746 38.1187"/>
+<path d="M65.2 40.205 L62.6 40.205"/>
+<path d="M61.198 37.4345 L63.65 34.9829"/>
+<path d="M54.591 40.2738 L54.591 45.9962"/>
+<path d="M57.58 49.5383 L57.58 54.205"/>
+<path d="M57.58 49.5383 L57.58 44.8717"/>
+<path d="M57.58 44.8717 L57.58 40.205"/>
+<path d="M51.2 49.475 L57.517 49.475"/>
+<path d="M57.517 49.475 L57.58 49.5383"/>
+<path d="M37.39 47.015 L37.47 46.935"/>
+<path d="M37.47 46.935 L43.58 46.935"/>
+<path d="M98.37 37.86 L97.4 37.86"/>
+<path d="M99.504 52.22 L99.504 38.9945"/>
+<path d="M99.504 52.22 L87.2 52.22"/>
+<path d="M103.21 55.9259 L99.504 52.22"/>
+<path d="M99.504 38.9945 L98.37 37.86"/>
+<path d="M103.21 65.78 L103.21 55.9259"/>
+<path d="M103.21 70.86 L100.758 70.86"/>
+<path d="M100.225 64.6914 L90.294 54.76"/>
+<path d="M100.225 70.3271 L100.225 64.6914"/>
+<path d="M90.294 54.76 L87.2 54.76"/>
+<path d="M100.758 70.86 L100.225 70.3271"/>
+<path d="M78.02 79.82 L78.02 83.2"/>
+<path d="M69.9 76.9 L69.9 68.6209"/>
+<path d="M69.9 76.9 L75.1 76.9"/>
+<path d="M65.2 44.8717 L73.37 53.0417"/>
+<path d="M69.9 68.6209 L73.37 65.1509"/>
+<path d="M73.37 53.0417 L73.37 65.1509"/>
+<path d="M75.1 76.9 L78.02 79.82"/>
+<path d="M67.293 60.6173 L65.91 62.0"/>
+<path d="M65.217 51.2866 L67.293 53.3626"/>
+<path d="M61.972 65.9385 L61.972 70.6235"/>
+<path d="M61.972 70.6235 L61.2 71.395"/>
+<path d="M65.91 62.0 L61.972 65.9385"/>
+<path d="M65.217 51.2866 L65.217 51.2866"/>
+<path d="M65.217 51.2866 L65.217 49.5551"/>
+<path d="M67.293 53.3626 L67.293 60.6173"/>
+<path d="M65.217 49.5551 L65.2 49.5383"/>
+<path d="M65.265 73.935 L66.6 72.6"/>
+<path d="M61.2 73.935 L65.265 73.935"/>
+<path d="M66.6 66.31 L70.91 62.0"/>
+<path d="M66.6 72.6 L66.6 67.2"/>
+<path d="M65.265 73.935 L66.6 75.27"/>
+<path d="M66.6 75.27 L66.6 79.0"/>
+<path d="M66.6 67.2 L66.6 66.31"/>
+<path d="M53.58 76.475 L42.47 76.475"/>
+<path d="M42.47 76.475 L42.47 76.935"/>
+<path d="M42.47 76.475 L40.2 74.205"/>
+<path d="M42.47 76.935 L40.2 79.205"/>
+<path d="M48.09 73.935 L47.82 74.205"/>
+<path d="M51.092 73.935 L48.09 73.935"/>
+<path d="M53.58 73.935 L51.092 73.935"/>
+<path d="M24.2 100.745 L31.74 100.745"/>
+<path d="M31.74 100.745 L33.2 102.205"/>
+<path d="M91.357 45.4347 L91.357 40.2487"/>
+<path d="M68.73 32.9887 L68.73 32.54"/>
+<path d="M91.357 40.2487 L89.201 38.0926"/>
+<path d="M87.2 47.14 L89.652 47.14"/>
+<path d="M89.201 38.0926 L73.834 38.0926"/>
+<path d="M89.652 47.14 L91.357 45.4347"/>
+<path d="M73.834 38.0926 L68.73 32.9887"/>
+<path d="M93.961 40.4 L90.001 36.4409"/>
+<path d="M97.4 40.4 L93.961 40.4"/>
+<path d="M77.204 36.4409 L73.81 33.0467"/>
+<path d="M90.001 36.4409 L77.204 36.4409"/>
+<path d="M73.81 33.0467 L73.81 32.54"/>
+<path d="M97.4 35.32 L96.868 34.7877"/>
+<path d="M78.163 34.7877 L76.35 32.9745"/>
+<path d="M76.35 32.9745 L76.35 32.54"/>
+<path d="M96.868 34.7877 L78.163 34.7877"/>
+<path d="M50.4 108.9213 L50.4 108.415"/>
+<path d="M98.267 96.2724 L98.267 103.091"/>
+<path d="M98.267 103.091 L87.697 113.6613"/>
+<path d="M96.2 94.205 L98.267 96.2724"/>
+<path d="M55.14 113.6613 L50.4 108.9213"/>
+<path d="M87.697 113.6613 L55.14 113.6613"/>
+<path d="M73.128 96.935 L73.128 87.4433"/>
+<path d="M73.128 87.4433 L72.89 87.205"/>
+<path d="M75.58 96.935 L73.128 96.935"/>
+<path d="M72.89 80.33 L74.22 79.0"/>
+<path d="M72.89 87.205 L72.89 80.33"/>
+</g>
+<path d="M84.076 63.7298 L89.725 58.0811" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M89.725 58.0811 L89.725 40.8998" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M68.701 73.9654 L68.701 69.8005" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M68.701 69.8005 L74.772 63.7298" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M81.365 32.54 L78.89 32.54" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M61.2 79.015 L63.652 79.015" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M74.772 63.7298 L84.076 63.7298" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M89.725 40.8998 L81.365 32.54" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M63.652 79.015 L68.701 73.9654" stroke="var(--wire-neg)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M76.89 89.205 L75.958 88.2727" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M61.11 33.0468 L63.978 35.9145" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M61.11 32.54 L61.11 33.0468" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M85.674 72.6 L90.4 72.6" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M79.58 52.22 L67.185 52.22" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M75.958 88.2727 L75.958 82.3165" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M75.958 82.3165 L85.674 72.6" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M67.185 52.22 L65.2 54.205" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M63.978 35.9145 L81.054 35.9145" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<path d="M81.054 35.9145 L87.2 42.06" stroke="var(--wire-pos)" stroke-width="0.7" opacity="0.32" stroke-dasharray="1.6 1.4" fill="none"/>
+<g fill="var(--pad)">
+<circle cx="33.2" cy="102.205" r="0.82"/>
+<circle cx="33.2" cy="92.205" r="0.82"/>
+<circle cx="46.2" cy="100.705" r="0.82"/>
+<circle cx="46.2" cy="95.705" r="0.82"/>
+<circle cx="91.89" cy="90.205" r="0.82"/>
+<circle cx="86.89" cy="90.205" r="0.82"/>
+<circle cx="67.89" cy="87.205" r="0.82"/>
+<circle cx="72.89" cy="87.205" r="0.82"/>
+<circle cx="70.91" cy="62.0" r="0.82"/>
+<circle cx="65.91" cy="62.0" r="0.82"/>
+<circle cx="76.89" cy="89.205" r="0.82"/>
+<circle cx="81.89" cy="89.205" r="0.82"/>
+<circle cx="76.89" cy="108.205" r="0.82"/>
+<circle cx="81.89" cy="108.205" r="0.82"/>
+<circle cx="44.89" cy="39.205" r="0.82"/>
+<circle cx="49.89" cy="39.205" r="0.82"/>
+<circle cx="54.89" cy="67.205" r="0.82"/>
+<circle cx="59.89" cy="67.205" r="0.82"/>
+<circle cx="54.89" cy="84.205" r="0.82"/>
+<circle cx="59.89" cy="84.205" r="0.82"/>
+<circle cx="74.39" cy="42.18" r="0.82"/>
+<circle cx="74.39" cy="47.18" r="0.82"/>
+<circle cx="90.4" cy="72.6" r="0.82"/>
+<circle cx="90.4" cy="77.6" r="0.82"/>
+<circle cx="114.0" cy="26.0" r="0.82"/>
+<circle cx="26.0" cy="26.0" r="0.82"/>
+<circle cx="114.0" cy="114.0" r="0.82"/>
+<circle cx="26.0" cy="114.0" r="0.82"/>
+<circle cx="61.11" cy="30.0" r="0.82"/>
+<circle cx="61.11" cy="32.54" r="0.82"/>
+<circle cx="63.65" cy="30.0" r="0.82"/>
+<circle cx="63.65" cy="32.54" r="0.82"/>
+<circle cx="66.19" cy="30.0" r="0.82"/>
+<circle cx="66.19" cy="32.54" r="0.82"/>
+<circle cx="68.73" cy="30.0" r="0.82"/>
+<circle cx="68.73" cy="32.54" r="0.82"/>
+<circle cx="71.27" cy="30.0" r="0.82"/>
+<circle cx="71.27" cy="32.54" r="0.82"/>
+<circle cx="73.81" cy="30.0" r="0.82"/>
+<circle cx="73.81" cy="32.54" r="0.82"/>
+<circle cx="76.35" cy="30.0" r="0.82"/>
+<circle cx="76.35" cy="32.54" r="0.82"/>
+<circle cx="78.89" cy="30.0" r="0.82"/>
+<circle cx="78.89" cy="32.54" r="0.82"/>
+<circle cx="24.2" cy="100.745" r="0.82"/>
+<circle cx="24.2" cy="95.665" r="0.82"/>
+<circle cx="97.4" cy="40.4" r="0.82"/>
+<circle cx="97.4" cy="37.86" r="0.82"/>
+<circle cx="97.4" cy="35.32" r="0.82"/>
+<circle cx="40.2" cy="93.395" r="0.82"/>
+<circle cx="40.2" cy="101.015" r="0.82"/>
+<circle cx="96.2" cy="94.205" r="0.82"/>
+<circle cx="88.58" cy="94.205" r="0.82"/>
+<circle cx="102.2" cy="98.205" r="0.82"/>
+<circle cx="94.58" cy="98.205" r="0.82"/>
+<circle cx="96.2" cy="102.205" r="0.82"/>
+<circle cx="88.58" cy="102.205" r="0.82"/>
+<circle cx="60.59" cy="98.3383" r="0.82"/>
+<circle cx="68.21" cy="98.3383" r="0.82"/>
+<circle cx="78.02" cy="83.2" r="0.82"/>
+<circle cx="70.4" cy="83.2" r="0.82"/>
+<circle cx="60.58" cy="106.205" r="0.82"/>
+<circle cx="68.2" cy="106.205" r="0.82"/>
+<circle cx="60.58" cy="91.205" r="0.82"/>
+<circle cx="68.2" cy="91.205" r="0.82"/>
+<circle cx="74.22" cy="79.0" r="0.82"/>
+<circle cx="66.6" cy="79.0" r="0.82"/>
+<circle cx="74.22" cy="72.6" r="0.82"/>
+<circle cx="66.6" cy="72.6" r="0.82"/>
+<circle cx="74.22" cy="67.2" r="0.82"/>
+<circle cx="66.6" cy="67.2" r="0.82"/>
+<circle cx="47.82" cy="79.205" r="0.82"/>
+<circle cx="40.2" cy="79.205" r="0.82"/>
+<circle cx="40.2" cy="74.205" r="0.82"/>
+<circle cx="47.82" cy="74.205" r="0.82"/>
+<circle cx="65.2" cy="49.5383" r="0.82"/>
+<circle cx="57.58" cy="49.5383" r="0.82"/>
+<circle cx="65.2" cy="44.8717" r="0.82"/>
+<circle cx="57.58" cy="44.8717" r="0.82"/>
+<circle cx="65.2" cy="40.205" r="0.82"/>
+<circle cx="57.58" cy="40.205" r="0.82"/>
+<circle cx="65.2" cy="54.205" r="0.82"/>
+<circle cx="57.58" cy="54.205" r="0.82"/>
+<circle cx="37.39" cy="39.395" r="0.82"/>
+<circle cx="37.39" cy="47.015" r="0.82"/>
+<circle cx="47.86" cy="108.415" r="0.82"/>
+<circle cx="50.4" cy="108.415" r="0.82"/>
+<circle cx="52.94" cy="108.415" r="0.82"/>
+<circle cx="83.2" cy="94.395" r="0.82"/>
+<circle cx="83.2" cy="96.935" r="0.82"/>
+<circle cx="83.2" cy="99.475" r="0.82"/>
+<circle cx="83.2" cy="102.015" r="0.82"/>
+<circle cx="75.58" cy="102.015" r="0.82"/>
+<circle cx="75.58" cy="99.475" r="0.82"/>
+<circle cx="75.58" cy="96.935" r="0.82"/>
+<circle cx="75.58" cy="94.395" r="0.82"/>
+<circle cx="51.2" cy="44.395" r="0.82"/>
+<circle cx="51.2" cy="46.935" r="0.82"/>
+<circle cx="51.2" cy="49.475" r="0.82"/>
+<circle cx="51.2" cy="52.015" r="0.82"/>
+<circle cx="43.58" cy="52.015" r="0.82"/>
+<circle cx="43.58" cy="49.475" r="0.82"/>
+<circle cx="43.58" cy="46.935" r="0.82"/>
+<circle cx="43.58" cy="44.395" r="0.82"/>
+<circle cx="61.2" cy="71.395" r="0.82"/>
+<circle cx="61.2" cy="73.935" r="0.82"/>
+<circle cx="61.2" cy="76.475" r="0.82"/>
+<circle cx="61.2" cy="79.015" r="0.82"/>
+<circle cx="53.58" cy="79.015" r="0.82"/>
+<circle cx="53.58" cy="76.475" r="0.82"/>
+<circle cx="53.58" cy="73.935" r="0.82"/>
+<circle cx="53.58" cy="71.395" r="0.82"/>
+<circle cx="87.2" cy="42.06" r="0.82"/>
+<circle cx="87.2" cy="44.6" r="0.82"/>
+<circle cx="87.2" cy="47.14" r="0.82"/>
+<circle cx="87.2" cy="49.68" r="0.82"/>
+<circle cx="87.2" cy="52.22" r="0.82"/>
+<circle cx="87.2" cy="54.76" r="0.82"/>
+<circle cx="87.2" cy="57.3" r="0.82"/>
+<circle cx="79.58" cy="57.3" r="0.82"/>
+<circle cx="79.58" cy="54.76" r="0.82"/>
+<circle cx="79.58" cy="52.22" r="0.82"/>
+<circle cx="79.58" cy="49.68" r="0.82"/>
+<circle cx="79.58" cy="47.14" r="0.82"/>
+<circle cx="79.58" cy="44.6" r="0.82"/>
+<circle cx="79.58" cy="42.06" r="0.82"/>
+<circle cx="103.21" cy="65.78" r="0.82"/>
+<circle cx="103.21" cy="68.32" r="0.82"/>
+<circle cx="103.21" cy="70.86" r="0.82"/>
+<circle cx="103.21" cy="73.4" r="0.82"/>
+<circle cx="103.21" cy="75.94" r="0.82"/>
+<circle cx="103.21" cy="78.48" r="0.82"/>
+<circle cx="103.21" cy="81.02" r="0.82"/>
+<circle cx="95.59" cy="81.02" r="0.82"/>
+<circle cx="95.59" cy="78.48" r="0.82"/>
+<circle cx="95.59" cy="75.94" r="0.82"/>
+<circle cx="95.59" cy="73.4" r="0.82"/>
+<circle cx="95.59" cy="70.86" r="0.82"/>
+<circle cx="95.59" cy="68.32" r="0.82"/>
+<circle cx="95.59" cy="65.78" r="0.82"/>
+</g><g fill="var(--fr4)">
+<circle cx="33.2" cy="102.205" r="0.4"/>
+<circle cx="33.2" cy="92.205" r="0.4"/>
+<circle cx="46.2" cy="100.705" r="0.4"/>
+<circle cx="46.2" cy="95.705" r="0.4"/>
+<circle cx="91.89" cy="90.205" r="0.4"/>
+<circle cx="86.89" cy="90.205" r="0.4"/>
+<circle cx="67.89" cy="87.205" r="0.4"/>
+<circle cx="72.89" cy="87.205" r="0.4"/>
+<circle cx="70.91" cy="62.0" r="0.4"/>
+<circle cx="65.91" cy="62.0" r="0.4"/>
+<circle cx="76.89" cy="89.205" r="0.4"/>
+<circle cx="81.89" cy="89.205" r="0.4"/>
+<circle cx="76.89" cy="108.205" r="0.4"/>
+<circle cx="81.89" cy="108.205" r="0.4"/>
+<circle cx="44.89" cy="39.205" r="0.4"/>
+<circle cx="49.89" cy="39.205" r="0.4"/>
+<circle cx="54.89" cy="67.205" r="0.4"/>
+<circle cx="59.89" cy="67.205" r="0.4"/>
+<circle cx="54.89" cy="84.205" r="0.4"/>
+<circle cx="59.89" cy="84.205" r="0.4"/>
+<circle cx="74.39" cy="42.18" r="0.4"/>
+<circle cx="74.39" cy="47.18" r="0.4"/>
+<circle cx="90.4" cy="72.6" r="0.4"/>
+<circle cx="90.4" cy="77.6" r="0.4"/>
+<circle cx="114.0" cy="26.0" r="0.4"/>
+<circle cx="26.0" cy="26.0" r="0.4"/>
+<circle cx="114.0" cy="114.0" r="0.4"/>
+<circle cx="26.0" cy="114.0" r="0.4"/>
+<circle cx="61.11" cy="30.0" r="0.4"/>
+<circle cx="61.11" cy="32.54" r="0.4"/>
+<circle cx="63.65" cy="30.0" r="0.4"/>
+<circle cx="63.65" cy="32.54" r="0.4"/>
+<circle cx="66.19" cy="30.0" r="0.4"/>
+<circle cx="66.19" cy="32.54" r="0.4"/>
+<circle cx="68.73" cy="30.0" r="0.4"/>
+<circle cx="68.73" cy="32.54" r="0.4"/>
+<circle cx="71.27" cy="30.0" r="0.4"/>
+<circle cx="71.27" cy="32.54" r="0.4"/>
+<circle cx="73.81" cy="30.0" r="0.4"/>
+<circle cx="73.81" cy="32.54" r="0.4"/>
+<circle cx="76.35" cy="30.0" r="0.4"/>
+<circle cx="76.35" cy="32.54" r="0.4"/>
+<circle cx="78.89" cy="30.0" r="0.4"/>
+<circle cx="78.89" cy="32.54" r="0.4"/>
+<circle cx="24.2" cy="100.745" r="0.4"/>
+<circle cx="24.2" cy="95.665" r="0.4"/>
+<circle cx="97.4" cy="40.4" r="0.4"/>
+<circle cx="97.4" cy="37.86" r="0.4"/>
+<circle cx="97.4" cy="35.32" r="0.4"/>
+<circle cx="40.2" cy="93.395" r="0.4"/>
+<circle cx="40.2" cy="101.015" r="0.4"/>
+<circle cx="96.2" cy="94.205" r="0.4"/>
+<circle cx="88.58" cy="94.205" r="0.4"/>
+<circle cx="102.2" cy="98.205" r="0.4"/>
+<circle cx="94.58" cy="98.205" r="0.4"/>
+<circle cx="96.2" cy="102.205" r="0.4"/>
+<circle cx="88.58" cy="102.205" r="0.4"/>
+<circle cx="60.59" cy="98.3383" r="0.4"/>
+<circle cx="68.21" cy="98.3383" r="0.4"/>
+<circle cx="78.02" cy="83.2" r="0.4"/>
+<circle cx="70.4" cy="83.2" r="0.4"/>
+<circle cx="60.58" cy="106.205" r="0.4"/>
+<circle cx="68.2" cy="106.205" r="0.4"/>
+<circle cx="60.58" cy="91.205" r="0.4"/>
+<circle cx="68.2" cy="91.205" r="0.4"/>
+<circle cx="74.22" cy="79.0" r="0.4"/>
+<circle cx="66.6" cy="79.0" r="0.4"/>
+<circle cx="74.22" cy="72.6" r="0.4"/>
+<circle cx="66.6" cy="72.6" r="0.4"/>
+<circle cx="74.22" cy="67.2" r="0.4"/>
+<circle cx="66.6" cy="67.2" r="0.4"/>
+<circle cx="47.82" cy="79.205" r="0.4"/>
+<circle cx="40.2" cy="79.205" r="0.4"/>
+<circle cx="40.2" cy="74.205" r="0.4"/>
+<circle cx="47.82" cy="74.205" r="0.4"/>
+<circle cx="65.2" cy="49.5383" r="0.4"/>
+<circle cx="57.58" cy="49.5383" r="0.4"/>
+<circle cx="65.2" cy="44.8717" r="0.4"/>
+<circle cx="57.58" cy="44.8717" r="0.4"/>
+<circle cx="65.2" cy="40.205" r="0.4"/>
+<circle cx="57.58" cy="40.205" r="0.4"/>
+<circle cx="65.2" cy="54.205" r="0.4"/>
+<circle cx="57.58" cy="54.205" r="0.4"/>
+<circle cx="37.39" cy="39.395" r="0.4"/>
+<circle cx="37.39" cy="47.015" r="0.4"/>
+<circle cx="47.86" cy="108.415" r="0.4"/>
+<circle cx="50.4" cy="108.415" r="0.4"/>
+<circle cx="52.94" cy="108.415" r="0.4"/>
+<circle cx="83.2" cy="94.395" r="0.4"/>
+<circle cx="83.2" cy="96.935" r="0.4"/>
+<circle cx="83.2" cy="99.475" r="0.4"/>
+<circle cx="83.2" cy="102.015" r="0.4"/>
+<circle cx="75.58" cy="102.015" r="0.4"/>
+<circle cx="75.58" cy="99.475" r="0.4"/>
+<circle cx="75.58" cy="96.935" r="0.4"/>
+<circle cx="75.58" cy="94.395" r="0.4"/>
+<circle cx="51.2" cy="44.395" r="0.4"/>
+<circle cx="51.2" cy="46.935" r="0.4"/>
+<circle cx="51.2" cy="49.475" r="0.4"/>
+<circle cx="51.2" cy="52.015" r="0.4"/>
+<circle cx="43.58" cy="52.015" r="0.4"/>
+<circle cx="43.58" cy="49.475" r="0.4"/>
+<circle cx="43.58" cy="46.935" r="0.4"/>
+<circle cx="43.58" cy="44.395" r="0.4"/>
+<circle cx="61.2" cy="71.395" r="0.4"/>
+<circle cx="61.2" cy="73.935" r="0.4"/>
+<circle cx="61.2" cy="76.475" r="0.4"/>
+<circle cx="61.2" cy="79.015" r="0.4"/>
+<circle cx="53.58" cy="79.015" r="0.4"/>
+<circle cx="53.58" cy="76.475" r="0.4"/>
+<circle cx="53.58" cy="73.935" r="0.4"/>
+<circle cx="53.58" cy="71.395" r="0.4"/>
+<circle cx="87.2" cy="42.06" r="0.4"/>
+<circle cx="87.2" cy="44.6" r="0.4"/>
+<circle cx="87.2" cy="47.14" r="0.4"/>
+<circle cx="87.2" cy="49.68" r="0.4"/>
+<circle cx="87.2" cy="52.22" r="0.4"/>
+<circle cx="87.2" cy="54.76" r="0.4"/>
+<circle cx="87.2" cy="57.3" r="0.4"/>
+<circle cx="79.58" cy="57.3" r="0.4"/>
+<circle cx="79.58" cy="54.76" r="0.4"/>
+<circle cx="79.58" cy="52.22" r="0.4"/>
+<circle cx="79.58" cy="49.68" r="0.4"/>
+<circle cx="79.58" cy="47.14" r="0.4"/>
+<circle cx="79.58" cy="44.6" r="0.4"/>
+<circle cx="79.58" cy="42.06" r="0.4"/>
+<circle cx="103.21" cy="65.78" r="0.4"/>
+<circle cx="103.21" cy="68.32" r="0.4"/>
+<circle cx="103.21" cy="70.86" r="0.4"/>
+<circle cx="103.21" cy="73.4" r="0.4"/>
+<circle cx="103.21" cy="75.94" r="0.4"/>
+<circle cx="103.21" cy="78.48" r="0.4"/>
+<circle cx="103.21" cy="81.02" r="0.4"/>
+<circle cx="95.59" cy="81.02" r="0.4"/>
+<circle cx="95.59" cy="78.48" r="0.4"/>
+<circle cx="95.59" cy="75.94" r="0.4"/>
+<circle cx="95.59" cy="73.4" r="0.4"/>
+<circle cx="95.59" cy="70.86" r="0.4"/>
+<circle cx="95.59" cy="68.32" r="0.4"/>
+<circle cx="95.59" cy="65.78" r="0.4"/>
+</g>
+<circle cx="114.0" cy="26.0" r="1.6" fill="none" stroke="var(--edge)" stroke-width="0.4"/>
+<circle cx="26.0" cy="26.0" r="1.6" fill="none" stroke="var(--edge)" stroke-width="0.4"/>
+<circle cx="114.0" cy="114.0" r="1.6" fill="none" stroke="var(--edge)" stroke-width="0.4"/>
+<circle cx="26.0" cy="114.0" r="1.6" fill="none" stroke="var(--edge)" stroke-width="0.4"/>
+<g class="ref">
+<text x="70.00" y="31.27" text-anchor="middle" dominant-baseline="central">J7</text>
+<text x="24.20" y="98.21" text-anchor="middle" dominant-baseline="central">J20</text>
+<text x="97.40" y="37.86" text-anchor="middle" dominant-baseline="central">J21</text>
+<text x="50.40" y="108.42" text-anchor="middle" dominant-baseline="central">RV20</text>
+<text x="79.39" y="98.20" text-anchor="middle" dominant-baseline="central">U20</text>
+<text x="47.39" y="48.20" text-anchor="middle" dominant-baseline="central">U21</text>
+<text x="57.39" y="75.20" text-anchor="middle" dominant-baseline="central">U22</text>
+<text x="83.39" y="49.68" text-anchor="middle" dominant-baseline="central">U23</text>
+<text x="99.40" y="73.40" text-anchor="middle" dominant-baseline="central">U24</text>
+</g>
+<path d="M103.21 73.4 L100.758 73.4" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.4" stroke-dasharray="1.6 1.2"/>
+<path d="M78.02 83.2 L96.729 83.2" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.4" stroke-dasharray="1.6 1.2"/>
+<path d="M100.758 79.1707 L100.758 73.4" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.4" stroke-dasharray="1.6 1.2"/>
+<path d="M96.729 83.2 L100.758 79.1707" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.4" stroke-dasharray="1.6 1.2"/>
+<path d="M78.02 79.82 L78.02 83.2" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.95" />
+<path d="M69.9 76.9 L69.9 68.6209" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.95" />
+<path d="M69.9 76.9 L75.1 76.9" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.95" />
+<path d="M65.2 44.8717 L73.37 53.0417" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.95" />
+<path d="M69.9 68.6209 L73.37 65.1509" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.95" />
+<path d="M73.37 53.0417 L73.37 65.1509" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.95" />
+<path d="M75.1 76.9 L78.02 79.82" stroke="var(--bad)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.95" />
+<circle cx="78.02" cy="83.2" r="2.2" fill="none" stroke="var(--bad)" stroke-width="0.8"/>
+<text class="callout" x="78.02" y="79.60" text-anchor="middle" fill="var(--bad)">R25.1</text>
+<circle cx="65.2" cy="44.8717" r="2.2" fill="none" stroke="var(--bad)" stroke-width="0.8"/>
+<text class="callout" x="65.2" y="41.27" text-anchor="middle" fill="var(--bad)">R34.1</text>
+<circle cx="103.21" cy="73.4" r="2.2" fill="none" stroke="var(--bad)" stroke-width="0.8"/>
+<text class="callout" x="103.21" y="69.80" text-anchor="middle" fill="var(--bad)">U24.4</text>
+</svg>
+    <figcaption>DACP_L on the solder-side view: U24.4 &rarr; R25.1 on the component side, R25.1 &rarr; R34.1 underneath.</figcaption>
+  </figure>
+  <p>Search in this order: <strong>U24 pins 4 and 5</strong> first &mdash; they are adjacent and pin 5 is ground,
+  so one bridge does it, and the socket's own contacts count too. Then <strong>R25.1</strong>, where the
+  component-side run meets the solder-side trace. Then the trace itself, following it up to
+  <strong>R34.1</strong>. A whisker across 0.5 mm of bare copper is the likeliest thing you will find.</p>
+</section>
+
+<section>
+  <h2><span class="n">03</span>Before it goes back in the stack</h2>
+  <p>Meter on resistance, board still unplugged. The first two confirm the wires do something; the last two
+  confirm they did not do something else.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Between</th><th>Expect</th><th>Means</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">J7.16 &harr; U22.4</td><td class="ok">near 0 &#8486;</td><td>the negative rail no longer depends on the top joint</td></tr>
+      <tr><td class="mono">J7.2 &harr; U23.14</td><td class="ok">near 0 &#8486;</td><td>same for the positive rail</td></tr>
+      <tr><td class="mono">J7.16 &harr; J7.15 (GND)</td><td class="bad">not 0 &#8486;</td><td>the &minus;5 V wire is not touching the pour</td></tr>
+      <tr><td class="mono">J7.2 &harr; J7.1 (GND)</td><td class="bad">not 0 &#8486;</td><td>the +5 V wire is not touching the pour</td></tr>
+      <tr><td class="mono">J7.2 &harr; J7.16</td><td class="bad">not 0 &#8486;</td><td>the two rails are not bridged to each other</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2><span class="n">04</span>Then ask the bitstream</h2>
+  <p>Boot the Pi first, then power the ADC. Stop the ripper so it releases the capture card, and run the live view
+  on the same port:</p>
+  <pre class="cmd">ssh mads@vinyladc.local
+sudo systemctl stop vinyl-adc-ripper
+python3 ~/pi/live.py          <b># then open http://vinyladc.local:8091</b></pre>
+  <p>The right channel should stop looking like the middle column and start looking like the left one. Mean run
+  length is the quickest tell &mdash; a limit cycle shows as long solid bars in the bit view.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Reading</th><th class="num">Left, healthy</th><th class="num">Right, faulty</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td>Mean run of identical bits</td><td class="num ok">1.35</td><td class="num bad">18.5&ndash;19.5</td><td>a rail-to-rail oscillation near 41&ndash;45 kHz</td></tr>
+      <tr><td>One-density, no input</td><td class="num ok">0.496</td><td class="num bad">0.56&ndash;0.57</td><td>the loop is overloaded, not modulating</td></tr>
+      <tr><td>Shaping, 30&rarr;80 kHz</td><td class="num ok">+69 dB/dec</td><td class="num bad">flat</td><td>third order, versus no shaping at all</td></tr>
+      <tr><td>Idle noise, 20 Hz&ndash;20 kHz</td><td class="num ok">&minus;79.6 dBFS</td><td class="num bad">&mdash;</td><td>the number to beat on the right</td></tr>
+    </tbody>
+  </table></div>
+  <p>When the ripper goes back on, remember it holds the card: <code class="mono">sudo systemctl start vinyl-adc-ripper</code>.</p>
+</section>
+
+<footer>
+  Drawn from <code>assembly/generated/boards.json</code> (KiCad snapshot of
+  <code>hardware/kicad/channel_l</code>) by <code>assembly/underside_wires.py</code>. Both channel boards are cut
+  from this one artwork. Background: bring-up log &sect;8.4, open item 1.
+</footer>
+
+</div></body></html>

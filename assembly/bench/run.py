@@ -259,7 +259,9 @@ class Run:
         if vfs>5.:self.say(f'  Full scale needs {vfs:.2f} Vpk; the AD3 gives 5 V at most, so the loudest test tone is {20*np.log10(5/vfs):+.1f} dBFS.')
         self.end()
         # idle noise with the input driven to 0 V by the generator
-        self.begin('noise');self.device.wave('dc',0.,0.,0.);time.sleep(settle);x=pi.grab(8.);nf=A.noise_figures(x[ch]);self.capture('noise',x,A.FS)
+        # the ripper serves the LAST 8 s, so wait the whole window out after silencing the generator
+        # or the previous step's 1 kHz tone is still inside it and 'idle noise' measures that instead.
+        self.begin('noise');self.device.wave('dc',0.,0.,0.);time.sleep(settle+8.);x=pi.grab(8.);nf=A.noise_figures(x[ch]);self.capture('noise',x,A.FS)
         self.measure('idle noise 20 Hz–20 kHz',nf['noise_dbfs'],None,None,'dBFS');self.measure('idle noise, A-weighted',nf['noise_dbfs_a'],None,None,'dBFS(A)')
         for h,v in nf['hum_dbfs'].items():self.measure(f'hum {h} Hz',v,None,None,'dBFS')
         self.measure('SNR (0 dBFS re idle noise, A-weighted)',-nf['noise_dbfs_a'],None,None,'dB');A.plot_spectrum(self.folder/'noise.png',x[ch],f'Idle noise, {name} channel ({nf["noise_dbfs_a"]:.1f} dBFS(A))');self.end()

@@ -29,8 +29,21 @@ def spectrum(x):
     bins, and noise sums to 2*variance, i.e. levels are rms relative to the rms of a full-scale sine (AES17 dBFS)."""
     n=len(x);w=np.hanning(n);X=np.fft.rfft(x*w)/np.sum(w)*2;P=np.abs(X)**2/1.5      # Hann: centre bin A^2, neighbours A^2/4 each -> sum 1.5 A^2
     return np.fft.rfftfreq(n,1/FS),P
+CLOCK_TOL_PPM=600.   # the ADC's LRCLK is crystal-derived (MCLK 1536.296 kHz -> 48009 Hz, ~190 ppm above nominal)
 def band_power(f,P,f0,half_bins=4):
-    i=int(np.argmin(np.abs(f-f0)));return float(P[max(0,i-half_bins):i+half_bins+1].sum())
+    """Power in the bins around f0, following the tone if the converter's sample rate is not exactly FS.
+
+    The ADC clocks itself, so a tone lands at f0*(FS/true_rate) - about -190 ppm here. A fixed +/-4 bin window
+    silently loses the tone once that offset exceeds the window, which reads as a steep high-frequency rolloff
+    (-51 dB at 8 kHz) that is pure measurement artefact. Search a +/-CLOCK_TOL_PPM window for the peak first,
+    then sum the same +/-half_bins around where the tone actually is."""
+    if len(f)<2:return 0.
+    step=float(f[1]-f[0]);i=int(np.argmin(np.abs(f-f0)))
+    slack=int(np.ceil(f0*CLOCK_TOL_PPM*1e-6/step))
+    if slack:
+        lo,hi=max(0,i-slack-half_bins),min(len(P),i+slack+half_bins+1)
+        if hi>lo:i=lo+int(np.argmax(P[lo:hi]))
+    return float(P[max(0,i-half_bins):i+half_bins+1].sum())
 def db(p):return float(10*np.log10(max(p,1e-30)))
 def a_weight(f):
     f2=f**2;r=12194.**2*f2**2/((f2+20.6**2)*np.sqrt((f2+107.7**2)*(f2+737.9**2))*(f2+12194.**2));return r/0.7943   # 0 dB at 1 kHz
