@@ -7,8 +7,9 @@
 `idle-snapshot.raw` is 10 s of the raw modulator stream with the inputs shorted, which
 is decimated here exactly as the ripper does it so the two spectra are comparable.
 
-Outputs are analysis of the recording - a spectrogram and a spectrum - and can be
-published; the recording itself cannot.
+Outputs are analysis of the recording - a spectrogram with a loudest-note lane and a
+beat lane, a spectrum against the idle floor, and the data the page's interactive
+version draws from - and can be published; the recording itself cannot.
 """
 from pathlib import Path
 import base64, io, json, sys, wave
@@ -77,90 +78,155 @@ def ramp(v):
     v = np.clip(v, 0, 1)
     return np.stack([np.interp(v, pos, stops[:, c]) for c in range(3)], axis=-1)
 
-def spectrogram_figure(x, out, seconds):
-    from PIL import Image
-    n, hop = 2048, 1024                                  # ~21 ms columns: about 1100 of them for 24 s
-    w = np.hanning(n); cols = (len(x) - n) // hop
-    R = 320; rows_f = np.geomspace(FMIN, FMAX, R + 1)     # log-spaced frequency rows
-    f = np.fft.rfftfreq(n, 1 / FS); idx = np.digitize(f, rows_f) - 1
-    centres = np.sqrt(rows_f[:-1] * rows_f[1:]); nearest = np.array([int(np.argmin(np.abs(f - fc))) for fc in centres])
-    members = [np.flatnonzero(idx == r) for r in range(R)]  # bins inside each row; empty below ~300 Hz at this FFT size
-    img = np.empty((R, cols))
-    for c in range(cols):
-        X = np.fft.rfft(x[c*hop:c*hop+n] * w) / w.sum() * 2; db = 10 * np.log10(np.abs(X) ** 2 / 1.5 + 1e-30)
-        for r in range(R):
-            m = members[r]; img[r, c] = db[m].max() if len(m) else db[nearest[r]]   # a row narrower than a bin shows that bin
-    lo, hi = -100., -30.
-    rgb = (ramp((img - lo) / (hi - lo))[::-1] * 255).astype(np.uint8)   # top row = highest frequency
-    buf = io.BytesIO(); Image.fromarray(rgb).quantize(colors=256).save(buf, format='PNG', optimize=True)
-    png = base64.b64encode(buf.getvalue()).decode()
+WINDOWS = ((8192, 250.), (4096, 1000.), (2048, FMAX + 1))   # FFT length, and the highest row centre it serves
+HOP, ROWS = 1024, 320                                        # ~21 ms columns, 32 rows per octave
+NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B']
 
-    W, H = 900, 470; X0, X1, Y0, Y1 = 66, 838, 78, 388
-    o = head(W, H, 'Twenty-four seconds of a record, through the converter',
-             'Everything in Its Right Place, 2:05 to 2:29, left channel of the ripper’s 48 kHz output. Level per 2048-point FFT bin.')
-    o.append(f'<image x="{X0}" y="{Y0}" width="{X1-X0}" height="{Y1-Y0}" preserveAspectRatio="none" '
-             f'xlink:href="data:image/png;base64,{png}"/>')
-    py = lambda fr: Y1 - (np.log10(fr) - np.log10(FMIN)) / (np.log10(FMAX) - np.log10(FMIN)) * (Y1 - Y0)
-    for fr, lab in ((50,'50'),(100,'100'),(200,'200'),(500,'500'),(1e3,'1k'),(2e3,'2k'),(5e3,'5k'),(10e3,'10k'),(20e3,'20k')):
-        y = py(fr)
-        o.append(f'<line x1="{X0-4}" y1="{y:.1f}" x2="{X0}" y2="{y:.1f}" stroke="{MUTED}" stroke-width="1"/>')
-        o.append(f'<text class="a" x="{X0-8}" y="{y+4:.1f}" text-anchor="end">{lab}</text>')
-    for t in range(0, int(seconds) + 1, 4):
-        x = X0 + t / seconds * (X1 - X0)
-        o.append(f'<line x1="{x:.1f}" y1="{Y1}" x2="{x:.1f}" y2="{Y1+4}" stroke="{MUTED}" stroke-width="1"/>')
-        o.append(f'<text class="a" x="{x:.1f}" y="{Y1+18}" text-anchor="middle">{t} s</text>')
-    o.append(f'<text class="a" x="{X0-8}" y="{Y0-8}" text-anchor="end">Hz</text>')
-    # colour key
-    kx, ky, kw = X1 - 200, Y1 + 30, 200
-    o.append('<defs><linearGradient id="k" x1="0" x2="1" y1="0" y2="0">' +
-             ''.join(f'<stop offset="{p*100:.0f}%" stop-color="rgb({int(c[0]*255)},{int(c[1]*255)},{int(c[2]*255)})"/>'
-                     for p, c in zip(np.linspace(0, 1, 9), ramp(np.linspace(0, 1, 9)))) + '</linearGradient></defs>')
-    o.append(f'<rect x="{kx}" y="{ky}" width="{kw}" height="8" fill="url(#k)" rx="2"/>')
-    o.append(f'<text class="a" x="{kx}" y="{ky+22}">{lo:.0f}</text>')
-    o.append(f'<text class="a" x="{kx+kw}" y="{ky+22}" text-anchor="end">{hi:.0f} dBFS</text>')
-    o.append(f'<text class="note" x="18" y="{H-34}">The electric piano’s chords are the horizontal bands; the bass is the bright floor under 100 Hz.</text>')
-    o.append(f'<text class="note" x="18" y="{H-14}" fill="{MUTED}">This rip was made before the right-channel repair, so the ripper fell back to mono: left copied to both sides.</text>')
-    o.append('</svg>'); out.write_text('\n'.join(o) + '\n')
-    return out, dict(img=img, rows_f=rows_f, hop=hop, n=n, lo=lo, hi=hi, cols=cols)
-
-# ------------------------------------------------- interactive export
-NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 def note_name(f):
     m = int(round(69 + 12 * np.log2(f / 440.))); cents = int(round(1200 * np.log2(f / (440. * 2 ** ((m - 69) / 12)))))
     return f"{NOTE_NAMES[m % 12]}{m // 12 - 1}", cents
 
-def interactive_export(x, sg, outdir, seconds):
-    """A grayscale PNG of the spectrogram's dB values and a JSON with axes, detected bands, and detected onsets."""
-    from PIL import Image
-    img, lo, hi = sg['img'], sg['lo'], sg['hi']
-    g = np.clip((img - lo) / (hi - lo), 0, 1)[::-1]            # top row = highest frequency, like the figure
-    Image.fromarray((g * 255).astype(np.uint8), mode='L').save(outdir / 'music-spectrogram-data.png', optimize=True)
+def spectrogram_data(x):
+    """Log-frequency dB image, ROWS from FMIN to FMAX by one column per HOP samples, and the STFTs it came from.
 
+    Three window lengths, all centred on the same instants: 171 ms below 250 Hz so the bass notes resolve
+    (a 43 ms window smears them into 23 Hz blocks), 85 ms up to 1 kHz, and 43 ms above, where the hits live.
+    Also the passage's own average level at each frequency, smoothed over 0.4 octave: what a note or a hit
+    stands out *from*, and the reference for the page's default view."""
+    cols = (len(x) - 2048) // HOP; pad = 4096; xp = np.pad(x, pad)
+    fade = int(0.01 * FS); ramp_in = 0.5 - 0.5 * np.cos(np.linspace(0, np.pi, fade))   # the excerpt is a hard cut; without
+    xp[pad:pad + fade] *= ramp_in; xp[pad + len(x) - fade:pad + len(x)] *= ramp_in[::-1]   # this its edges splatter
+    rows_f = np.geomspace(FMIN, FMAX, ROWS + 1); centres = np.sqrt(rows_f[:-1] * rows_f[1:])
+    img = np.empty((ROWS, cols)); stft = {}; lo_f = 0.
+    for n, hi_f in WINDOWS:
+        w = np.hanning(n); f = np.fft.rfftfreq(n, 1 / FS); M = np.empty((len(f), cols))
+        for c in range(cols):
+            ctr = c * HOP + 1024 + pad; X = np.fft.rfft(xp[ctr - n // 2:ctr + n // 2] * w) / w.sum() * 2
+            M[:, c] = 10 * np.log10(np.abs(X) ** 2 / 1.5 + 1e-30)
+        idx = np.digitize(f, rows_f) - 1
+        for r in np.flatnonzero((centres > lo_f) & (centres <= hi_f)):
+            m = np.flatnonzero(idx == r)             # bins inside the row; a row narrower than a bin shows the nearest bin
+            img[r] = M[m].max(axis=0) if len(m) else M[int(np.argmin(np.abs(f - centres[r])))]
+        stft[n] = (f, M); lo_f = hi_f
+    med = np.median(img, axis=1); k = 13
+    env = np.convolve(np.pad(med, (6, 6), mode='edge'), np.ones(k) / k, mode='valid')
+    return dict(img=img, env=env, rows_f=rows_f, centres=centres, hop=HOP, cols=cols, stft=stft,
+                lo=-100., hi=-10., rel_lo=-20., rel_hi=20.)
+
+def features(x, sg):
+    """What the picture is made of, read from the data rather than asserted: the sustained bands and their
+    notes, the hits, which note is loudest at each moment, and where each kind of thing is at its clearest."""
+    img, env, hop, cols, centres = sg['img'], sg['env'], sg['hop'], sg['cols'], sg['centres']
     # sustained bands: peaks of the time-averaged spectrum between 40 Hz and 1.5 kHz, with their notes
     f, P = avg_spectrum(x, 4096); db = 10 * np.log10(P + 1e-30)
-    lo_i, hi_i = np.searchsorted(f, 40), np.searchsorted(f, 1500)
-    bands = []
+    lo_i, hi_i = np.searchsorted(f, 40), np.searchsorted(f, 1500); bands = []
     for i in range(lo_i + 2, hi_i - 2):
         if db[i] >= db[i-1] and db[i] >= db[i+1] and db[i] > db[i-2] and db[i] > db[i+2] and db[i] > np.median(db[lo_i:hi_i]) + 12:
-            # refine the peak by a parabolic fit across three bins
-            a, b, c = db[i-1], db[i], db[i+1]; d = 0.5 * (a - c) / (a - 2*b + c) if (a - 2*b + c) else 0.
+            a, b, c = db[i-1], db[i], db[i+1]; d = 0.5 * (a - c) / (a - 2*b + c) if (a - 2*b + c) else 0.   # parabolic peak
             fp = float(f[i] + d * (f[1] - f[0])); name, cents = note_name(fp)
             bands.append(dict(hz=round(fp, 1), db=round(float(b), 1), note=name, cents=cents))
     bands = sorted(bands, key=lambda z: -z['db'])[:10]
-
-    # onsets: positive spectral flux of the 2-8 kHz rows between neighbouring columns, peaks 150 ms apart
-    rows = sg['rows_f']; sel = (rows[:-1] >= 2000) & (rows[:-1] <= 8000)
-    flux = np.maximum(np.diff(img[sel], axis=1), 0).sum(axis=0); flux = np.concatenate(([0.], flux))
-    thr = flux.mean() + 2.0 * flux.std(); min_gap = int(0.15 * FS / sg['hop']); onsets = []; last = -min_gap
+    # hits: positive spectral flux of the 2-8 kHz rows between neighbouring columns; a hit is a peak 150 ms clear of the last
+    sel = (centres >= 2000) & (centres <= 8000)
+    flux = np.concatenate(([0.], np.maximum(np.diff(img[sel], axis=1), 0).sum(axis=0)))
+    thr = flux.mean() + 2.0 * flux.std(); min_gap = int(0.15 * FS / hop); onsets = []; last = -min_gap
     for c in range(1, len(flux) - 1):
         if flux[c] > thr and flux[c] >= flux[c-1] and flux[c] >= flux[c+1] and c - last >= min_gap:
-            onsets.append(round(c * sg['hop'] / FS, 3)); last = c
+            onsets.append(round(c * hop / FS, 3)); last = c
+    flux_n = np.clip(flux / np.percentile(flux, 99), 0, 1)
+    # loudest note: power in the 171 ms window's bins between 60 Hz and 2 kHz, summed per note name, per column;
+    # scaled to the strongest note in the column, and dimmed where the whole column is quiet
+    f8, M = sg['stft'][8192]; sel = (f8 >= 60) & (f8 <= 2000); Pw = 10 ** (M[sel] / 10)
+    pc = (np.round(12 * np.log2(f8[sel] / 440.)) + 69).astype(int) % 12
+    C = np.stack([Pw[pc == k].sum(axis=0) for k in range(12)])
+    strength = 10 * np.log10(C.max(axis=0) + 1e-30); gate = np.clip((strength - (strength.max() - 25)) / 25, 0, 1)
+    chroma = C / np.maximum(C.max(axis=0), 1e-30) * gate
+    # where each kind of thing is clearest (a 0.5 s average), so the page can play it on request
+    smooth = lambda v: np.convolve(v, np.ones(23) / 23, mode='same')
+    edge = int(0.5 * FS / hop)                                   # not the first or last half second
+    peak_t = lambda v: round(float((edge + np.argmax(smooth(v)[edge:-edge])) * hop / FS), 2)
+    band_rows = [int(np.argmin(np.abs(centres - b['hz']))) for b in bands]
+    moments = dict(
+        bands=peak_t((img[band_rows] - env[band_rows][:, None]).mean(axis=0)) if bands else 0.,
+        hits=max(onsets, key=lambda t: flux_n[int(round(t * FS / hop))]) if onsets else 0.,
+        bass=peak_t(img[centres < 90].mean(axis=0)),
+        highs=peak_t(img[centres >= 6000].mean(axis=0)))
+    return dict(bands=bands, onsets=onsets, flux=flux_n, chroma=chroma, moments=moments)
+
+# shared layout of the static figure and the page's canvas: the plot, a lane for the loudest note, a lane for the beat
+W, H = 900, 524; X0, X1 = 66, 812; Y0, Y1 = 78, 314; CY0, CY1 = 330, 450; HY0, HY1 = 464, 494
+
+def spectrogram_figure(sg, feat, out, seconds):
+    """The no-JS fallback: the same picture the page draws, as an SVG with the two lanes and the labels."""
+    from PIL import Image
+    img, env = sg['img'], sg['env']; lo, hi = sg['rel_lo'], sg['rel_hi']
+    def png(rgb):
+        buf = io.BytesIO(); Image.fromarray(rgb).quantize(colors=256).save(buf, format='PNG', optimize=True)
+        return base64.b64encode(buf.getvalue()).decode()
+    rgb = (ramp((img - env[:, None] - lo) / (hi - lo))[::-1] * 255).astype(np.uint8)         # top row = highest frequency
+    main = png(np.asarray(Image.fromarray(rgb).resize((X1 - X0, Y1 - Y0), Image.LANCZOS)))     # at its drawn size: 220 kB, not 450
+    lane = png((ramp(feat['chroma'])[::-1] * 255).astype(np.uint8))                          # top row = B, bottom = C
+    o = head(W, H, 'Twenty-four seconds of a record, through the converter',
+             'Everything in Its Right Place, 2:05 to 2:29, left channel of the ripper’s 48 kHz output.')
+    o.append(f'<image x="{X0}" y="{Y0}" width="{X1-X0}" height="{Y1-Y0}" preserveAspectRatio="none" xlink:href="data:image/png;base64,{main}"/>')
+    o.append(f'<image x="{X0}" y="{CY0}" width="{X1-X0}" height="{CY1-CY0}" preserveAspectRatio="none" style="image-rendering:pixelated" xlink:href="data:image/png;base64,{lane}"/>')
+    py = lambda fr: Y1 - (np.log10(fr) - np.log10(FMIN)) / (np.log10(FMAX) - np.log10(FMIN)) * (Y1 - Y0)
+    px = lambda t: X0 + t / seconds * (X1 - X0)
+    for fr, lab in ((50,'50'),(100,'100'),(200,'200'),(500,'500'),(1e3,'1k'),(2e3,'2k'),(5e3,'5k'),(10e3,'10k'),(20e3,'20k')):
+        y = py(fr); o.append(f'<line x1="{X0-4}" y1="{y:.1f}" x2="{X0}" y2="{y:.1f}" stroke="{MUTED}" stroke-width="1"/>')
+        o.append(f'<text class="a" x="{X0-8}" y="{y+4:.1f}" text-anchor="end">{lab}</text>')
+    o.append(f'<text class="a" x="{X0-8}" y="{Y0-8}" text-anchor="end">Hz</text>')
+    # the bands, with their notes; the hits, ticked above the plot
+    for b in feat['bands']:
+        y = py(b['hz'])
+        o.append(f'<line x1="{X0}" y1="{y:.1f}" x2="{X1}" y2="{y:.1f}" stroke="rgba(255,255,255,0.35)" stroke-width="0.8" stroke-dasharray="3 4"/>')
+        o.append(f'<text x="{X1+6}" y="{y+4:.1f}" style="font:12px system-ui,sans-serif" fill="{INK_2}">{esc(b["note"])} · {b["hz"]:.0f} Hz</text>')
+    for t in feat['onsets']:
+        o.append(f'<line x1="{px(t):.1f}" y1="{Y0-10}" x2="{px(t):.1f}" y2="{Y0-2}" stroke="rgba(255,255,255,0.45)" stroke-width="1"/>')
+    o.append(f'<text x="{X1}" y="{Y0-14}" text-anchor="end" style="font:12px system-ui,sans-serif" fill="{MUTED}">{len(feat["onsets"])} hits detected</text>')
+    # what is what, written on the picture
+    for fr, lab in ((11000, 'highs · percussion ticks and the record’s surface noise'), (3200, 'beats · vertical stripes'),
+                    (380, 'chord tones · horizontal bands'), (38, 'bass')):
+        o.append(f'<text x="{X0+8}" y="{py(fr)+4:.1f}" style="font:600 11.5px system-ui,sans-serif;paint-order:stroke;stroke:{SURFACE};stroke-width:4px;stroke-linejoin:round" fill="{INK}">{esc(lab)}</text>')
+    # lanes
+    o.append(f'<text x="{X0}" y="{CY0-5}" style="font:11px system-ui,sans-serif" fill="{MUTED}">loudest note</text>')
+    for k, name in enumerate(NOTE_NAMES[::-1]):
+        o.append(f'<text class="a" x="{X0-8}" y="{CY0 + (k + 0.5) * (CY1-CY0) / 12 + 3.5:.1f}" text-anchor="end" style="font-size:10.5px">{esc(name)}</text>')
+    o.append(f'<text x="{X0}" y="{HY0-5}" style="font:11px system-ui,sans-serif" fill="{MUTED}">beat activity</text>')
+    fl = feat['flux']; pts = ' '.join(f'{px(c * sg["hop"] / FS):.1f},{HY1 - v * (HY1-HY0):.1f}' for c, v in enumerate(fl))
+    o.append(f'<polygon points="{px(0):.1f},{HY1} {pts} {px(len(fl) * sg["hop"] / FS):.1f},{HY1}" fill="{LEFT}" opacity="0.85"/>')
+    for t in range(0, int(seconds) + 1, 4):
+        o.append(f'<line x1="{px(t):.1f}" y1="{HY1}" x2="{px(t):.1f}" y2="{HY1+4}" stroke="{MUTED}" stroke-width="1"/>')
+        o.append(f'<text class="a" x="{px(t):.1f}" y="{HY1+18}" text-anchor="middle">{t} s</text>')
+    # colour key, above the plot on the left
+    kx, ky, kw = X0 + 34, 55, 160
+    o.append('<defs><linearGradient id="k" x1="0" x2="1" y1="0" y2="0">' +
+             ''.join(f'<stop offset="{p*100:.0f}%" stop-color="rgb({int(c[0]*255)},{int(c[1]*255)},{int(c[2]*255)})"/>'
+                     for p, c in zip(np.linspace(0, 1, 9), ramp(np.linspace(0, 1, 9)))) + '</linearGradient></defs>')
+    o.append(f'<rect x="{kx}" y="{ky}" width="{kw}" height="8" fill="url(#k)" rx="2"/>')
+    o.append(f'<text class="a" x="{kx-6}" y="{ky+8}" text-anchor="end">{lo:+.0f}</text>')
+    o.append(f'<text class="a" x="{kx+kw+6}" y="{ky+8}">{hi:+.0f} dB against the usual level at that pitch</text>')
+    o.append('</svg>'); out.write_text('\n'.join(o) + '\n'); return out
+
+# ------------------------------------------------- interactive export
+def interactive_export(sg, feat, outdir, seconds):
+    """What the page's canvas draws from: the spectrogram's absolute dB values as a grayscale PNG, the
+    loudest-note lane as another, and a JSON with the axes, the reference level per row, the features."""
+    from PIL import Image
+    img, env, lo, hi = sg['img'], sg['env'], sg['lo'], sg['hi']
+    g = np.clip((img - lo) / (hi - lo), 0, 1)[::-1]            # top row = highest frequency, like the figure
+    Image.fromarray((g * 255).astype(np.uint8), mode='L').save(outdir / 'music-spectrogram-data.png', optimize=True)
+    Image.fromarray((feat['chroma'][::-1] * 255).astype(np.uint8), mode='L').save(outdir / 'music-spectrogram-chroma.png', optimize=True)
     meta = dict(seconds=round(seconds, 3), fmin=FMIN, fmax=FMAX, cols=int(sg['cols']), rows=int(img.shape[0]),
-                db_lo=lo, db_hi=hi, hop_s=sg['hop'] / FS, bands=bands, onsets=onsets)
-    (outdir / 'music-spectrogram-data.json').write_text(json.dumps(meta) + '\n')
-    print(f'  bands: ' + ', '.join(f"{b['hz']:.0f} Hz {b['note']}" for b in bands))
-    print(f'  onsets: {len(onsets)} between {onsets[0] if onsets else 0:.2f} and {onsets[-1] if onsets else 0:.2f} s')
-    return outdir / 'music-spectrogram-data.png', outdir / 'music-spectrogram-data.json'
+                db_lo=lo, db_hi=hi, rel_lo=sg['rel_lo'], rel_hi=sg['rel_hi'], hop_s=sg['hop'] / FS,
+                windows=[[n, f] for n, f in WINDOWS[:-1]] + [[WINDOWS[-1][0], FMAX]],
+                env=[round(float(v), 1) for v in env[::-1]],                       # per PNG row, top first
+                bands=feat['bands'], onsets=feat['onsets'], moments=feat['moments'],
+                flux=[round(float(v), 2) for v in feat['flux']], chroma_rows=NOTE_NAMES[::-1])
+    (outdir / 'music-spectrogram-data.json').write_text(json.dumps(meta, ensure_ascii=False) + '\n')
+    print('  bands: ' + ', '.join(f"{b['hz']:.0f} Hz {b['note']}" for b in feat['bands']))
+    print(f"  onsets: {len(feat['onsets'])}; moments: {feat['moments']}")
+    return [outdir / n for n in ('music-spectrogram-data.png', 'music-spectrogram-chroma.png', 'music-spectrogram-data.json')]
 
 # ------------------------------------------------- music against the noise floor
 def floor_figure(music, idle, out):
@@ -205,10 +271,11 @@ def main():
     print(f'excerpt {seconds:.1f} s, L/R correlation {np.corrcoef(x[0], x[1])[0,1]:+.3f}')
     idle = idle_audio(raw)[0]
     print(f'idle {len(idle)/FS:.1f} s decimated, rms {20*np.log10(np.sqrt((idle**2).mean())):.1f} dBFS')
-    fig, sg = spectrogram_figure(music, outdir / 'music-spectrogram.svg', seconds)
-    outs = [fig, floor_figure(music, idle, outdir / 'music-vs-floor.svg'), *interactive_export(music, sg, outdir, seconds)]
+    sg = spectrogram_data(music); feat = features(music, sg)
+    outs = [spectrogram_figure(sg, feat, outdir / 'music-spectrogram.svg', seconds),
+            floor_figure(music, idle, outdir / 'music-vs-floor.svg'), *interactive_export(sg, feat, outdir, seconds)]
     for p in outs:
-        print(f'  wrote {p.relative_to(ROOT)}  ({p.stat().st_size/1024:.0f} kB)')
+        print(f'  wrote {p.relative_to(ROOT) if p.is_relative_to(ROOT) else p}  ({p.stat().st_size/1024:.0f} kB)')
 
 if __name__ == '__main__':
     main()
