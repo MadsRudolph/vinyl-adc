@@ -68,9 +68,12 @@ def test_duration_from_envelope_and_scan():
         R.acoustid_lookup=lambda key,fp,dur:(asked.append(dur) or {'status':'ok','results':results() if abs(dur-251)<=10 else []})
         f,env=side_file(rip,'s1',640);env[:5,2]=-80.;env[2520:2550,2]=-80.;env[6300:,2]=-80.;np.save(f.with_suffix('.env.npy'),env)     # music from 0.5 s, gap at 252 s
         side={'id':'s1','started':time.time(),'file':str(f),'frames':640*R.FS,'gaps':[],'album':None,'status':'recorded','seconds':640.,'peak':.3,'tracks':[]}
-        rip.store['sides'].append(side);t0,gaps=rip.first_track_extent(side);assert abs(t0-0.)<.6 and len(gaps)==1 and abs(gaps[0][0]-252)<1 and abs(gaps[0][1]-255)<1,(t0,gaps)
+        rip.store['sides'].append(side);segs=rip.track_segments(side);assert len(segs)==2 and abs(segs[0][0])<.6 and abs(segs[0][1][0][0]-252)<1 and abs(segs[1][0]-255)<1,segs
         rip.identify(('s1','closed'));assert side['ident']['status']=='ok' and len(asked)==1 and abs(asked[0]-253.5)<1,(side['ident'],asked)
-        asked.clear();side2={**side,'id':'s2','ident':None};rip.side=side2;rip.identify(('s2',None));assert side2['ident']['status']=='ok' and asked[-1]==250 and len(asked)==14,asked
+        # an unknown first track (an intro): the second track, 255-630 s, is tried next and found by its own length
+        asked.clear();R.acoustid_lookup=lambda key,fp,dur:(asked.append(dur) or {'status':'ok','results':results() if abs(dur-375)<=10 else []})
+        side['ident']=None;rip.identify(('s1','closed'));assert side['ident']['status']=='ok' and 370<=asked[-1]<=385 and len(asked)==4,(side['ident'],asked)
+        asked.clear();R.acoustid_lookup=lambda key,fp,dur:(asked.append(dur) or {'status':'ok','results':results() if abs(dur-251)<=10 else []});side2={**side,'id':'s2','ident':None};rip.side=side2;rip.identify(('s2',None));assert side2['ident']['status']=='ok' and asked[-1]==250 and len(asked)==14,asked
 
 def test_split_uses_first_and_trashes_repeats():
     with tempfile.TemporaryDirectory() as tmp:
@@ -84,6 +87,10 @@ def test_split_uses_first_and_trashes_repeats():
         g,_=side_file(rip,'s2',640);np.save(g.with_suffix('.env.npy'),env)
         again={**side,'id':'s2','file':str(g),'tracks':[]};rip.store['sides'].append(again);rip.split_side('s2')
         assert again not in rip.store['sides'] and (rip.home/'trash'/'s2.s24').exists() and a['next_track']==3
+        # a restart from track 1 that runs through track 3: it takes over the tracks the shorter side had, which is then trashed
+        h,env3=side_file(rip,'s3',900);env3[2500:2540,2]=-80.;env3[5340:5380,2]=-80.;env3[8860:,2]=-80.;np.save(h.with_suffix('.env.npy'),env3)
+        full={**side,'id':'s3','file':str(h),'frames':900*R.FS,'seconds':900.,'tracks':[],'first':0};rip.store['sides'].append(full);rip.split_side('s3')
+        assert [t['index'] for t in full['tracks']]==[0,1,2] and side not in rip.store['sides'] and a['status']=='complete',(full['tracks'],a)
 
 if __name__=='__main__':
     for name,fn in list(globals().items()):

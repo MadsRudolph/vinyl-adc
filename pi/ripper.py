@@ -225,8 +225,10 @@ class Ripper:
             else:
                 if self.gap_run*.1>=cfg['gap_seconds']:
                     g0=t-self.gap_run*.1;self.side['gaps'].append([round(g0,1),round(t,1)])
-                    if not self.side.get('ident') and g0>40:          # first gap over: the first track's length is known, identify now
-                        self.side['ident']={'status':'pending'};self.jobs.put(('identify',(self.side['id'],(.5,(g0,t)))))
+                    ident=self.side.get('ident') or {}
+                    if ident.get('status') in (None,'unknown') and ident.get('tries',0)<4 and g0-self.side.get('ident_from',.5)>40:   # a track has ended: its length is known, identify now; retry on later tracks (intros are rarely fingerprinted)
+                        self.side['ident']={'status':'pending','tries':ident.get('tries',0)+1};self.jobs.put(('identify',(self.side['id'],(self.side.get('ident_from',.5),(g0,t)))))
+                    if self.side.get('ident_from',.5)<g0-40:self.side['ident_from']=t
                 self.gap_run=0
         seconds=self.side['frames']/FS
         if seconds>=self.cfg['identify_at_seconds'] and not self.side.get('ident'):                       # tracks that run into each other: scan durations
@@ -294,6 +296,11 @@ class Ripper:
             have={tr['index'] for s in self.store['sides'] if s is not side and s['album']==album['mbid'] for tr in s['tracks']}
             if all(tr['index'] in have for tr in tracks):          # the same side played again: the library already has it
                 self.log(f'Side {sid} is tracks {first+1}–{first+k} of “{album["title"]}” again; already recorded, so it goes to the trash');self.trash_side(side);return
+            mine={tr['index'] for tr in tracks}
+            for other in self.store['sides']:                       # a fresh play of tracks an earlier, shorter side had (a restart from track 1): the new side wins them
+                if other is not side and other['album']==album['mbid'] and any(tr['index'] in mine for tr in other['tracks']):
+                    other['tracks']=[tr for tr in other['tracks'] if tr['index'] not in mine];self.log(f'Side {other["id"]} loses its overlap with {sid}')
+                    if not other['tracks']:self.log(f'Side {other["id"]} is fully replaced and goes to the trash');self.trash_side(other)
             side['tracks']=tracks;side['status']='split';self.recount(album);self.save()
         self.log(f'Side {sid}: tracks {first+1}–{first+k} of “{album["title"]}”'+(' — album complete' if album['status']=='complete' else ''))
         if album['status']=='complete':self.jobs.put(('finalize',album['mbid']))
@@ -301,16 +308,21 @@ class Ripper:
         with self.lock:
             if self.side and self.side['id']==sid:return self.side
             return next((s for s in self.store['sides'] if s['id']==sid),None)
-    def first_track_extent(self,side):
-        """From a closed side's envelope: the music start and the quiet fragments (start, end) within 30 s of the first one, longest
-        first. A fade-out leaves several quiet spots before the real gap, and the true track length ends at the next track's start."""
+    def track_segments(self,side,limit=4):
+        """From a closed side's envelope: the first few tracks as (start, quiet fragments at their end). Fragments within 30 s of
+        each other belong to one track end (a fade-out leaves several); the true length ends somewhere in that cluster."""
         level=self.side_env(side)[:,2];frac=lambda mask,n:np.convolve(mask.astype(float),np.ones(n)/n,'same')
         music=np.flatnonzero(frac(level>self.cfg['start_db'],30)>=.5)
-        if not len(music):return .5,[]
+        if not len(music):return []
         t0=max(0.,music[0]*.1-.5);t1=music[-1]*.1+1.;edge=np.diff(np.r_[0,(frac(level<self.cfg['gap_db'],15)>=.8).astype(int),0])
-        gaps=[(a*.1,b*.1) for a,b in zip(np.flatnonzero(edge==1),np.flatnonzero(edge==-1)) if a*.1>t0+20 and b-a>=5]
-        if not gaps:return t0,[(t1,t1)]
-        gaps=[g for g in gaps if g[0]<=gaps[0][0]+30];return t0,sorted(gaps,key=lambda g:g[0]-g[1])
+        gaps=[(a*.1,b*.1) for a,b in zip(np.flatnonzero(edge==1),np.flatnonzero(edge==-1)) if b-a>=5];segments=[];start=t0
+        while len(segments)<limit:
+            cluster=[g for g in gaps if g[0]>start+40];cluster=[g for g in cluster if g[0]<=cluster[0][0]+30] if cluster else []
+            if not cluster:
+                if t1-start>40 and not segments:segments.append((start,[(t1,t1)]))
+                break
+            segments.append((start,sorted(cluster,key=lambda g:g[0]-g[1])));start=max(g[1] for g in cluster)
+        return segments
     def identify(self,arg):
         """Fingerprint the first two minutes of a side and ask AcoustID which recording it is; that fixes the album and the starting track.
 
@@ -323,23 +335,26 @@ class Ripper:
         if not self.acoustid:
             side['ident']={'status':'no key'};self.log('Cannot identify the record: no AcoustID key (see ~/vinyl/acoustid.key)');return
         try:
-            if duration=='closed':start,gaps=self.first_track_extent(side);duration=(start,gaps)
-            if duration is None:start,candidates=.5,list(range(120,int(side['frames']/FS)+1,10))
-            elif isinstance(duration,tuple):                    # (music start, quiet fragments): a track ends where the next begins, somewhere in or after the gap
-                start,gaps=duration;gaps=gaps if isinstance(gaps,list) else [gaps];candidates=[]
-                for g0,g1 in gaps:candidates+=[(g0+g1)/2-start,g1-start,g0-start]
-                candidates+=[c+d for c in candidates[:3] for d in (10,-10)]
-                seen=[];candidates=[c for c in candidates if c>=30 and not any(abs(c-x)<3 for x in seen) and not seen.append(c)][:8]
-            else:start,candidates=.5,[duration,duration-8,duration+8]
-            fp,_=fingerprint(side['file'],start,min(120.,max(30.,candidates[0])));res={}
-            for i,d in enumerate(candidates):
-                if i:time.sleep(.4)                                   # AcoustID allows three requests a second
-                res=acoustid_lookup(self.acoustid,fp,d)
+            segments=self.track_segments(side) if duration=='closed' else [duration] if isinstance(duration,tuple) else [None]
+            res={};n=0
+            for seg in segments:                                    # one track after another until something is known (intros are rarely fingerprinted)
+                if seg is None:start,candidates=.5,list(range(120,int(side['frames']/FS)+1,10))
+                else:                                               # (track start, quiet fragments): the track ends where the next begins, somewhere in or after the gap
+                    start,gaps=seg;gaps=gaps if isinstance(gaps,list) else [gaps];candidates=[]
+                    for g0,g1 in gaps:candidates+=[(g0+g1)/2-start,g1-start,g0-start]
+                    candidates+=[c+d for c in candidates[:3] for d in (10,-10)]
+                    seen=[];candidates=[c for c in candidates if c>=30 and not any(abs(c-x)<3 for x in seen) and not seen.append(c)][:8]
+                if not candidates:continue
+                fp,_=fingerprint(side['file'],start,min(120.,max(30.,candidates[0])))
+                for d in candidates:
+                    if n:time.sleep(.4)                               # AcoustID allows three requests a second
+                    res=acoustid_lookup(self.acoustid,fp,d);n+=1
+                    if res.get('results'):break
                 if res.get('results'):break
         except Exception as e:side['ident']={'status':'failed','error':repr(e)};self.log(f'Identification failed: {e!r}');return
         with self.lock:current=self.store['albums'].get(side['album'] or self.store['current_album'] or '')
         matches=rank_releases(res.get('results',[]),current['mbid'] if current else None)
-        if not matches:side['ident']={'status':'unknown'};self.log('AcoustID does not know this record; choose the album in the dashboard');return
+        if not matches:side['ident']={'status':'unknown','tries':(side.get('ident') or {}).get('tries',1)};self.log('AcoustID does not know this track; trying again after the next one' if self.side is side else 'AcoustID does not know this record; choose the album in the dashboard');return
         # the album in use wins whenever one of its recordings matched, even if AcoustID lists that recording under other pressings only
         recs={m['recording'] for m in matches};hit=next((i for i,t in enumerate(current['tracks']) if t['recording'] in recs),None) if current else None
         if hit is not None:best=next(m for m in matches if m['recording']==current['tracks'][hit]['recording'])
