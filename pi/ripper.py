@@ -389,7 +389,7 @@ class Ripper:
         with self.lock:
             for a in list(self.store['albums'].values()):
                 if a.get('status')!='in progress':continue
-                last=max((s['started']+s['seconds'] for s in self.store['sides'] if s['album']==a['mbid']),default=0)
+                last=max([s['started']+s['seconds'] for s in self.store['sides'] if s['album']==a['mbid']]+[a.get('touched',0)],default=0)   # a re-cut or reset counts as activity too
                 if last and time.time()-last>self.cfg['finalize_after_hours']*3600 and not (self.side and self.side['album']==a['mbid']):
                     self.log(f'“{a["title"]}”: nothing new for {self.cfg["finalize_after_hours"]:g} h, sending what was recorded');self.jobs.put(('finalize',a['mbid']))
     def trash_side(self,side):
@@ -421,7 +421,7 @@ class Ripper:
     def recount(self,album):
         """What has been recorded decides where the album stands, so assigning, unassigning or re-cutting a side can never leave a stale counter."""
         done={tr['index'] for s in self.store['sides'] if s['album']==album['mbid'] for tr in s['tracks'] if not tr.get('partial')}
-        album['next_track']=max(done)+1 if done else 0
+        album['next_track']=max(done)+1 if done else 0;album['touched']=time.time()
         if album.get('status') not in ('encoding','ready','delivered'):album['status']='complete' if len(done)>=len(album['tracks']) else ('in progress' if done else 'selected')
     # ---- encoding
     def finalize(self,mbid):
