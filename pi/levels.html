@@ -1,0 +1,165 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vinyl ADC · set the levels</title>
+<style>
+:root{color-scheme:dark;--surface:#1a1a19;--card:#232321;--raise:#2d2d2a;--grid:#33332f;--text:#fff;--text2:#c3c2b7;--muted:#8d8c83;--left:#3987e5;--right:#d95926;--good:#0ca30c;--warning:#fab219;--serious:#ec835a;--critical:#d03b3b}
+*{box-sizing:border-box}body{margin:0;background:var(--surface);color:var(--text);font:15px/1.45 system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--grid)}h1{font-size:19px;margin:0 8px 0 0}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:999px;background:var(--raise);font-size:13.5px}.pill i{width:9px;height:9px;border-radius:50%;flex:none;background:var(--muted)}
+main{padding:16px 22px 40px;max-width:1200px;margin:0 auto;display:grid;gap:16px}
+.card{background:var(--card);border-radius:12px;padding:16px 18px}
+.card h2{font-size:12.5px;margin:0 0 12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.chans{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:820px){.chans{grid-template-columns:1fr}}
+.chan{border-top:3px solid var(--c)}
+.chead{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}.chead b{font-size:17px}.chead .sw{width:12px;height:12px;border-radius:3px;background:var(--c);align-self:center;flex:none}
+.says{font-size:26px;font-weight:600;line-height:1.15;margin:6px 0 2px;letter-spacing:-.01em}
+.big{font:600 46px/1 system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.big small{font-size:17px;font-weight:400;color:var(--muted);letter-spacing:0}
+.rail{position:relative;height:26px;border-radius:5px;background:#141413;overflow:hidden;margin:14px 0 4px}
+.rail .zone{position:absolute;top:0;bottom:0}
+.rail .fill{position:absolute;left:0;top:0;bottom:0;background:var(--c);opacity:.85;border-radius:0 3px 3px 0}
+.rail .mus{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--text);border-radius:2px}
+.rail .mx{position:absolute;top:0;bottom:0;width:2px;background:var(--text2);opacity:.65}
+.ticks{display:flex;justify-content:space-between;color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+.sub{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:12px;color:var(--text2);font-size:13.5px;font-variant-numeric:tabular-nums}
+.sub b{color:var(--text);font-weight:600}
+.bal{position:relative;height:34px;border-radius:5px;background:#141413;overflow:hidden;margin:6px 0 4px}
+.bal .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--muted)}
+.bal .ok{position:absolute;top:0;bottom:0;background:rgba(12,163,12,.16)}
+.bal .b{position:absolute;top:6px;bottom:6px;border-radius:3px}
+canvas{width:100%;display:block}
+.note{color:var(--text2);font-size:13.5px;margin:10px 0 0}.note b{color:var(--text)}
+.banner{background:#3a2a12;border-left:4px solid var(--warning);padding:11px 15px;border-radius:8px;color:var(--text2)}
+.banner.bad{background:#3a1616;border-left-color:var(--critical)}
+button{font:inherit;border:0;border-radius:8px;padding:7px 13px;background:var(--raise);color:var(--text);cursor:pointer}
+button[aria-pressed=true]{background:var(--text);color:#111;font-weight:600}
+.steps{margin:0;padding-left:20px;color:var(--text2);font-size:13.5px}.steps li{margin:5px 0}.steps b{color:var(--text)}
+</style>
+<header>
+ <h1>Vinyl ADC · set the levels</h1>
+ <span class="pill" id="conn"><i></i><span>connecting…</span></span>
+ <span class="pill" id="stat"></span>
+ <button id="hold" aria-pressed="true" title="While this is on, a record playing will not start a side">Recorder held off</button>
+</header>
+<main>
+ <div id="banner" class="banner" hidden></div>
+
+ <div class="chans" id="chans"></div>
+
+ <section class="card"><h2>Channel match</h2>
+  <div class="bal"><div class="ok" id="balok"></div><div class="mid"></div><div class="b" id="balbar"></div></div>
+  <div class="ticks"><span>L louder ·　2 dB</span><span>1</span><span>matched</span><span>1</span><span>2 dB · R louder</span></div>
+  <p class="note" id="baltext">—</p>
+ </section>
+
+ <section class="card"><h2>Last <span id="win">30</span> seconds</h2>
+  <canvas id="hist" height="200"></canvas>
+  <p class="note"><b>White dashes</b> are the −6 dBFS target, <b>red</b> is −3 dBFS where the loop goes unstable. Spikes through the red line are clicks in the groove — expected, and the input clamp is built for them. The music is what has to stay under.</p>
+ </section>
+
+ <section class="card"><h2>How to use this</h2>
+  <ol class="steps">
+   <li>Play the <b>loudest record you own</b>, somewhere in the middle of a side.</li>
+   <li>Turn <b>RV20 on the left channel board</b> until the big number reads −6 dBFS and the line says <b>On target</b>.</li>
+   <li>Do the same on the right board, then let a minute pass and check the match below.</li>
+   <li>Match by <b>reading, not by rotation</b> — these are ±20 % parts and identical positions differed by about a decibel last time.</li>
+   <li>Release the hold when you are done, or the ripper will not start a side.</li>
+  </ol>
+  <p class="note">The tuning number is the <b>95th percentile</b> of the 100 ms peaks, not the maximum: trim to a click and every record ends up ten decibels too quiet.</p>
+ </section>
+</main>
+<script>
+const $=s=>document.querySelector(s), LO=-48, HI=0;
+const COL={ok:'var(--good)',low:'var(--warning)',hot:'var(--serious)',over:'var(--critical)',silent:'var(--muted)'};
+const pos=d=>Math.max(0,Math.min(100,(d-LO)/(HI-LO)*100));
+let S=null, holding=true;
+
+function chanCard(c,i,S){
+  const col=i?'var(--right)':'var(--left)';
+  const mus=c.music==null?null:c.music, mx=c.max, live=(S.live||[])[i];
+  const t0=pos(S.target-S.tol), t1=pos(S.target+S.tol), c0=pos(S.ceiling);
+  return `<section class="card chan" style="--c:${col}">
+    <div class="chead"><span class="sw"></span><b>${c.name}</b><span style="color:var(--muted);font-size:13px">RV20 on the ${c.name.toLowerCase()} board</span></div>
+    <div class="says" style="color:${COL[c.verdict]}">${c.says}</div>
+    <div class="big">${mus==null?'—':mus.toFixed(1)}<small> dBFS music peak</small></div>
+    <div class="rail">
+      <div class="zone" style="left:${t0}%;width:${t1-t0}%;background:rgba(12,163,12,.22)"></div>
+      <div class="zone" style="left:${c0}%;right:0;background:rgba(208,59,59,.22)"></div>
+      <div class="fill" style="width:${live==null?0:pos(live)}%"></div>
+      ${mx==null?'':`<div class="mx" style="left:${pos(mx)}%"></div>`}
+      ${mus==null?'':`<div class="mus" style="left:${pos(mus)}%"></div>`}
+    </div>
+    <div class="ticks"><span>−48</span><span>−36</span><span>−24</span><span>−12</span><span>0</span></div>
+    <div class="sub">
+      <span>loudest transient <b>${mx==null?'—':mx.toFixed(1)}</b> dBFS</span>
+      <span>live peak <b>${live==null?'—':live.toFixed(1)}</b></span>
+      ${c.over?`<span style="color:var(--critical)">clipped ${c.over}×</span>`:''}
+    </div>
+  </section>`;
+}
+
+function draw(){
+  const cv=$('#hist'), g=cv.getContext('2d'), dpr=devicePixelRatio||1;
+  const w=cv.clientWidth, h=200; cv.width=w*dpr; cv.height=h*dpr; g.scale(dpr,dpr);
+  g.fillStyle='#141413'; g.fillRect(0,0,w,h);
+  if(!S||!S.ok) return;
+  const H=S.history||{left:[],right:[]}, n=Math.max(H.left.length,H.right.length,2);
+  const y=d=>h-8-(Math.max(LO,Math.min(HI,d))-LO)/(HI-LO)*(h-16);
+  g.strokeStyle='#33332f'; g.lineWidth=1;
+  for(const d of [-12,-24,-36]){g.beginPath();g.moveTo(0,y(d));g.lineTo(w,y(d));g.stroke();
+    g.fillStyle='#8d8c83';g.font='11px system-ui';g.fillText(d,4,y(d)-3);}
+  for(const [d,col] of [[S.target,'#fff'],[S.ceiling,'#d03b3b']]){
+    g.strokeStyle=col;g.setLineDash([5,4]);g.beginPath();g.moveTo(0,y(d));g.lineTo(w,y(d));g.stroke();g.setLineDash([]);}
+  for(const [k,col] of [['left','#3987e5'],['right','#d95926']]){
+    const a=H[k]||[]; if(a.length<2) continue;
+    g.strokeStyle=col;g.lineWidth=1.6;g.beginPath();
+    a.forEach((d,i)=>{const X=i/(n-1)*w, Y=y(d); i?g.lineTo(X,Y):g.moveTo(X,Y);});
+    g.stroke();
+  }
+}
+
+function render(){
+  const c=$('#conn'), b=$('#banner');
+  if(!S||!S.ok){
+    c.innerHTML=`<i style="background:var(--critical)"></i><span>no data</span>`;
+    b.hidden=false; b.className='banner bad'; b.textContent=(S&&S.error)||'Waiting for the ripper…';
+    $('#chans').innerHTML=''; draw(); return;
+  }
+  c.innerHTML=`<i style="background:var(--good)"></i><span>${(S.samples*S.history.step_s).toFixed(0)} s of history</span>`;
+  $('#stat').textContent=S.status+(S.message?' · '+S.message:'');
+  $('#win').textContent=S.window_s;
+  // two things worth interrupting for: no clocks at all, and a side that started before the hold took hold
+  if(S.status==='waiting'){b.hidden=false;b.className='banner bad';b.textContent=S.message||'The ripper is not seeing clocks from the ADC. Is the stack powered?';}
+  else if(S.status==='recording'){b.hidden=false;b.className='banner';
+    b.innerHTML='<b>A side is recording.</b> It started before the hold did, and anything captured while you are turning the trimmers is junk. No <em>new</em> side will start while the hold is on — finish here, then trash this one in the ripper.';}
+  else b.hidden=true;
+  $('#chans').innerHTML=S.ch.map((x,i)=>chanCard(x,i,S)).join('');
+  const bal=S.balance, bb=$('#balbar'), ok=$('#balok');
+  ok.style.left=pos2(0.3)+'%'; ok.style.width=(pos2(-0.3)-pos2(0.3))+'%';
+  if(bal==null){bb.style.display='none';$('#baltext').textContent='Both channels need signal before this means anything.';}
+  else{
+    bb.style.display='block';
+    const a=pos2(Math.min(0,bal)), z=pos2(Math.max(0,bal));
+    bb.style.left=a+'%'; bb.style.width=Math.max(2,z-a)+'%';
+    bb.style.background = Math.abs(bal)<=0.3?'var(--good)':Math.abs(bal)<=1?'var(--warning)':'var(--serious)';
+    $('#baltext').innerHTML = Math.abs(bal)<0.05 ? '<b>Matched.</b>'
+      : `<b>${Math.abs(bal).toFixed(1)} dB</b> apart — ${bal>0?'left':'right'} is louder. `+
+        (Math.abs(bal)<=0.3?'Close enough; the record itself is not perfectly centred either.'
+         :`Turn <b>${bal>0?'right':'left'}</b> up by ${Math.abs(bal).toFixed(1)} dB, or the other down.`);
+  }
+  draw();
+}
+const pos2=v=>Math.max(0,Math.min(100,(2-v)/4*100));   // balance bar: left end = left louder, so +ve goes left
+
+async function tick(){
+  try{ S=await (await fetch('/api/levels',{cache:'no-store'})).json(); }
+  catch(e){ S={ok:false,error:'This page lost its own server.'}; }
+  render();
+}
+$('#hold').onclick=async()=>{
+  holding=!holding;
+  await fetch('/api/holding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:holding})});
+  $('#hold').setAttribute('aria-pressed',holding);
+  $('#hold').textContent=holding?'Recorder held off':'Recorder free to start';
+};
+addEventListener('resize',draw);
+tick(); setInterval(tick,250);
+</script>
