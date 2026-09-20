@@ -1,0 +1,11 @@
+[Unit]
+Description=Mirror the Vinyl ADC ripper into Home Assistant
+Documentation=https://github.com/MadsRudolph/vinyl-adc
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/vinyl-ha-bridge
+EnvironmentFile=-/etc/default/vinyl-pull
+TimeoutStartSec=40

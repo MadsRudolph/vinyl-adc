@@ -1,0 +1,13 @@
+[Unit]
+Description=Push the Vinyl ADC ripper's state to Home Assistant every 30 s
+# The entities are created through HA's states API, so an HA restart drops them.
+# This interval is also how long they stay missing afterwards.
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+AccuracySec=5s
+Unit=vinyl-ha-bridge.service
+
+[Install]
+WantedBy=timers.target
