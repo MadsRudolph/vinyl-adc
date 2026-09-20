@@ -97,17 +97,32 @@ The loop, rails, references and DAC are therefore exonerated by §3. The deficit
 
 RV20 sets each channel's full-scale input, so **full scale is a calibration, not a property of the converter**. The two were matched by driving 0.5 Vpk at 1 kHz and reading the ADC output: the left gives −26.37 dBFS, the right was set to −25.56 dBFS, leaving **0.81 dB of channel imbalance**. Setting both trimmers to the same physical rotation is not sufficient — these are ±20 % parts and identical positions differed by about a dB.
 
-At 10.41 Vpk (7.36 Vrms) of full scale, a phono stage delivering ~0.5 Vrms would peak near −23 dBFS and waste most of a converter that only has ~68 dB to give. **The absolute level has not been set for the actual source** and should be before any recording that matters.
+At 10.41 Vpk (7.36 Vrms) of full scale, a phono stage delivering ~0.5 Vrms would peak near −23 dBFS and waste most of a converter that only has ~68 dB to give.
+
+### Set against the real source, 2026-09-20
+
+Done, with the converter in the listening chain: the Phono Box output and the Saga input now share J20's two screws on each board, so the record plays through the speakers and into the ADC from one junction. Levels were set with a record playing, using `pi/levels.py`.
+
+| | before | after |
+|---|---|---|
+| Music peak, left | −13.9 dBFS | **−6.9 dBFS** |
+| Music peak, right | −13.9 dBFS | **−6.9 dBFS** |
+| Channel imbalance | 0.81 dB (1 kHz tone) | **0.0 dB** |
+
+"Music peak" is the 95th percentile of the 100 ms peak buckets over 30 s, not the maximum: the loudest transients in the same passage reached −3.6 dBFS, and those are clicks in the groove. Trimming to them would have left the record 7 dB quieter than it needs to be.
+
+**Checked for clamping, and there is none.** A 10 s capture gives a crest factor of 15.9 dB (left) and 16.8 dB (right), with 1 sample in 480 000 above 99 % of peak and 13 above 90 %. A limiter or an input clamp in circuit piles thousands of samples at one amplitude; this distribution is ordinary music. The +7 dB moves the converter from roughly the low 60s to the 68 dB region of the design curve (`docs/design-notes.md` §3).
+
+Both boards read **Healthy** at the bitstream level while doing this — density 0.4956 / 0.4959, mean run 1.34 / 1.35 — and the ripper selected **stereo**, not the mono fallback it used before the right-channel repair.
 
 ## 6. Conditions not covered
 
 - **Pi-powered operation.** All figures here are on the Korad bench supply. The 1-bit DAC gates run directly from +5 V, so that rail *is* the DAC reference; running from the Pi previously cost 6–11 dB of idle noise. The 5 V filtering and the 470 Ω series resistors in PI_BCLK/PI_LRCLK that address this are not fitted.
 - **Idle noise is not comparable between §3 and §4.** §3 shorts the input; §4 has the generator wired to it, contributing its own noise. The −66.2 dBFS in §4 and the −76.8 dBFS in §3 are measurements of different configurations.
 - **Right channel after an RV20 repair** — the open item from §5.
-- **Absolute input level for the real source** — §5.
 - **The top octave, 16.3–20 kHz.** `sweep_points()` steps in third-octaves from 20 Hz and stops at 16255 Hz because the next step would pass 20 kHz, so the highest measured point is 16.3 kHz. The plan's own row is *labelled* "20 Hz–20 kHz" and that label overstates what was swept — a figure of ±0.06 dB should be quoted to 16.3 kHz, not 20 kHz.
 - **A full record side end to end**, and the enclosure as a physical print.
-- **Hum with the turntable connected.** The −99.5 dBFS here is with the generator driving the input; with the phono lead attached, hum was previously −39 dBFS at 50 Hz. That is a wiring and grounding problem, not a converter problem, and remains open.
+- **Hum with the turntable connected.** The −99.5 dBFS here is with the generator driving the input. With the phono lead attached, hum was previously −39 dBFS at 50 Hz. After the tap was wired (2026-09-20) the 50 Hz line measured −60 to −63 dBFS, but *with a record playing*, so music and groove rumble are mixed into that figure and it is only an upper bound. It does establish that the −39 dBFS condition is gone. A clean measurement needs the stylus up and the turntable stopped, and has not been made.
 
 ## 7. Two measurement bugs found, and why the first runs were invalid
 
