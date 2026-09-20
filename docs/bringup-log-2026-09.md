@@ -648,6 +648,7 @@ Against the plan's own reference points, 67.9 dB of dynamic range sits inside th
 | MCLK–(−5 V) clearance is 0.07 mm | Different copper layers | Printing the layer of each segment |
 | U23 is inserted backwards | Notch toward the bus is correct | Checking pin 1's position in the PCB data |
 | R33 and R34 are swapped | Colour bands correct; an open joint | The builder reading the bands |
+| Turning the input trimmer up costs nothing but noise headroom | It invalidates every absolute threshold downstream: at +7 dB the needle detector's −65 dBFS stop sat *below* the new noise floor, so sides never ended and one ran 40 min through a record flip | Two sides recorded at the 40-minute cap |
 | Expect 255 kΩ / open across a capacitor | Parallel paths and unpowered ICs | Both boards reading the same |
 | Sliced bitstreams can be concatenated | Seams break the noise shaping (33 dB) | A tone SNR check before trusting the audio |
 | Treble spikes are clicks | Mostly cymbals (24 % flagged) | The patch percentage |

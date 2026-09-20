@@ -24,7 +24,12 @@ import decimate as d
 
 FS=48000;BLOCK_FRAMES=24000;BLOCK_BYTES=BLOCK_FRAMES*8;CHUNK=4800           # 0.5 s blocks, 100 ms level chunks
 UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
-DEFAULTS={'start_db':-62.,'start_seconds':2.,'stop_db':-65.,'stop_seconds':30.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
+# start_db and stop_db are ABSOLUTE dBFS, so they belong to one input-gain setting: move RV20 and they must be
+# re-derived or the needle detector stops working. With the trimmers set for a phono stage (2026-09-20) silence
+# reads about -57.6 dBFS on the treble-weighted detector and music sits 15-20 dB above it, which leaves a narrow
+# window: -53 keeps 93 % of silence below the stop rule's 80 % and the quietest 30 s of a sparse jazz side at
+# 61 %, and both margins shrink if the input noise floor rises. See docs/test-and-verification.md section 5b.
+DEFAULTS={'start_db':-55.,'start_seconds':2.,'stop_db':-53.,'stop_seconds':30.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
           'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.,
           'identify':True,'identify_at_seconds':480.,'finalize_after_hours':3.,'min_free_gb':3.}
 ACOUSTID='https://api.acoustid.org/v2/lookup'
