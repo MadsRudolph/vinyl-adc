@@ -143,7 +143,7 @@ class Ripper:
         self.stop=threading.Event();self.recover_orphans()
         self.acoustid=(self.home/'acoustid.key').read_text().strip() if (self.home/'acoustid.key').exists() else None
         self.ring=deque(maxlen=120);self.hold_until=0.;self.last_check=time.time()       # ring: the last 60 s of decimated audio, for measurements
-        self.pre=deque();self.side=None;self.loud=deque(maxlen=int(self.cfg['start_seconds']*10));self.still=deque(maxlen=int(self.cfg['stop_seconds']*10));self.quiet=0.;self.gap_run=0;self.events=deque(maxlen=40);self.seq=0;self.manual=None
+        self.pre=deque();self.side=None;self.loud=deque(maxlen=int(self.cfg['start_seconds']*10));self.still=deque(maxlen=int(self.cfg['stop_seconds']*10));self.quiet=0.;self.gap_run=0;self.events=deque(maxlen=40);self.seq=0;self.manual=None;self.now_track=None
     def recover_orphans(self):
         """A side file without a state entry means the process died while recording (power loss, kill). Rebuild its envelope and keep it."""
         known={Path(x['file']).name for x in self.store['sides']}
@@ -225,6 +225,24 @@ class Ripper:
                 self.seq+=1;self.status='recording' if self.side else 'idle';self.message='';self.meters={**{k:info[k] for k in ('mode','health','rms_db','peak_db')},'level_db':float(info['level'].max()),
                     'cpu_ms':round((time.time()-t0)*1000),'backlog':q.qsize(),'repaired':self.dsp.repaired}
                 for pk,lv in zip(info['peaks'],info['level']):self.recent.append((float(pk[0]),float(pk[1]),float(lv)))
+    def playing(self):
+        """Which album track the needle is on right now: (index in album, track, seconds into it), or None.
+
+        Same walk over the expected track lengths that the dashboard does, so the phone and the
+        screen never disagree about what is on the platter."""
+        s=self.side
+        if not s:return None
+        with self.lock:album=self.store['albums'].get(s.get('album') or self.store['current_album'] or '')
+        if not album or not album.get('tracks'):return None
+        start=s['first'] if s.get('first') is not None else album['next_track']
+        rest=album['tracks'][start:]
+        if not rest:return None
+        t=max(0.,s['frames']/FS-self.cfg['preroll_seconds']);acc=0.;idx=0
+        for i,tr in enumerate(rest):
+            idx=i
+            if tr['length'] is None or t<acc+tr['length']:break
+            acc+=tr['length']
+        return start+idx,rest[idx],t-acc,album
     # ---- recorder state machine, fed every 0.5 s
     def feed(self,audio,info):
         cfg=self.cfg;pcm=np.clip(np.round(audio.T*(2**23-1)),-2**23,2**23-1).astype('<i4').reshape(-1,1).view(np.uint8).reshape(-1,4)[:,:3].tobytes()
@@ -236,6 +254,15 @@ class Ripper:
             if self.manual=='start' or (time.time()>self.hold_until and len(self.loud)==self.loud.maxlen and sum(self.loud)>=.7*len(self.loud)):self.open_side()
             self.manual=None;return
         self.write_block(block)
+        cur=self.playing();idx=cur[0] if cur else None
+        if idx!=self.now_track:
+            self.now_track=idx
+            if cur:
+                i,tr,_,album=cur
+                self.notify('now_ripping','Now ripping',
+                            f"{tr['title']}\n{album['artist']} \u2014 {album['title']}  (track {i+1} of {len(album['tracks'])})",
+                            track=tr['title'],number=i+1,of=len(album['tracks']),
+                            album=album['title'],artist=album['artist'],side=self.side['id'])
         for v in block[2]:
             self.still.append(v<cfg['stop_db'])     # a window, not a run: isolated clicks must not keep a finished side open
             t=len(self.side['level'])*.1
@@ -259,7 +286,7 @@ class Ripper:
         sid=time.strftime('%Y%m%d-%H%M%S');path=self.home/'sides'/f'{sid}.s24'
         self.side={'id':sid,'started':time.time(),'file':str(path),'frames':0,'peaks':[],'level':[],'gaps':[],'album':self.store['current_album'],'status':'recording','fh':open(path,'wb')}
         for block in self.pre:self.write_block(block)
-        self.pre.clear();self.loud.clear();self.still.clear();self.quiet=0.;self.gap_run=0;self.imbalance=None;self.log(f'Recording started ({sid})')
+        self.pre.clear();self.loud.clear();self.still.clear();self.quiet=0.;self.gap_run=0;self.imbalance=None;self.now_track=None;self.log(f'Recording started ({sid})')
         alb=self.store['albums'].get(self.store['current_album'] or '')
         self.notify('side_started','Vinyl rip started',
                     f"Recording a side of \u201c{alb['title']}\u201d" if alb else 'Recording a side (no album chosen yet)',
