@@ -643,6 +643,11 @@ def make_handler(rip):
                     with rip.lock:
                         for k,v in body.items():
                             if k in DEFAULTS:rip.cfg[k]=type(DEFAULTS[k])(v)
+                        # the needle detector's windows are deques sized at startup, so a new
+                        # start_seconds or stop_seconds means nothing until they are rebuilt
+                        for name,key in (('loud','start_seconds'),('still','stop_seconds')):
+                            want=int(rip.cfg[key]*10);d=getattr(rip,name)
+                            if d.maxlen!=want:setattr(rip,name,deque(d,maxlen=want))
                         rip.save()
                     self.reply({'ok':True})
                 elif self.path=='/outbox/ack':
