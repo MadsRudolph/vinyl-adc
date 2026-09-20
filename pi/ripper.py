@@ -31,8 +31,11 @@ UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
 # second side proved it, fragmenting into three. Sixty seconds does separate them, because a musical gap cannot
 # fill a minute and a lifted needle can - measured over four real sides, the worst passage reaches 63 % of the
 # window against the stop rule's 80 %, while silence reaches 100 %. Widening the window, not moving the
-# threshold, is what bought the margin. See docs/test-and-verification.md section 5b.
-DEFAULTS={'start_db':-55.,'start_seconds':2.,'stop_db':-50.,'stop_seconds':60.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
+# threshold, is what bought the margin. -50 was the first attempt and it still cut Abbey Road's second side in
+# three: a caution about the method, not just the number. Those sides had been closed by the 30 s rule, so none
+# of them contained a 60 s silence to trigger a 60 s rule, and validating against them was circular. -54 is
+# measured against sides that fragmented under the rule being replaced. See docs/test-and-verification.md 5b.
+DEFAULTS={'start_db':-55.,'start_seconds':2.,'stop_db':-54.,'stop_seconds':60.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
           'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.,
           'identify':True,'identify_at_seconds':480.,'finalize_after_hours':3.,'min_free_gb':3.,
           'notify_url':''}          # a webhook that gets a JSON POST when a side starts, ends or lands in the library
