@@ -31,7 +31,8 @@ UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
 # 61 %, and both margins shrink if the input noise floor rises. See docs/test-and-verification.md section 5b.
 DEFAULTS={'start_db':-55.,'start_seconds':2.,'stop_db':-53.,'stop_seconds':30.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
           'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.,
-          'identify':True,'identify_at_seconds':480.,'finalize_after_hours':3.,'min_free_gb':3.}
+          'identify':True,'identify_at_seconds':480.,'finalize_after_hours':3.,'min_free_gb':3.,
+          'notify_url':''}          # a webhook that gets a JSON POST when a side starts, ends or lands in the library
 ACOUSTID='https://api.acoustid.org/v2/lookup'
 
 def db(x):return float(10*np.log10(x+1e-20))
@@ -170,6 +171,18 @@ class Ripper:
     def log(self,text):
         with self.lock:self.events.appendleft({'time':time.time(),'text':text})
         print(time.strftime('%H:%M:%S'),text,flush=True)
+    def notify(self,event,title,message,**extra):
+        """Fire-and-forget JSON at cfg['notify_url'] (a Home Assistant webhook here).
+
+        On its own thread and swallowing everything: a phone that cannot be reached must never
+        be able to interrupt a recording, which is the only thing in this program that matters."""
+        url=self.cfg.get('notify_url') or ''
+        if not url:return
+        body=json.dumps({'event':event,'title':title,'message':message,'at':time.strftime('%Y-%m-%dT%H:%M:%S'),**extra}).encode()
+        def send():
+            try:urllib.request.urlopen(urllib.request.Request(url,data=body,headers={'Content-Type':'application/json'}),timeout=8).read()
+            except Exception as e:print(time.strftime('%H:%M:%S'),f'notify failed: {e!r}',flush=True)
+        threading.Thread(target=send,daemon=True).start()
     # ---- capture
     def source(self):
         if self.replay:
@@ -246,7 +259,11 @@ class Ripper:
         sid=time.strftime('%Y%m%d-%H%M%S');path=self.home/'sides'/f'{sid}.s24'
         self.side={'id':sid,'started':time.time(),'file':str(path),'frames':0,'peaks':[],'level':[],'gaps':[],'album':self.store['current_album'],'status':'recording','fh':open(path,'wb')}
         for block in self.pre:self.write_block(block)
-        self.pre.clear();self.loud.clear();self.still.clear();self.quiet=0.;self.gap_run=0;self.log(f'Recording started ({sid})')
+        self.pre.clear();self.loud.clear();self.still.clear();self.quiet=0.;self.gap_run=0;self.imbalance=None;self.log(f'Recording started ({sid})')
+        alb=self.store['albums'].get(self.store['current_album'] or '')
+        self.notify('side_started','Vinyl rip started',
+                    f"Recording a side of \u201c{alb['title']}\u201d" if alb else 'Recording a side (no album chosen yet)',
+                    side=sid,album=(alb or {}).get('title'),artist=(alb or {}).get('artist'))
     def write_block(self,block):
         pcm,peaks,level=block;s=self.side;s['fh'].write(pcm);s['frames']+=len(pcm)//6;s['peaks']+=peaks;s['level']+=level
     def close_side(self,why,keep=False):
@@ -256,6 +273,12 @@ class Ripper:
         np.save(Path(s['file']).with_suffix('.env.npy'),np.column_stack((np.array(s['peaks']),np.array(s['level']))))
         meta={k:s[k] for k in ('id','started','file','frames','gaps','album')};meta.update(status='recorded',seconds=round(seconds,1),peak=float(np.max(s['peaks'])),tracks=[],first=s.get('first'),anchor=s.get('anchor'),ident=s.get('ident'))
         with self.lock:self.store['sides'].append(meta);self.save()
+        pk=np.array(s['peaks']);loud=pk.max(axis=1)>0.002
+        gap=float(np.median(20*np.log10(np.maximum(pk[loud,0],1e-12))-20*np.log10(np.maximum(pk[loud,1],1e-12)))) if loud.sum()>100 else 0.
+        warn=f' \u2014 WARNING: the channels are {abs(gap):.0f} dB apart, {"left" if gap<0 else "right"} is weak' if abs(gap)>4 else ''
+        self.notify('side_finished','Vinyl side finished' if not warn else 'Vinyl side finished with a fault',
+                    f'{music/60:.0f} min recorded ({why}){warn}',
+                    side=s['id'],minutes=round(music/60,1),reason=why,channel_gap_db=round(gap,1),ok=not warn)
         self.log(f'Side {s["id"]} closed after {seconds/60:.1f} min ({why})')
         if (meta['ident'] or {}).get('status') in (None,'pending','unknown','failed'):meta['ident']={'status':'pending'};self.jobs.put(('identify',(meta['id'],'closed')))
         self.jobs.put(('split',meta['id']));self.jobs.put(('purge',None))
@@ -578,7 +601,10 @@ def make_handler(rip):
                         rip.save()
                     self.reply({'ok':True})
                 elif self.path=='/outbox/ack':
-                    with rip.lock:rip.store['albums'][body['album']].update(status='delivered',delivered=time.time());rip.save()
+                    with rip.lock:alb=rip.store['albums'][body['album']];alb.update(status='delivered',delivered=time.time());rip.save()
+                    rip.notify('delivered','Vinyl rip is in the library',
+                               f"\u201c{alb['title']}\u201d by {alb['artist']} \u2014 {len(alb.get('files') or [])} files",
+                               album=alb['title'],artist=alb['artist'],files=len(alb.get('files') or []))
                     rip.log(f'Delivered to the media server: {rip.store["albums"][body["album"]]["title"]}');self.reply({'ok':True})
                 else:self.reply({'error':'not found'},code=404)
             except Exception as e:self.reply({'error':repr(e)},code=400)
