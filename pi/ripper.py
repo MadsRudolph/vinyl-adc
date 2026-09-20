@@ -114,6 +114,15 @@ def acoustid_lookup(key,fp,duration):
     with MB_LOCK:
         req=urllib.request.Request(ACOUSTID,data=body,headers={'User-Agent':UA,'Content-Type':'application/x-www-form-urlencoded'})
         with urllib.request.urlopen(req,timeout=30) as r:return json.loads(r.read())
+def same_song(title):
+    """A title stripped to what survives a remaster: 'Here Comes the Sun (2019 mix)' -> 'here comes the sun'.
+
+    A 2019 remix is a different MusicBrainz *recording* from the 1969 mix, so matching on recording id
+    alone lets a compilation carrying the remix outrank the album already on the platter. The song name
+    is what actually stays put across pressings."""
+    t=re.sub(r'[\(\[][^\)\]]*[\)\]]','',title or '')
+    return re.sub(r'\s+',' ',re.sub(r'[^a-z0-9 ]','',t.lower())).strip()
+
 def rank_releases(results,current=None,min_score=.5):
     """Every (release, medium, track) an AcoustID match could be, best first: the album already in use, then vinyl pressings, then the match score."""
     found=[]
@@ -427,7 +436,16 @@ class Ripper:
         # the album in use wins whenever one of its recordings matched, even if AcoustID lists that recording under other pressings only
         recs={m['recording'] for m in matches};hit=next((i for i,t in enumerate(current['tracks']) if t['recording'] in recs),None) if current else None
         if hit is not None:best=next(m for m in matches if m['recording']==current['tracks'][hit]['recording'])
-        else:
+        elif current and current.get('status') in ('selected','in progress'):
+            # the recording ids did not line up, which a remix or remaster guarantees. Fall back to the song
+            # name before abandoning the record on the platter: on 2026-09-20 side two of Abbey Road was filed
+            # as "tracks 22-23 of 1967-1970" because the 2019 mixes matched the compilation and not the album.
+            want={same_song(m['title']):m for m in matches if m.get('title')}
+            hit=next((i for i,t in enumerate(current['tracks']) if same_song(t['title']) in want),None)
+            if hit is not None:
+                best=want[same_song(current['tracks'][hit]['title'])]
+                self.log(f'Kept “{current["title"]}”: {best["title"]} is the same song as its track {hit+1}, under a different recording id')
+        if hit is None:
             best=matches[0]
             if current and current.get('status')=='in progress':self.jobs.put(('finalize',current['mbid']))   # a new record: send what the last one has
             try:album=mb_release(best['release']);album.update(next_track=0,status='selected')
