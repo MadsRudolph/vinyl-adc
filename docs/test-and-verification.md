@@ -115,6 +115,28 @@ Done, with the converter in the listening chain: the Phono Box output and the Sa
 
 Both boards read **Healthy** at the bitstream level while doing this — density 0.4956 / 0.4959, mean run 1.34 / 1.35 — and the ripper selected **stereo**, not the mono fallback it used before the right-channel repair.
 
+### 5b. The idle floor with the turntable connected, 2026-09-20
+
+Stylus up, platter stopped, whole chain powered, trimmers at the setting above. Ten seconds of the ripper's own output, 0.73 Hz bins.
+
+| | Left | Right |
+|---|---|---|
+| Total, 20 Hz–20 kHz | −55.8 dBFS | −56.1 dBFS |
+| A-weighted | −61.1 dBFS | −62.1 dBFS |
+| 20–200 Hz | −58.6 dBFS | −58.4 dBFS |
+| 200 Hz–2 kHz | −68.6 dBFS | −69.4 dBFS |
+| 2–20 kHz | −59.6 dBFS | −60.6 dBFS |
+
+Against §3's −77 dBFS with the input shorted, **the chain costs about 21 dB**, and with peaks at −7 dBFS the delivered recording has ~49 dB of range unweighted, ~54 dB A-weighted. **The converter is no longer what limits a rip; the source chain is.** (Turning RV20 up did not cause this: source noise and signal rise together, so the ratio was the same 49 dB at the old setting, where the floor sat near −63 dBFS.)
+
+**Two contributors, and the L/R coherence separates them.** Coherence is 1.00 at 50 Hz and 0.99 across 20–200 Hz — both channels see the *same* voltage, which only happens through a shared ground — and 0.21–0.34 above 200 Hz, which is independent per channel and therefore the phono stage's own noise or the cartridge. The 50 Hz fundamental dominates its harmonics by 14 dB, so the low end is inductive pickup rather than supply ripple.
+
+They are close to equal in power, which is the trap: removing the mains family entirely would take the total from −55.8 to only −59.6 dBFS, and removing the HF half alone gains 2.8 dB. Neither is worth chasing alone.
+
+**Ethernet is ruled out.** The Pi runs on `eth0`, so the router looked like an earth path. Unplugged for 37 s (kernel log 15:17:35 → 15:18:12) and recovered from the ripper's 60 s ring afterwards, the 50 Hz line moved 0.2 dB and the 20–200 Hz coherence never left 0.99 — before, during and after are identical within 0.3 dB. In hindsight this was predictable: Ethernet is transformer-isolated at the PHY and the cable is unshielded, so there was never a galvanic path there to break. Any advice to "move the Pi to Wi-Fi to break the loop" is wrong for this reason.
+
+**Next test**, not yet done: disconnect the turntable at the Phono Box input (arm leads and the ground wire) with everything else untouched. If the 20–200 Hz noise falls, it originates in the arm, cartridge or turntable earth; if it holds, it is the phono stage or a loop between its ground and the converter's through the tap.
+
 ## 6. Conditions not covered
 
 - **Pi-powered operation.** All figures here are on the Korad bench supply. The 1-bit DAC gates run directly from +5 V, so that rail *is* the DAC reference; running from the Pi previously cost 6–11 dB of idle noise. The 5 V filtering and the 470 Ω series resistors in PI_BCLK/PI_LRCLK that address this are not fitted.
@@ -122,7 +144,7 @@ Both boards read **Healthy** at the bitstream level while doing this — density
 - **Right channel after an RV20 repair** — the open item from §5.
 - **The top octave, 16.3–20 kHz.** `sweep_points()` steps in third-octaves from 20 Hz and stops at 16255 Hz because the next step would pass 20 kHz, so the highest measured point is 16.3 kHz. The plan's own row is *labelled* "20 Hz–20 kHz" and that label overstates what was swept — a figure of ±0.06 dB should be quoted to 16.3 kHz, not 20 kHz.
 - **A full record side end to end**, and the enclosure as a physical print.
-- **Hum with the turntable connected.** The −99.5 dBFS here is with the generator driving the input. With the phono lead attached, hum was previously −39 dBFS at 50 Hz. After the tap was wired (2026-09-20) the 50 Hz line measured −60 to −63 dBFS, but *with a record playing*, so music and groove rumble are mixed into that figure and it is only an upper bound. It does establish that the −39 dBFS condition is gone. A clean measurement needs the stylus up and the turntable stopped, and has not been made.
+- **Hum with the turntable connected** — measured properly on 2026-09-20, see §5b. Not closed, but no longer a guess.
 
 ## 7. Two measurement bugs found, and why the first runs were invalid
 
