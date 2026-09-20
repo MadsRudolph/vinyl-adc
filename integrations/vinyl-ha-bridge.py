@@ -38,7 +38,20 @@ def main():
     peak = met.get('peak_db') or []
     health = met.get('health') or []
     healthy = bool(health) and all(h.get('ok') for h in health)
-    gap = round(peak[0] - peak[1], 1) if len(peak) == 2 else None
+
+    # The channel gap has to be a MEDIAN over the recent envelope, never the instantaneous peaks:
+    # real stereo music runs several dB wider on one side from moment to moment, so comparing one
+    # 0.5 s block would paint a fault light red through every record. This is the same measure the
+    # ripper uses when it decides whether to flag a finished side.
+    wave = d.get('wave') or {}
+    L, R = wave.get('left') or [], wave.get('right') or []
+    pairs = [(l, r) for l, r in zip(L, R) if max(l, r) > 0.002]          # only where there is signal
+    if len(pairs) >= 100:
+        import math
+        diffs = sorted(20 * math.log10(max(l, 1e-12) / max(r, 1e-12)) for l, r in pairs)
+        gap = round(diffs[len(diffs) // 2], 1)
+    else:
+        gap = None
 
     state = (d.get('status') or 'unknown') if online else 'offline'
     ha('sensor.vinyl_ripper', state, {
@@ -56,6 +69,7 @@ def main():
            {'friendly_name': name, 'unit_of_measurement': 'dBFS',
             'state_class': 'measurement', 'icon': 'mdi:sine-wave'})
     fault = online and (not healthy or (gap is not None and abs(gap) > 4))
+    if gap is None and len(peak) == 2: gap = round(peak[0] - peak[1], 1)   # show something before the envelope fills
     ha('binary_sensor.vinyl_channel_fault', 'on' if fault else 'off',
        {'friendly_name': 'Vinyl channel fault', 'device_class': 'problem',
         'icon': 'mdi:alert-circle' if fault else 'mdi:check-circle'})
