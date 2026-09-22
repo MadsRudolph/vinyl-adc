@@ -35,6 +35,11 @@ G = lambda n: round(n * 1.27, 2)              # noqa: E731
 
 TL07X = "Amplifier_Operational:TL074"
 TL072 = "Amplifier_Operational:TL072"
+# Bench, 16 September 2026 (design-notes 10b'): the reference inverter U2B
+# must sink VREF_N to -2.5 V from a pump rail that sags to -3.8 V under both
+# channels, and a TL07x output stops ~2 V above V-.  The LM358 is the one
+# stocked drop-in that reaches within a few hundred mV of its rail.
+LM358 = "Amplifier_Operational:LM358"
 R_LIB, C_LIB = "Device:R", "Device:C"
 CP_LIB = "Device:C_Polarized"
 
@@ -408,8 +413,8 @@ def reference(sh, rx, y, opamp=TL072, refs=("U2", "U2"), supply=True):
     if not supply:
         return u2a, u2b
 
-    sup = sh.place(TL072, "U2", at=(rx + G(16), mid + G(30)), unit=3,
-                  value="TL072")
+    sup = sh.place(opamp, "U2", at=(rx + G(16), mid + G(30)), unit=3,
+                  value=opamp.split(":")[1])
     vp, vn = sup.pin("V+"), sup.pin("V-")
     sh.seg(vp, (vp.x, vp.y - STUB))
     sh.rail((vp.x, vp.y - STUB), net="+5V", rise=STUB)
@@ -447,7 +452,7 @@ def power_flags(sh, x, y, nets=("+5V", "-5V", "+3V3", "GND")):
 
 
 def band_power(sh, y, flags=("+5V", "-5V", "+3V3", "GND"),
-               pump_x=G(75), ref_x=G(250), flag_x=G(20)):
+               pump_x=G(75), ref_x=G(250), flag_x=G(20), ref_opamp=TL072):
     note_block(sh, (G(16), y - G(16)), "POWER  (Pi +5V -> charge-pump -5V -> "
             "+/-2.5V DAC reference)", size=2.0)
 
@@ -475,7 +480,8 @@ def band_power(sh, y, flags=("+5V", "-5V", "+3V3", "GND"),
     pump = charge_pump(sh, pump_x, y)
 
     # -- +/-2.5 V reference, ratiometric off the same +5 V rail --------
-    ref = reference(sh, ref_x, y) if ref_x is not None else None
+    ref = (reference(sh, ref_x, y, opamp=ref_opamp)
+           if ref_x is not None else None)
     return {"pump": pump, "ref": ref}
 
 # ============================================================ BAND B: DIGITAL
@@ -879,8 +885,16 @@ def blk_dac_gates(sh, gx, y):
 
 
 
-def blk_levelshift(sh, lx, y):
-    """74HC4049: 5 V logic down to the Pi's 3.3 V.  DIGITAL."""
+def blk_levelshift(sh, lx, y, series=None):
+    """74HC4049: 5 V logic down to the Pi's 3.3 V.  DIGITAL.
+
+    `series` maps a signal to a refdes -- {"BCLK": "R12", "LRCLK": "R13"} --
+    and puts 475 R (E96, stocked) between that inverter and the Pi.  Bring-up found the
+    Pi's I2S pins are OUTPUTS until a stream is first opened (bringup log
+    6.3), so until then two push-pull drivers meet on BCLK and LRCLK; the
+    resistor limits that contention to a few milliamps and costs nothing at
+    3 MHz into a few tens of pF.
+    """
     note_block(sh, (lx - G(8), y - G(6)),
             "LEVEL SHIFT to 3.3 V.  74HC4049 tolerates inputs above its own\n"
             "VCC, which is exactly what makes it legal here.  Two inverters\n"
@@ -900,9 +914,18 @@ def blk_levelshift(sh, lx, y):
         sh.label((ai.x - G(6), ai.y), sig, kind="global")
         tips[sig] = (ai.x - G(6), ai.y)
         sh.seg(ao, bi)
-        sh.seg(bo, (bo.x + G(6), bo.y))
-        sh.label((bo.x + G(6), bo.y), f"PI_{sig}", kind="global")
-        tips["PI_" + sig] = (bo.x + G(6), bo.y)
+        if series and sig in series:
+            rs = sh.place(R_LIB, series[sig], at=(bo.x + G(9), bo.y), rot=90,
+                          value="475R")
+            rl, rr = sorted(rs.pins, key=lambda q: q.x)
+            sh.seg(bo, rl)
+            sh.seg(rr, (bo.x + G(14), bo.y))
+            end = (bo.x + G(14), bo.y)
+        else:
+            sh.seg(bo, (bo.x + G(6), bo.y))
+            end = (bo.x + G(6), bo.y)
+        sh.label(end, f"PI_{sig}", kind="global")
+        tips["PI_" + sig] = end
     # BELOW the three signal rows, not beside them.  At (lx + G(34), y + G(6))
     # -- where this used to be -- the package body lands exactly where the
     # first PI_ label goes and the label is drawn inside it.
@@ -952,6 +975,87 @@ def blk_pi_header(sh, hx, y):
             "Pi pins: 1=+5V(pin2)  2=GND(6)  3=+3V3(1)\n"
             "4=BCLK GPIO18(12)  5=LRCLK GPIO19(35)\n"
             "6=DIN GPIO20(38)   7=GPCLK0 GPIO4(7)  8=GND(39)\n"
+            "Pi is I2S SLAVE: this board is the clock master.", size=1.27)
+    return tips
+
+
+# The Pi's 40-pin GPIO header, seen from the board it plugs onto.  Odd pins
+# are the row nearer the Pi's centre (3V3 on pin 1), even pins the row along
+# the Pi's edge (5V on pin 2).  Only the I2S trio, GPCLK0, both supplies and
+# the grounds are wired; the other 24 pins are marked no-connect so ERC does
+# not have to guess.
+PI40 = {1: "+3V3", 17: "+3V3", 2: "5V", 4: "5V",
+        6: "GND", 9: "GND", 14: "GND", 20: "GND", 25: "GND", 30: "GND",
+        34: "GND", 39: "GND",
+        7: "GPCLK0", 12: "PI_BCLK", 35: "PI_LRCLK", 38: "PI_DIN"}
+
+
+def blk_pi40_header(sh, hx, y):
+    """The Raspberry Pi 4 itself, on a 2x20 socket.  REV C, DIGITAL.
+
+    The Pi sits UNDER the board HAT-style, plugged into a socket on the
+    copper side, and it is also the board's only power inlet: its 5 V pins
+    come in through a ferrite bead onto the +5V rail, so the Pi's own
+    switching noise meets an impedance before it meets the DAC gates'
+    reservoir (bringup log, open item 4).
+    """
+    j2 = sh.place("Connector_Generic:Conn_02x20_Odd_Even", "J2",
+                  at=(hx, y + G(14)), value="RASPBERRY PI 4")
+    left = min(p.x for p in j2.pins)
+    right = max(p.x for p in j2.pins)
+    tips = {}
+
+    # a ground bus down each side, well clear of the label text
+    for col, pins in ((left - G(18), (9, 25, 39)),
+                      (right + G(18), (6, 14, 20, 30, 34))):
+        pp = [j2.pin(n) for n in pins]
+        for p in pp:
+            sh.seg(p, (col, p.y))
+        sh.seg((col, pp[0].y), (col, pp[-1].y))
+        sh.gnd((col, pp[-1].y), drop=STUB)
+
+    # both 3V3 pins, straight out to a rail symbol each
+    for n in (1, 17):
+        p = j2.pin(n)
+        sh.seg(p, (p.x - G(6), p.y))
+        sh.rail((p.x - G(6), p.y), net="+3V3", rise=0)
+
+    # the 5 V pins share one stub, up and through the bead onto +5V
+    p2, p4 = j2.pin(2), j2.pin(4)
+    bx = right + G(4)
+    sh.seg(p2, (bx, p2.y))
+    sh.seg(p4, (bx, p4.y))
+    sh.seg((bx, p4.y), (bx, p2.y))
+    sh.seg((bx, p2.y), (bx, p2.y - G(4)))
+    fb = sh.place("Device:FerriteBead", "FB1", at=(bx + G(7), p2.y - G(4)),
+                  rot=90, value="FB")
+    fl, fr = sorted(fb.pins, key=lambda q: q.x)
+    sh.seg((bx, p2.y - G(4)), fl)
+    sh.seg(fr, (bx + G(14), p2.y - G(4)))
+    sh.rail((bx + G(14), p2.y - G(4)), net="+5V", rise=STUB)
+    tips["+5V"] = (bx + G(14), p2.y - G(4))
+
+    # the four signals: labels leave leftwards on the odd row, rightwards on
+    # the even one, each pointing away from the header
+    for n, net in ((7, "GPCLK0"), (35, "PI_LRCLK")):
+        p = j2.pin(n)
+        sh.seg(p, (p.x - G(6), p.y))
+        sh.label((p.x - G(6), p.y), net, rot=180, kind="global")
+        tips[net] = (p.x - G(6), p.y)
+    for n, net in ((12, "PI_BCLK"), (38, "PI_DIN")):
+        p = j2.pin(n)
+        sh.seg(p, (p.x + G(6), p.y))
+        sh.label((p.x + G(6), p.y), net, kind="global")
+        tips[net] = (p.x + G(6), p.y)
+
+    for p in j2.pins:
+        if int(p.number) not in PI40:
+            sh.nc(p)
+
+    note_block(sh, (hx - G(20), y + G(58)),
+            "RASPBERRY PI 4 on a 2x20 socket, mounted UNDER the board.\n"
+            "1/17=3V3  2/4=5V in (through FB1 onto +5V)  7=GPCLK0 GPIO4\n"
+            "12=BCLK GPIO18  35=LRCLK GPIO19  38=DIN GPIO20  even GND\n"
             "Pi is I2S SLAVE: this board is the clock master.", size=1.27)
     return tips
 
@@ -1092,8 +1196,12 @@ def interconnect(sh, x, y, ref, pins, note, value=None):
     return tips
 
 
-def band_digital(sh, y):
-    """Every clocked block on one band: the reference sheet's arrangement."""
+def band_digital(sh, y, pi40=False):
+    """Every clocked block on one band: the reference sheet's arrangement.
+
+    `pi40` swaps the 8-way pigtail for the Pi's own 40-pin socket and puts
+    the 470 R series resistors in BCLK and LRCLK -- the rev C board.
+    """
     note_block(sh, (G(16), y - G(16)),
             "CLOCK AND DIGITAL  (6.144 MHz -> /2 BCLK 3.072M, /4 MCLK 1.536M, "
             "/128 LRCLK 48k;  L and R interleaved onto one DIN)", size=2.0)
@@ -1103,8 +1211,12 @@ def band_digital(sh, y):
     blk_clock_buffer(sh, G(104), y, sel)
     clock_divider(sh, G(156), y)
     blk_mux(sh, G(214), y)
-    blk_levelshift(sh, G(270), y)
-    blk_pi_header(sh, G(340), y)
+    if pi40:
+        blk_levelshift(sh, G(270), y, series={"BCLK": "R12", "LRCLK": "R13"})
+        blk_pi40_header(sh, G(352), y)
+    else:
+        blk_levelshift(sh, G(270), y)
+        blk_pi_header(sh, G(340), y)
 
 
 # ====================================================== BANDS C/D: MODULATORS
@@ -1383,6 +1495,13 @@ FOOTPRINTS = {
         "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal",
     "Comparator:LM311": FP_DIP.format(8),
     "Amplifier_Operational:TL072": FP_DIP.format(8),
+    "Amplifier_Operational:LM358": FP_DIP.format(8),
+    # rev C: the Pi's 40-pin header, a socket on the copper side; a bead on a
+    # lead for the 5 V inlet, same axial footprint family as the resistors
+    "Connector_Generic:Conn_02x20_Odd_Even":
+        "Connector_PinSocket_2.54mm:PinSocket_2x20_P2.54mm_Vertical",
+    "Device:FerriteBead":
+        "Inductor_THT:L_Axial_L7.0mm_D3.3mm_P10.16mm_Horizontal_Fastron_MICC",
     "Amplifier_Operational:TL074": FP_DIP.format(14),
     # a DIP-8 SOCKET footprint, not Oscillator:Oscillator_DIP-8: the can is
     # socketed like every other IC here, and a socket wants all eight pads
@@ -1592,6 +1711,23 @@ def board_full(sh):
     return sim_index(sh, G(150), G(56))
 
 
+def board_rev_c(sh):
+    """REV C: the whole converter on ONE 4-layer board, fabricated.
+
+    The reference sheet's own arrangement -- the split existed only because
+    nothing passes between DIP pins on the milled process, and a fab with a
+    ground plane and vias removes that.  Three things differ from the
+    reference: U2 is the LM358 the bench needed, the Pi plugs straight in on
+    its 40-pin header (and powers the board through a bead), and BCLK/LRCLK
+    carry 470 R against the Pi driving them before its I2S is up.
+    """
+    band_power(sh, G(27), ref_opamp=LM358)
+    band_digital(sh, G(109), pi40=True)
+    modulator(sh, "L", G(200), refs_for("L", 20))
+    modulator(sh, "R", G(310), refs_for("R", 60))
+    return sim_index(sh, G(150), G(56))
+
+
 NOTE_DIGITAL_LINK = (
     "TO THE DIGITAL BOARD, 12-way IDC ribbon.  Odd pins are all GND, so\n"
     "every signal conductor has a grounded neighbour either side of it.\n"
@@ -1694,6 +1830,8 @@ BOARDS = {
     "vinyl_adc_channel_r": (lambda sh: board_channel(sh, "R"), "A2",
                             TITLE + "  -  CHANNEL BOARD, R wiring"),
     "vinyl_adc_digital":   (board_digital, "A3", TITLE + "  -  DIGITAL BOARD"),
+    "vinyl_adc_rev_c":     (board_rev_c,   "A1",
+                            TITLE + "  -  REV C, ONE 4-LAYER BOARD"),
 }
 
 

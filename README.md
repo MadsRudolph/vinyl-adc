@@ -4,6 +4,8 @@
 
 All four boards are assembled and bench-screened with the AD3 (16–17 September): power, rev B digital with the on-board crystal Pierce, both channels and the full stack pass, after resoldering a crystal leg and swapping the reference op-amp U2 to an LM358 for output headroom on the charge-pump rail (design-notes §10b′). A Raspberry Pi 4 captures the stream, and a ripper service on it records sides automatically, splits and tags the tracks and hands finished albums to the Jellyfin server; setup in [pi/README.md](pi/README.md) and [server/README.md](server/README.md). No complete-system audio performance is claimed by these assembly tests.
 
+**Rev C (22 September):** with a fab available, the four milled boards are redrawn as [one 4-layer board](hardware/kicad/rev_c/README.md), 170 × 120 mm, all through-hole, with the Raspberry Pi 4 plugged into its underside on its own 40-pin header and the bench fixes (LM358 reference, filtered 5 V inlet, series resistors on the I2S clocks) built in. It passes the same intent gate as the milled boards against the reference sheet; [production files](production/vinyl_adc_rev_c/) and a [bill of materials](docs/bom-rev-c.md) are exported. It has not been built yet; the measured milled stack above is the baseline it will be compared to.
+
 <p align="center">
   <a href="https://madsrudolph.github.io/vinyl-adc/"><img src="https://img.shields.io/badge/🚀_Interactive_3D-Live_Web_Viewer-38bdf8?style=for-the-badge&logo=webgl&logoColor=white" alt="Live 3D Web Viewer"></a>
   <a href="https://github.com/MadsRudolph/srm-cam"><img src="https://img.shields.io/badge/CNC_Milled_With-SRM--CAM-10b981?style=for-the-badge&logo=cmake&logoColor=white" alt="Milled with SRM-CAM"></a>

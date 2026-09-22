@@ -1,5 +1,11 @@
 # PCB — four CNC-milled, single-sided boards from three designs
 
+> **Rev C (September 2026):** the same converter drawn as ONE fabricated
+> 4-layer board with the Pi plugged into its underside, in `rev_c/` — see
+> [`rev_c/README.md`](rev_c/README.md). Everything below describes the four
+> milled boards that were built and measured; the split they describe exists
+> only because of the mill, and rev C undoes it.
+
 Copper is isolation-milled on **B.Cu** with an 0.8 mm flat end mill; the
 silkscreen is laser-etched on top. Everything is through-hole and every IC is
 socketed.

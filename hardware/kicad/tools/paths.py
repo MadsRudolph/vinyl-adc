@@ -22,6 +22,8 @@ DIRS = {
     "vinyl_adc_channel_l": "channel_l",
     "vinyl_adc_channel_r": "channel_r",
     "vinyl_adc_digital": "digital",
+    # rev C: the whole converter on one fabricated 4-layer board
+    "vinyl_adc_rev_c": "rev_c",
 }
 
 # The three that actually become copper.  vinyl_adc is the one-page reference

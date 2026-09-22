@@ -104,9 +104,17 @@ BOARDS = (("P", "vinyl_adc_power", 1),
           ("M", "vinyl_adc_channel_l", 2),
           ("D", "vinyl_adc_digital", 1))
 
+# `make_bom.py rev_c`: the fabricated one-board revision instead.  One
+# artwork, built once, so every quantity is simply the count on the sheet.
+BOARDS_REV_C = (("C", "vinyl_adc_rev_c", 1),)
+
 
 def main():
+    global BOARDS
     here = os.path.dirname(os.path.abspath(__file__))
+    rev_c = len(sys.argv) > 1 and sys.argv[1] == "rev_c"
+    if rev_c:
+        BOARDS = BOARDS_REV_C
     shop = load_shop()
 
     groups = collections.defaultdict(list)
@@ -123,7 +131,8 @@ def main():
 
     def sort_key(item):
         (value, lib), refs = item
-        order = {"R": 0, "C": 1, "D": 2, "U": 3, "X": 3, "J": 4, "RV": 5}
+        order = {"R": 0, "C": 1, "D": 2, "U": 3, "X": 3, "J": 4, "RV": 5,
+                 "FB": 2, "Y": 3}
         pfx = re.match(r"[A-Z]+", refs[0]).group()
         return (order.get(pfx, 9), value)
 
@@ -153,6 +162,8 @@ def main():
                      "CLK SEL": "Header Male + Jumper",
                      "Q SEL": "Header Male + Jumper",
                      "TO PI GPIO": "Header Male 1x8"}.get(value)
+        elif pfx == "FB":
+            avail = None            # axial ferrite bead: not a shop line
         status = avail or "** ORDER **"
         if not avail:
             orders.append((value, ", ".join(refs)))
@@ -172,18 +183,32 @@ def main():
     print("schematic, with every line checked against the DTU shop stock list")
     print("(`dtu_component_shop.csv`). **ORDER** means the shop does not carry it.")
     print()
-    print(f"{total} components in {len(lines)} distinct lines, for the four "
-          "boards a stereo ADC needs.")
-    print()
-    print("**Board** is **P** power (supplies and the +/-2.5 V reference), "
-          "**M** modulator channel, **D** digital (clock, interleave, level "
-          "shift, Pi). Three artworks, four boards: the channel is ONE "
-          "artwork MILLED TWICE, so its lines are marked `M x2` and the "
-          "quantity already counts both. The refdes shown are the ones "
-          "printed on the copper, and the second copy carries the same ones "
-          "-- the reference sheet numbers that channel forty higher, the "
-          "board does not.")
-    print()
+    if rev_c:
+        print(f"{total} components in {len(lines)} distinct lines, for the "
+              "ONE fabricated rev C board (`hardware/kicad/rev_c`), which "
+              "replaces the four milled boards.")
+        print()
+        print("**Board** is always **C**: one four-layer artwork, built once, "
+              "so a quantity is simply the count on the sheet. The right "
+              "channel carries the reference sheet's refdes, forty higher "
+              "than the left. Against the milled boards this adds U2 as an "
+              "LM358 (docs/design-notes.md 10b'), FB1 on the 5 V inlet, "
+              "R12/R13 in series with BCLK/LRCLK, and the Pi's own 2x20 "
+              "socket J2 in place of the pigtail and stacking bus.")
+        print()
+    else:
+        print(f"{total} components in {len(lines)} distinct lines, for the four "
+              "boards a stereo ADC needs.")
+        print()
+        print("**Board** is **P** power (supplies and the +/-2.5 V reference), "
+              "**M** modulator channel, **D** digital (clock, interleave, level "
+              "shift, Pi). Three artworks, four boards: the channel is ONE "
+              "artwork MILLED TWICE, so its lines are marked `M x2` and the "
+              "quantity already counts both. The refdes shown are the ones "
+              "printed on the copper, and the second copy carries the same ones "
+              "-- the reference sheet numbers that channel forty higher, the "
+              "board does not.")
+        print()
     print("| Qty | Value | Refs | Board | DTU shop |")
     print("|----:|-------|------|-------|----------|")
     for n, value, refs, boards, status in lines:
@@ -203,7 +228,17 @@ def main():
     print("and the LM311s, 14-pin for the 74HC04 / 74HCU04 / 74HC74 /")
     print("74HCT132, 16-pin for the 74HC157 / 74HC4040 / 74HC4049, 20-pin for")
     print("the 74HC244. The crystal Y1 solders in directly.")
+    if rev_c:
+        print()
+        print("J2 is a 2x20 FEMALE header on the copper side (a plain 8.5 mm "
+              "HAT socket; an 11 mm extended-height one if the Pi's PoE header "
+              "touches the leads at the socket's top end). FB1 is any axial "
+              "ferrite bead on a lead, 10.16 mm pitch -- or a wire link. The "
+              "board also wants four M2.5 standoffs for the Pi and four M3 for "
+              "the enclosure.")
     print()
+    if rev_c:
+        return
     print("## The stacking bus")
     print()
     print("There are no ribbons. Every board carries the SAME 2x8 on 2.54 mm")
