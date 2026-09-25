@@ -1,11 +1,11 @@
 G04 #@! TF.GenerationSoftware,KiCad,Pcbnew,10.0.6*
-G04 #@! TF.CreationDate,2026-09-25T08:08:23+02:00*
+G04 #@! TF.CreationDate,2026-09-25T08:15:42+02:00*
 G04 #@! TF.ProjectId,vinyl_adc_rev_d,76696e79-6c5f-4616-9463-5f7265765f64,rev?*
 G04 #@! TF.SameCoordinates,Original*
 G04 #@! TF.FileFunction,Profile,NP*
 %FSLAX46Y46*%
 G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
-G04 Created by KiCad (PCBNEW 10.0.6) date 2026-09-25 08:08:23*
+G04 Created by KiCad (PCBNEW 10.0.6) date 2026-09-25 08:15:42*
 %MOMM*%
 %LPD*%
 G01*
@@ -15,9 +15,9 @@ G04 #@! TA.AperFunction,Profile*
 G04 #@! TD*
 G04 APERTURE END LIST*
 D10*
-X0Y0D02*
-X140000000Y0D01*
-X140000000Y-136000000D01*
-X0Y-136000000D01*
-X0Y0D01*
+X51060000Y-21500000D02*
+X191060000Y-21500000D01*
+X191060000Y-157500000D01*
+X51060000Y-157500000D01*
+X51060000Y-21500000D01*
 M02*
