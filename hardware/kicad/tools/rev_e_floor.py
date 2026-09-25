@@ -194,6 +194,18 @@ def silkscreen(board, fps):
             T(board, nm, px - 3.4, py, size=0.8)
         px, py = pad_mm(fps[ref], "1")
         T(board, cap, px + 0.2, py - 2.6, size=0.8)
+    # what each connector and jumper is for, beside it
+    from hat_board import label_near
+    for ref, cap in (("J20", "LINE IN L"), ("J60", "LINE IN R"),
+                     ("J3", "TONEARM GND"), ("RV20", "TRIM L"),
+                     ("RV60", "TRIM R"),
+                     ("J4", "BOND")):
+        label_near(board, fps, ref, cap)
+    # the two jumpers in the crowded digital column: short words, 0.8 mm
+    label_near(board, fps, "J6", "WR: short", size=0.8, reach=12.0)
+    label_near(board, fps, "J1", ("1-2 XTAL", "2-3 GPCLK"), size=0.8,
+               reach=12.0)
+    label_near(board, fps, "D6", "VINYL ADC  rev E  SMD  Raspberry Pi 4 HAT", size=1.2, reach=40.0)
     # on the copper side, where the Pi sits: the first pad-free spot
     from hat_board import text_block
     text_block(board, fps, ("VINYL ADC  rev E", "SMD Raspberry Pi HAT, 4 layers",

@@ -106,7 +106,7 @@ def add_text(board, text, x, y, size=1.0, layer=pcbnew.F_SilkS, rot=0,
     t.SetLayer(layer)
     t.SetPosition(VECTOR2I(FromMM(x), FromMM(y)))
     t.SetTextSize(VECTOR2I(FromMM(size), FromMM(size)))
-    t.SetTextThickness(FromMM(thickness or max(0.12, size * 0.15)))
+    t.SetTextThickness(FromMM(thickness or max(SILK_MIN, size * 0.15)))
     t.SetTextAngleDegrees(rot)
     if mirror:
         t.SetMirrored(True)
@@ -153,6 +153,32 @@ def write_project(outf, netnames, r):
     with open(prof, "w", encoding="utf-8") as f:
         json.dump(doc, f, indent=2)
 
+
+
+# PCBWay's smallest printable silkscreen stroke is 0.15 mm (6 mil); KiCad's
+# library footprints draw their outlines at 0.12, which may print broken
+SILK_MIN = 0.15
+
+
+def fatten_silk(board):
+    """Every silkscreen line and text stroke to at least SILK_MIN."""
+    n = 0
+    lim = FromMM(SILK_MIN)
+    for fp in board.GetFootprints():
+        for g in fp.GraphicalItems():
+            if g.GetLayer() not in (pcbnew.F_SilkS, pcbnew.B_SilkS):
+                continue
+            if g.GetClass() == "PCB_TEXT":
+                if g.GetTextThickness() < lim:
+                    g.SetTextThickness(lim)
+                    n += 1
+            elif g.GetWidth() < lim:
+                g.SetWidth(lim)
+                n += 1
+        for t in (fp.Reference(), fp.Value()):
+            if t.GetTextThickness() < lim:
+                t.SetTextThickness(lim)
+    return n
 
 
 # -- the Raspberry Pi, seen from above the board ------------------------------
@@ -252,7 +278,7 @@ def place_refs(board, fps, size, keep_out=()):
             continue
         t = fp.Reference()
         t.SetTextSize(VECTOR2I(FromMM(size), FromMM(size)))
-        t.SetTextThickness(FromMM(max(0.12, size * 0.15)))
+        t.SetTextThickness(FromMM(max(SILK_MIN, size * 0.15)))
         n = len(ref)
         tw, th = n * size * 0.9 + 0.3, size + 0.4
         x0, y0, x1, y1 = bodies[ref]
@@ -287,6 +313,26 @@ def place_refs(board, fps, size, keep_out=()):
             texts.append(b)
             done = True
             break
+        if not done and fp.HasThroughHolePads():
+            # a through-hole part's body stands over its outline, so a
+            # reference printed inside it is readable exactly when it is
+            # needed: while the part goes in.  Along the long axis, shrunk
+            # to fit if it must be.
+            ang = 0 if (x1 - x0) >= (y1 - y0) else 90
+            room = max(x1 - x0, y1 - y0) - 0.6
+            sz = min(size, max(0.8, room / (n * 0.9 + 0.3)))
+            w, h = n * sz * 0.9 + 0.3, sz + 0.4
+            b = ((cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2) if ang == 0
+                 else (cx - h / 2, cy - w / 2, cx + h / 2, cy + w / 2))
+            if not hit(b, ref):
+                t.SetLayer(pcbnew.F_SilkS)
+                t.SetVisible(True)
+                t.SetTextSize(VECTOR2I(FromMM(sz), FromMM(sz)))
+                t.SetTextAngleDegrees(ang)
+                t.SetPosition(VECTOR2I(FromMM(cx), FromMM(cy)))
+                t.SetKeepUpright(True)
+                texts.append(b)
+                done = True
         if not done:
             t.SetLayer(pcbnew.F_Fab)
             t.SetPosition(VECTOR2I(FromMM(cx), FromMM(cy)))
@@ -314,43 +360,66 @@ def add_board_text(board, text, x, y, size=1.0, layer=pcbnew.F_SilkS, rot=0,
 
 
 def text_block(board, fps, lines, sizes, layer, region, mirror=False,
-               step=0.5):
-    """Put a block of legend lines where no pad reaches, inside `region`.
+               step=0.25, anchor=None):
+    """Put a block of legend lines where nothing is, inside `region`.
 
-    The copper side of a through-hole board is mostly pads; a title at a
-    fixed spot lands on some of them (silk over copper), so the spot is
-    searched for instead: the first place, scanning the region, where the
-    block's box clears every pad on that side by 0.4 mm.
+    On the copper side of a through-hole board the obstacles are pads (a
+    title at a fixed spot lands on some of them); on the component side
+    they are also every part's courtyard and every legend already down.
+    Candidate spots are tried nearest `anchor` first (the region's centre
+    by default), so a label lands as close to what it names as it can.
     """
     side_cu = pcbnew.B_Cu if layer == pcbnew.B_SilkS else pcbnew.F_Cu
-    pads = []
+    obst = []
     for fp in fps.values():
         for p in fp.Pads():
             if p.IsOnLayer(side_cu):
                 bb = p.GetBoundingBox()
-                pads.append((ToMM(bb.GetLeft()) - 0.4, ToMM(bb.GetTop()) - 0.4,
+                obst.append((ToMM(bb.GetLeft()) - 0.4, ToMM(bb.GetTop()) - 0.4,
                              ToMM(bb.GetRight()) + 0.4, ToMM(bb.GetBottom()) + 0.4))
-    pitch = [s * 1.9 for s in sizes]
-    w = max(len(t) * s * 0.9 for t, s in zip(lines, sizes)) + 0.4
+        if layer == pcbnew.F_SilkS and fp.GetLayer() == pcbnew.F_Cu:
+            obst.append(HP._bbox_mm(fp))
+    if layer == pcbnew.F_SilkS:
+        obst += [(a - 0.2, b - 0.2, c + 0.2, d + 0.2) for a, b, c, d in LEGENDS]
+    pitch = [sz * 1.9 for sz in sizes]
+    w = max(len(t) * sz * 0.9 for t, sz in zip(lines, sizes)) + 0.4
     h = sum(pitch)
     x0, y0, x1, y1 = region
+    ax, ay = anchor or ((x0 + x1) / 2, (y0 + y1) / 2)
+    cands = []
     y = y0
     while y + h <= y1:
         x = x0
         while x + w <= x1:
-            box = (x, y, x + w, y + h)
-            if not any(box[0] < a[2] and a[0] < box[2] and box[1] < a[3]
-                       and a[1] < box[3] for a in pads):
-                cy = y
-                for t, s, pt in zip(lines, sizes, pitch):
-                    add_board_text(board, t, x + w / 2, cy + pt / 2, size=s,
-                                   layer=layer, mirror=mirror)
-                    cy += pt
-                return (x + w / 2, y + h / 2)
+            cands.append((abs(x + w / 2 - ax) + abs(y + h / 2 - ay), x, y))
             x += step
         y += step
-    print(f"   no pad-free spot for '{lines[0]}' in {region}; left off")
+    for _d, x, y in sorted(cands):
+        box = (x, y, x + w, y + h)
+        if any(box[0] < a[2] and a[0] < box[2] and box[1] < a[3]
+               and a[1] < box[3] for a in obst):
+            continue
+        cy = y
+        for t, sz, pt in zip(lines, sizes, pitch):
+            add_board_text(board, t, x + w / 2, cy + pt / 2, size=sz,
+                           layer=layer, mirror=mirror)
+            cy += pt
+        return (x + w / 2, y + h / 2)
+    print(f"   no free spot for '{lines[0]}' in {region}; left off")
     return None
+
+
+def label_near(board, fps, ref, lines, size=0.9, reach=8.0, W=None, H=None):
+    """A component-side legend as close to part `ref` as there is room."""
+    x0, y0, x1, y1 = HP._bbox_mm(fps[ref])
+    eb = board.GetBoardEdgesBoundingBox()
+    bw, bh = ToMM(eb.GetRight()), ToMM(eb.GetBottom())
+    region = (max(0.6, x0 - reach), max(0.6, y0 - reach),
+              min(bw - 0.6, x1 + reach), min(bh - 0.6, y1 + reach))
+    if isinstance(lines, str):
+        lines = (lines,)
+    return text_block(board, fps, lines, (size,) * len(lines), pcbnew.F_SilkS,
+                      region, anchor=((x0 + x1) / 2, (y0 + y1) / 2))
 
 
 def build(spec, jsonf, outf, seed=1, iters=None):
@@ -441,6 +510,7 @@ def build(spec, jsonf, outf, seed=1, iters=None):
         add_zone(board, netmap[net], layer, pts)
     _check_planes(spec, fps)
 
+    fatten_silk(board)
     LEGENDS.clear()
     spec.silkscreen(board, fps)
     hidden = place_refs(board, fps, spec.REF_SIZE, keep_out=LEGENDS)
@@ -510,6 +580,7 @@ def resilk(spec, pcbf):
                 d.GetLayer() in (pcbnew.F_SilkS, pcbnew.B_SilkS):
             board.Delete(d)
     fps = {fp.GetReference(): fp for fp in board.GetFootprints()}
+    print(f"  silk: {fatten_silk(board)} strokes widened to {SILK_MIN} mm")
     LEGENDS.clear()
     spec.silkscreen(board, fps)
     hidden = place_refs(board, fps, spec.REF_SIZE, keep_out=LEGENDS)
