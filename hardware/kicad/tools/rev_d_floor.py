@@ -234,10 +234,20 @@ def silkscreen(board, fps):
     label_near(board, fps, "J6", "WR: short", size=0.8, reach=12.0)
     label_near(board, fps, "J1", ("1-2 XTAL", "2-3 GPCLK"), size=0.8,
                reach=12.0)
-    label_near(board, fps, "D6", "VINYL ADC  rev D  through-hole  Raspberry Pi 4 HAT", size=1.2, reach=40.0)
+    at = label_near(board, fps, "D6",
+                    "VINYL ADC  rev D  through-hole  Raspberry Pi 4 HAT",
+                    size=1.2, reach=40.0)
+    # the signature, under the title where it will be seen
+    from hat_board import text_block
+    if at:
+        text_block(board, fps, ("designed by Mads Rudolph",
+                                "madsrudolph.dev  2026"), (1.1, 1.0),
+                   pcbnew.F_SilkS, (0.6, at[1] - 30.0, W - 0.6, at[1] + 30.0),
+                   anchor=(at[0], at[1] + 3.5))
     # on the copper side, where the Pi sits: the first pad-free spot
     from hat_board import text_block
     text_block(board, fps, ("VINYL ADC  rev D", "through-hole Raspberry Pi HAT, 4 layers",
                             "Pi 4 plugs in on this side",
-                            "USB / Ethernet over the top edge"),
-               (1.4, 1.0, 1.0, 1.0), pcbnew.B_SilkS, (2.0, 2.0, W - 2.0, H - 2.0), mirror=True)
+                            "USB / Ethernet over the top edge",
+                            "Mads Rudolph  -  madsrudolph.dev"),
+               (1.4, 1.0, 1.0, 1.0, 1.0), pcbnew.B_SilkS, (2.0, 2.0, W - 2.0, H - 2.0), mirror=True)
