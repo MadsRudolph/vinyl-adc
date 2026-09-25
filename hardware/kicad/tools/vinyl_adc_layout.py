@@ -73,17 +73,20 @@ def ic_supply(sh, part, vcc, gnd, cref, x_cap, rail="+5V"):
 
 
 def opamp_supply(sh, uref, at, ca_ref, cb_ref, unit=3, lib=None,
-                 value="TL072"):
+                 value="TL072", rail="+5V"):
     """A dual-supply op-amp package's power unit, with its two 100n.
 
     The caps sit in series across the rails with the midpoint grounded, so
     each rail gets a 100n to ground and the pair also decouples rail to rail,
     which is the loop the op-amp's own supply current actually takes.
+
+    `rail` is the positive supply: +5V on every milled board, +5VA -- the
+    analog island behind its own choke -- on rev D.
     """
     sup = sh.place(lib or TL072, uref, at=at, unit=unit, value=value)
     vp, vn = sup.pin("V+"), sup.pin("V-")
     sh.seg(vp, (vp.x, vp.y - STUB))
-    sh.rail((vp.x, vp.y - STUB), net="+5V", rise=STUB)
+    sh.rail((vp.x, vp.y - STUB), net=rail, rise=STUB)
     sh.seg(vn, (vn.x, vn.y + STUB))
     sh.rail((vn.x, vn.y + STUB), net="-5V", rise=-STUB)
     cx = vp.x + G(10)
@@ -264,9 +267,16 @@ def sim_index(sh, x, y):
 
 # =============================================================== BAND A: POWER
 
-def charge_pump(sh, px, y):
+def charge_pump(sh, px, y, second=None):
     """The -5 V rail: a 74HC244 with all eight buffers paralleled, two
     Schottkys and an RC post-filter.
+
+    `second` = (refdes, cap refdes) adds a SECOND 74HC244 below the first
+    with its eight outputs on the same node -- rev D.  The pump's 16 ohm
+    output resistance is the drivers' own on-resistance (design-notes 10b),
+    so sixteen buffers halve it and lift the rail from about -3.8 V to
+    about -4.4 V under both channels, which is the TL072 common-mode margin
+    that section flagged as the one thing worth acting on.
 
     There is no charge-pump IC in the DTU shop, so the driver is eight bus
     buffers in parallel -- about 32 mA, which is the whole analog budget and
@@ -294,9 +304,33 @@ def charge_pump(sh, px, y):
     sh.seg((xout, outs[0].y), (xout, outs[-1].y))
     tie_low(sh, u1.pin(1), u1.pin(19))                         # both /OE low
     ic_supply(sh, u1, 20, 10, "C3", px + G(24))
-    note_block(sh, (px - G(14), y - G(6)),
-            "8 buffers paralleled ~= 32 mA;\nno charge-pump IC in the shop",
-            size=1.27)
+    if second:
+        # same drawing again, G(48) lower: the pin rows share the two
+        # vertical buses, so the second package simply extends them.  The
+        # symbol is G(16) each side of its origin, so at G(56) the second
+        # package's +5V rail symbol landed exactly on the first one's GND
+        # symbol and the two rails merged -- ERC's pin_to_pin caught it.
+        uref, cref = second
+        u2_ = sh.place("74xx:74HC244", uref, at=(px, y + G(60)),
+                       value="74HC244")
+        ins2 = [u2_.pin(n) for n in (2, 4, 6, 8, 17, 15, 13, 11)]
+        outs2 = [u2_.pin(n) for n in (18, 16, 14, 12, 3, 5, 7, 9)]
+        for p in ins2:
+            sh.seg(p, (xin, p.y))
+        sh.seg((xin, ins[-1].y), (xin, ins2[-1].y))
+        for p in outs2:
+            sh.seg(p, (xout, p.y))
+        sh.seg((xout, outs[-1].y), (xout, outs2[-1].y))
+        tie_low(sh, u2_.pin(1), u2_.pin(19))
+        ic_supply(sh, u2_, 20, 10, cref, px + G(24))
+        note_block(sh, (px - G(14), y - G(6)),
+                "2 x 8 buffers paralleled: half the 16 ohm output\n"
+                "resistance of one package, ~0.6 V more rail (10b)",
+                size=1.27)
+    else:
+        note_block(sh, (px - G(14), y - G(6)),
+                "8 buffers paralleled ~= 32 mA;\nno charge-pump IC in the shop",
+                size=1.27)
 
     # pump capacitor, rectifier, reservoir
     cy = outs[0].y
@@ -347,7 +381,8 @@ def charge_pump(sh, px, y):
     return {"node": (nx, cy), "out": (nx + G(30), ry), "u": u1}
 
 
-def reference(sh, rx, y, opamp=TL072, refs=("U2", "U2"), supply=True):
+def reference(sh, rx, y, opamp=TL072, refs=("U2", "U2"), supply=True,
+              rail="+5V"):
     """The +/-2.5 V DAC reference, ratiometric off the same +5 V rail.
 
     Deliberately NOT filtered: because the divider tracks the rail the gate
@@ -368,7 +403,7 @@ def reference(sh, rx, y, opamp=TL072, refs=("U2", "U2"), supply=True):
     r2 = sh.place(R_LIB, "R2", at=(rx, y + G(2)), rot=0, value="10k0")
     r3 = sh.place(R_LIB, "R3", at=(rx, y + G(12)), rot=0, value="10k0")
     sh.seg(r2.pin(1), (rx, y - G(2)))
-    sh.rail((rx, y - G(2)), net="+5V", rise=STUB)
+    sh.rail((rx, y - G(2)), net=rail, rise=STUB)
     sh.seg(r2.pin(2), r3.pin(1))
     sh.seg(r3.pin(2), (rx, y + G(18)))
     sh.gnd((rx, y + G(18)))
@@ -417,7 +452,7 @@ def reference(sh, rx, y, opamp=TL072, refs=("U2", "U2"), supply=True):
                   value=opamp.split(":")[1])
     vp, vn = sup.pin("V+"), sup.pin("V-")
     sh.seg(vp, (vp.x, vp.y - STUB))
-    sh.rail((vp.x, vp.y - STUB), net="+5V", rise=STUB)
+    sh.rail((vp.x, vp.y - STUB), net=rail, rise=STUB)
     sh.seg(vn, (vn.x, vn.y + STUB))
     sh.rail((vn.x, vn.y + STUB), net="-5V", rise=-STUB)
     c7 = sh.place(C_LIB, "C7", at=(vp.x + G(10), vp.y - STUB + G(3)), rot=0,
@@ -452,7 +487,8 @@ def power_flags(sh, x, y, nets=("+5V", "-5V", "+3V3", "GND")):
 
 
 def band_power(sh, y, flags=("+5V", "-5V", "+3V3", "GND"),
-               pump_x=G(75), ref_x=G(250), flag_x=G(20), ref_opamp=TL072):
+               pump_x=G(75), ref_x=G(250), flag_x=G(20), ref_opamp=TL072,
+               ref_rail="+5V", pump_second=None):
     note_block(sh, (G(16), y - G(16)), "POWER  (Pi +5V -> charge-pump -5V -> "
             "+/-2.5V DAC reference)", size=2.0)
 
@@ -477,17 +513,17 @@ def band_power(sh, y, flags=("+5V", "-5V", "+3V3", "GND"),
     power_flags(sh, flag_x, y - G(10), flags)
 
     # -- charge pump: 74HC244, all eight buffers in parallel -------------
-    pump = charge_pump(sh, pump_x, y)
+    pump = charge_pump(sh, pump_x, y, second=pump_second)
 
     # -- +/-2.5 V reference, ratiometric off the same +5 V rail --------
-    ref = (reference(sh, ref_x, y, opamp=ref_opamp)
+    ref = (reference(sh, ref_x, y, opamp=ref_opamp, rail=ref_rail)
            if ref_x is not None else None)
     return {"pump": pump, "ref": ref}
 
 # ============================================================ BAND B: DIGITAL
 
 def clock_divider(sh, dx, y, clk_label="CLK6M", out_labels=True,
-                  nc_spares=True, cap_x=None):
+                  nc_spares=True, cap_x=None, mclk_label="MCLK"):
     """The 74HC4040 that makes every clock on the board from one 6.144 MHz can.
 
     Q0 = BCLK 3.072 MHz, Q1 = MCLK 1.536 MHz, Q4 = the 192 kHz charge-pump
@@ -514,6 +550,8 @@ def clock_divider(sh, dx, y, clk_label="CLK6M", out_labels=True,
     for pin, lbl in ((9, "BCLK"), (7, "MCLK"), (3, "PUMP"), (4, "LRCLK")):
         p = u4.pin(pin)
         outs[lbl] = p
+        if lbl == "MCLK":
+            lbl = mclk_label        # rev D: MCLK_SRC, then R14, then MCLK
         if out_labels:
             sh.seg(p, (p.x + G(8), p.y))
             sh.label((p.x + G(8), p.y), lbl, kind="global")
@@ -656,11 +694,16 @@ def blk_oscillator(sh, ox, y):
     return (j1.pin(2).x + G(5), y + G(24))
 
 
-def blk_clock_buffer(sh, bx, y, sel):
+def blk_clock_buffer(sh, bx, y, sel, detector=None):
     """74HCT132 Schmitt buffer.  `sel` is where blk_oscillator left the clock.
 
     HCT, not HC, so that a 3.3 V source still meets VIH: the Pi's GPCLK0 is a
     legal input here only because of that.
+
+    `detector` = (input net, output net) turns the first spare gate into an
+    inverter -- both inputs on the one net -- so the rev D clock-alive
+    detector has a driver of its own instead of loading LRCLK's real edge
+    with its pump capacitor.
     """
     u3 = sh.place("74xx:74LS132", "U3", at=(bx, y + G(8)), unit=1,
                   value="74HCT132")
@@ -677,9 +720,23 @@ def blk_clock_buffer(sh, bx, y, sel):
         g = sh.place("74xx:74LS132", "U3", at=(gx_, y + G(40)),
                      unit=un, value="74HCT132")
         li, ri = gate_pins(g, gx_)
+        if detector and i == 0:
+            src, dst = detector
+            jx = li[0].x - G(4)
+            for q in li:
+                sh.seg(q, (jx, q.y))
+            sh.seg((jx, li[0].y), (jx, li[-1].y))
+            sh.seg((jx, li[0].y), (jx - G(4), li[0].y))
+            sh.label((jx - G(4), li[0].y), src, kind="global")
+            sh.seg(ri[0], (ri[0].x + G(6), ri[0].y))
+            sh.label((ri[0].x + G(6), ri[0].y), dst, kind="global")
+            continue
         tie_low(sh, *li)
         sh.nc(*ri)
-    note_block(sh, (bx - G(4), y + G(50)), "spare gates: inputs tied low", size=1.27)
+    note_block(sh, (bx - G(4), y + G(50)),
+               "spare gates: inputs tied low" if not detector else
+               f"U3B buffers {detector[0]} for the clock-alive LED; "
+               "other spares tied low", size=1.27)
     u3p = sh.place("74xx:74LS132", "U3", at=(bx + G(20), y + G(8)), unit=5,
                    value="74HCT132")
     ic_supply(sh, u3p, 14, 7, "C10", u3p.pin(14).x + G(10))
@@ -732,7 +789,7 @@ def blk_retime(sh, fx, y, power_at=None):
 
 
 
-def blk_retime_ch(sh, fx, y, ch, r, qsig=None, qnsig=None):
+def blk_retime_ch(sh, fx, y, ch, r, qsig=None, qnsig=None, rail="+5V"):
     """74HC74, ONE PER CHANNEL: this channel's comparator re-clocked on MCLK.
 
     It sits on the channel board, not on a shared one, because it closes the
@@ -765,7 +822,7 @@ def blk_retime_ch(sh, fx, y, ch, r, qsig=None, qnsig=None):
         dy = STUB if pp.y > d.y else -STUB
         sh.seg(pp, (pp.x, pp.y + dy))
         sh.seg((pp.x, pp.y + dy), (pp.x + G(5), pp.y + dy))
-        sh.rail((pp.x + G(5), pp.y + dy), net="+5V",
+        sh.rail((pp.x + G(5), pp.y + dy), net=rail,
                 rise=STUB if dy < 0 else -STUB)
     sp = sh.place("74xx:74HC74", r["Uff"], at=(fx, y + G(30)), unit=2,
                   value="74HC74")
@@ -775,16 +832,16 @@ def blk_retime_ch(sh, fx, y, ch, r, qsig=None, qnsig=None):
         dy = STUB if pp.y > sp.pin("D").y else -STUB
         sh.seg(pp, (pp.x, pp.y + dy))
         sh.seg((pp.x, pp.y + dy), (pp.x + G(5), pp.y + dy))
-        sh.rail((pp.x + G(5), pp.y + dy), net="+5V",
+        sh.rail((pp.x + G(5), pp.y + dy), net=rail,
                 rise=STUB if dy < 0 else -STUB)
     sh.nc(sp.pin("Q"), sp.pin("~{Q}"))
     pwr = sh.place("74xx:74HC74", r["Uff"], unit=3, value="74HC74",
                    at=(fx + G(26), y + G(30)))
-    ic_supply(sh, pwr, 14, 7, r["Cf"], pwr.pin(14).x + G(10))
+    ic_supply(sh, pwr, 14, 7, r["Cf"], pwr.pin(14).x + G(10), rail=rail)
     return tips
 
 
-def blk_dac_gates_ch(sh, gx, y, ch, r, qsig=None, qnsig=None):
+def blk_dac_gates_ch(sh, gx, y, ch, r, qsig=None, qnsig=None, rail="+5V"):
     """74HC04, ONE PER CHANNEL: the 1-bit DAC drive from Q and /Q.
 
     These gates ARE the DAC -- their output levels are the reference the
@@ -818,7 +875,7 @@ def blk_dac_gates_ch(sh, gx, y, ch, r, qsig=None, qnsig=None):
         sh.nc(*ri)
     pwr = sh.place("74xx:74HC04", r["Udac"], at=(gx + G(56), y + G(6)),
                    unit=7, value="74HC04")
-    ic_supply(sh, pwr, 14, 7, r["Cg"], pwr.pin(14).x + G(10))
+    ic_supply(sh, pwr, 14, 7, r["Cg"], pwr.pin(14).x + G(10), rail=rail)
     return tips
 
 
@@ -990,8 +1047,12 @@ PI40 = {1: "+3V3", 17: "+3V3", 2: "5V", 4: "5V",
         7: "GPCLK0", 12: "PI_BCLK", 35: "PI_LRCLK", 38: "PI_DIN"}
 
 
-def blk_pi40_header(sh, hx, y):
+def blk_pi40_header(sh, hx, y, extra=None, inlet=("FB1", "Device:FerriteBead", "FB")):
     """The Raspberry Pi 4 itself, on a 2x20 socket.  REV C, DIGITAL.
+
+    `extra` maps more pin numbers to net names -- rev D's status LEDs,
+    buttons and the HAT ID EEPROM -- and `inlet` names the part between the
+    Pi's 5 V pins and +5V (a bead on rev C, a 10 uH choke on rev D).
 
     The Pi sits UNDER the board HAT-style, plugged into a socket on the
     copper side, and it is also the board's only power inlet: its 5 V pins
@@ -1027,8 +1088,12 @@ def blk_pi40_header(sh, hx, y):
     sh.seg(p4, (bx, p4.y))
     sh.seg((bx, p4.y), (bx, p2.y))
     sh.seg((bx, p2.y), (bx, p2.y - G(4)))
-    fb = sh.place("Device:FerriteBead", "FB1", at=(bx + G(7), p2.y - G(4)),
-                  rot=90, value="FB")
+    if extra is not None:
+        # rev D names the Pi side of the inlet so the board can give that
+        # 100 mA track the supply width; on the corner, text away from it
+        sh.label((bx, p4.y), "PI_5V", kind="global")
+    fb = sh.place(inlet[1], inlet[0], at=(bx + G(7), p2.y - G(4)),
+                  rot=90, value=inlet[2])
     fl, fr = sorted(fb.pins, key=lambda q: q.x)
     sh.seg((bx, p2.y - G(4)), fl)
     sh.seg(fr, (bx + G(14), p2.y - G(4)))
@@ -1037,19 +1102,25 @@ def blk_pi40_header(sh, hx, y):
 
     # the four signals: labels leave leftwards on the odd row, rightwards on
     # the even one, each pointing away from the header
-    for n, net in ((7, "GPCLK0"), (35, "PI_LRCLK")):
+    wired = dict(PI40)
+    wired.update(extra or {})
+    lefts = [(7, "GPCLK0"), (35, "PI_LRCLK")]
+    rights = [(12, "PI_BCLK"), (38, "PI_DIN")]
+    for n, net in sorted((extra or {}).items()):
+        (lefts if n % 2 else rights).append((n, net))
+    for n, net in lefts:
         p = j2.pin(n)
         sh.seg(p, (p.x - G(6), p.y))
         sh.label((p.x - G(6), p.y), net, rot=180, kind="global")
         tips[net] = (p.x - G(6), p.y)
-    for n, net in ((12, "PI_BCLK"), (38, "PI_DIN")):
+    for n, net in rights:
         p = j2.pin(n)
         sh.seg(p, (p.x + G(6), p.y))
         sh.label((p.x + G(6), p.y), net, kind="global")
         tips[net] = (p.x + G(6), p.y)
 
     for p in j2.pins:
-        if int(p.number) not in PI40:
+        if int(p.number) not in wired:
             sh.nc(p)
 
     note_block(sh, (hx - G(20), y + G(58)),
@@ -1196,11 +1267,15 @@ def interconnect(sh, x, y, ref, pins, note, value=None):
     return tips
 
 
-def band_digital(sh, y, pi40=False):
+def band_digital(sh, y, pi40=False, hat=None, detector=None,
+                 mclk_label="MCLK", inlet=("FB1", "Device:FerriteBead", "FB")):
     """Every clocked block on one band: the reference sheet's arrangement.
 
     `pi40` swaps the 8-way pigtail for the Pi's own 40-pin socket and puts
-    the 470 R series resistors in BCLK and LRCLK -- the rev C board.
+    the 470 R series resistors in BCLK and LRCLK -- the rev C board.  The
+    rest are rev D: `hat` wires more of the Pi's pins, `detector` gives the
+    clock-alive LED its own gate, `mclk_label` lets a damping resistor sit
+    between the divider and MCLK, `inlet` picks the 5 V inlet part.
     """
     note_block(sh, (G(16), y - G(16)),
             "CLOCK AND DIGITAL  (6.144 MHz -> /2 BCLK 3.072M, /4 MCLK 1.536M, "
@@ -1208,12 +1283,12 @@ def band_digital(sh, y, pi40=False):
     sel = blk_oscillator(sh, G(18), y)
     # G(104) is far enough right that the buffer's input riser clears every
     # stub on the clock-select jumper and the Pierce's supply unit
-    blk_clock_buffer(sh, G(104), y, sel)
-    clock_divider(sh, G(156), y)
+    blk_clock_buffer(sh, G(104), y, sel, detector=detector)
+    clock_divider(sh, G(156), y, mclk_label=mclk_label)
     blk_mux(sh, G(214), y)
     if pi40:
         blk_levelshift(sh, G(270), y, series={"BCLK": "R12", "LRCLK": "R13"})
-        blk_pi40_header(sh, G(352), y)
+        blk_pi40_header(sh, G(352), y, extra=hat, inlet=inlet)
     else:
         blk_levelshift(sh, G(270), y)
         blk_pi_header(sh, G(340), y)
@@ -1281,7 +1356,7 @@ def front_end(sh, jx, y, r, ch, jack=True, pot=True):
     return rv
 
 
-def quantiser(sh, XC, y, r, ch, v3=None, rows_labelled=True):
+def quantiser(sh, XC, y, r, ch, v3=None, rows_labelled=True, rail="+5V"):
     """LM311 on a single supply, its four-resistor summing node and pull-up.
 
     The node sums the third integrator through Rs, the DAC through Rk0 -- the
@@ -1316,7 +1391,7 @@ def quantiser(sh, XC, y, r, ch, v3=None, rows_labelled=True):
     ry = cy + 3 * COL
     rb = sh.place(R_LIB, r["Rb"], at=(XC + G(12), ry), rot=90, value="22k1")
     sh.seg((XC, ry), rb.pin(1))
-    sh.rail((XC, ry), net="+5V", rise=0)
+    sh.rail((XC, ry), net=rail, rise=0)
     sh.seg(rb.pin(2), (bus_x, ry))
     sh.seg((bus_x, cy), (bus_x, ry))
     sh.seg((bus_x, y_s), cmp_u.pin(3))
@@ -1331,7 +1406,7 @@ def quantiser(sh, XC, y, r, ch, v3=None, rows_labelled=True):
     # supplies: single +5 V, both grounds down
     v8 = cmp_u.pin(8)
     sh.seg(v8, (v8.x, v8.y - G(6)))
-    sh.rail((v8.x, v8.y - G(6)), net="+5V", rise=STUB)
+    sh.rail((v8.x, v8.y - G(6)), net=rail, rise=STUB)
     for pn in (1, 4):
         p = cmp_u.pin(pn)
         sh.seg(p, (p.x, p.y + G(6)))
@@ -1346,7 +1421,7 @@ def quantiser(sh, XC, y, r, ch, v3=None, rows_labelled=True):
                    value="2k21")
     sh.seg((o.x + G(8), o.y), rpu.pin(2))
     sh.seg(rpu.pin(1), (o.x + G(8), o.y - G(14)))
-    sh.rail((o.x + G(8), o.y - G(14)), net="+5V", rise=STUB)
+    sh.rail((o.x + G(8), o.y - G(14)), net=rail, rise=STUB)
     sh.seg((o.x + G(8), o.y), (o.x + G(14), o.y))
     sh.label((o.x + G(14), o.y), f"CMP_{ch}", kind="global")
     note_block(sh, (XC - G(6), y - G(16)),
@@ -1370,8 +1445,16 @@ def quantiser(sh, XC, y, r, ch, v3=None, rows_labelled=True):
 
 
 
-def modulator(sh, ch, y, refs, qsig=None, qnsig=None):
-    """One complete channel. `refs` maps role -> refdes so L and R differ."""
+def modulator(sh, ch, y, refs, qsig=None, qnsig=None, rail="+5V",
+              int_labels=False):
+    """One complete channel. `refs` maps role -> refdes so L and R differ.
+
+    `rail` is the positive supply for everything in the loop -- the op-amps,
+    the comparator's bias and pull-up, and the DAC gates whose supply IS
+    the reference (rev D: +5VA).  `int_labels` names the three integrator
+    outputs INT1..3_ch so the clip detector and the test-point header can
+    reach them; the labels sit on the elbow corners, where nothing else is.
+    """
     r = refs
     # kept short on purpose: a longer title overruns INTEGRATOR 1's caption
     note_block(sh, (G(16), y - G(26)),
@@ -1415,6 +1498,10 @@ def modulator(sh, ch, y, refs, qsig=None, qnsig=None):
                         r["Ub"], 2, "R", r["Rf"], "10k0", opamp=TL072,
                         title="RESONATOR INVERTER  (g = 0.0297)")
     elbow(sh, i3["out"], (XI, y), XI - G(4))
+    if int_labels:
+        for k, (blk, nx) in enumerate(((i1, X2), (i2, X3), (i3, XI)), 1):
+            sh.label((nx - G(4), blk["y_out"]), f"INT{k}_{ch}", rot=90,
+                     kind="global")
 
     # return path, right to left along the bottom, up into integrator 2 row 4
     ret_y = y + G(46)
@@ -1425,14 +1512,14 @@ def modulator(sh, ch, y, refs, qsig=None, qnsig=None):
     sh.seg((X2 - G(2), y + 3 * COL), (X2, y + 3 * COL))
 
     # -- comparator ----------------------------------------------------------
-    quantiser(sh, G(320), y, r, ch, v3=i3)
+    quantiser(sh, G(320), y, r, ch, v3=i3, rail=rail)
 
     # -- the rest of the loop, on this board: retime, then drive the DAC -----
     # Q/QN and DACP/DACN carry between these two by global label rather than
     # by wire; on this sheet they are a row apart, and a wire would have to
     # cross the whole return path to get there.
-    blk_retime_ch(sh, G(316), y + G(56), ch, r, qsig, qnsig)
-    blk_dac_gates_ch(sh, G(150), y + G(56), ch, r, qsig, qnsig)
+    blk_retime_ch(sh, G(316), y + G(56), ch, r, qsig, qnsig, rail=rail)
+    blk_dac_gates_ch(sh, G(150), y + G(56), ch, r, qsig, qnsig, rail=rail)
 
     # -- the two TL072 package supplies --------------------------------------
     # Two duals rather than one quad: seventeen resistors cannot all reach the
@@ -1442,11 +1529,11 @@ def modulator(sh, ch, y, refs, qsig=None, qnsig=None):
     # both ways, so at 26 the upper one's -5V stub meets the lower one's +5V
     # and the two rails merge. Every geometry check still passed -- the
     # netlist simply had no -5V net left at all.
-    opamp_supply(sh, r["Ua"], (G(392), y + G(6)), r["Ca"], r["Cb"])
-    opamp_supply(sh, r["Ub"], (G(392), y + G(42)), r["Cd"], r["Ce"])
+    opamp_supply(sh, r["Ua"], (G(392), y + G(6)), r["Ca"], r["Cb"], rail=rail)
+    opamp_supply(sh, r["Ub"], (G(392), y + G(42)), r["Cd"], r["Ce"], rail=rail)
     ccmp = sh.place(C_LIB, r["Cc"], at=(G(430), y + G(6)), rot=0, value="100n")
     sh.seg(ccmp.pin(1), (G(430), y + G(2)))
-    sh.rail((G(430), y + G(2)), net="+5V", rise=STUB)
+    sh.rail((G(430), y + G(2)), net=rail, rise=STUB)
     sh.gnd(ccmp.pin(2), drop=STUB)
 
 

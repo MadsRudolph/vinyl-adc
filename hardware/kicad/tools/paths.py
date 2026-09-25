@@ -24,6 +24,11 @@ DIRS = {
     "vinyl_adc_digital": "digital",
     # rev C: the whole converter on one fabricated 4-layer board
     "vinyl_adc_rev_c": "rev_c",
+    # rev D: the same, as a Raspberry Pi HAT with status LEDs, an analog
+    # supply island, a doubled charge pump, test points and a HAT EEPROM
+    "vinyl_adc_rev_d": "rev_d",
+    # rev E: rev D's circuit in surface-mount parts, a smaller 4-layer HAT
+    "vinyl_adc_rev_e": "rev_e",
 }
 
 # The three that actually become copper.  vinyl_adc is the one-page reference

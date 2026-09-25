@@ -35,11 +35,18 @@ SHOP = next(q for q in (
     r"C:\Users\Mads2\KiCad\DTU-EKB-components\Components\parts"
     r"\dtu_component_shop.csv",
     os.path.expanduser("~/Downloads/dtu_component_shop.csv"),
+    os.path.expanduser("~/Downloads/Documents/dtu_component_shop.csv"),
 ) if os.path.exists(q))
 
 # value -> (category hint, what to look for in the shop list)
 IC_ALIASES = {"74HCT132": "74HCT132", "74HC157": "74HC157",
-              "74HC4040": "74HC4040", "74HC4049": "74HC4049"}
+              "74HC4040": "74HC4040", "74HC4049": "74HC4049",
+              "BC547": "BC547A"}          # the shop's grade of the same part
+
+# rev D's LEDs carry their colour as the value; the shop lists 5 mm LEDs by
+# colour in Danish
+LED_SHOP = {"RED": "LED 5MM RØD", "YELLOW": "LED 5MM GUL",
+            "GREEN": "LED 5MM GRØN", "WHITE": "LED 5mm Hvid"}
 
 
 def load_shop():
@@ -107,13 +114,19 @@ BOARDS = (("P", "vinyl_adc_power", 1),
 # `make_bom.py rev_c`: the fabricated one-board revision instead.  One
 # artwork, built once, so every quantity is simply the count on the sheet.
 BOARDS_REV_C = (("C", "vinyl_adc_rev_c", 1),)
+# `make_bom.py rev_d`: the HAT revision, likewise one artwork built once.
+BOARDS_REV_D = (("D", "vinyl_adc_rev_d", 1),)
 
 
 def main():
     global BOARDS
     here = os.path.dirname(os.path.abspath(__file__))
-    rev_c = len(sys.argv) > 1 and sys.argv[1] == "rev_c"
-    if rev_c:
+    rev = sys.argv[1] if len(sys.argv) > 1 else ""
+    rev_c = rev in ("rev_c", "rev_d")
+    rev_d = rev == "rev_d"
+    if rev_d:
+        BOARDS = BOARDS_REV_D
+    elif rev_c:
         BOARDS = BOARDS_REV_C
     shop = load_shop()
 
@@ -159,11 +172,26 @@ def main():
         elif pfx == "J":
             avail = {"LINE IN L": "Terminal 2 pol skrueterminal",
                      "LINE IN R": "Terminal 2 pol skrueterminal",
+                     "TONEARM GND": "Terminal 2 pol skrueterminal",
                      "CLK SEL": "Header Male + Jumper",
                      "Q SEL": "Header Male + Jumper",
+                     "GND LIFT": "Header Male + Jumper",
+                     "WP": "Header Male + Jumper",
+                     "TP L": "Header Male 2x5", "TP R": "Header Male 2x5",
+                     "TP DIG": "Header Male 2x5",
                      "TO PI GPIO": "Header Male 1x8"}.get(value)
         elif pfx == "FB":
             avail = None            # axial ferrite bead: not a shop line
+        elif pfx == "L":
+            # the shop's low-DCR 10 uH choke; any 10 uH part rated over
+            # about 0.5 A does the same job
+            avail = "Inductor 10µ 3A" if value == "10u" else None
+        elif pfx == "Q":
+            avail = ic_in_shop(shop, value)
+        elif pfx == "SW":
+            avail = "Hardware Pushbutton (6 mm tactile)"
+        if pfx == "D" and lib == "Device:LED":
+            avail = LED_SHOP.get(value)
         status = avail or "** ORDER **"
         if not avail:
             orders.append((value, ", ".join(refs)))
@@ -183,7 +211,23 @@ def main():
     print("schematic, with every line checked against the DTU shop stock list")
     print("(`dtu_component_shop.csv`). **ORDER** means the shop does not carry it.")
     print()
-    if rev_c:
+    if rev_d:
+        print(f"{total} components in {len(lines)} distinct lines, for the "
+              "ONE fabricated rev D board (`hardware/kicad/rev_d`): the "
+              "converter as a Raspberry Pi HAT.")
+        print()
+        print("**Board** is always **D**: one four-layer artwork, built once, "
+              "so a quantity is simply the count on the sheet. The right "
+              "channel carries the reference sheet's refdes, forty higher "
+              "than the left. Against rev C this adds the +5VA analog island "
+              "(L2, C18, C19), a second charge-pump driver (U10), R14 in "
+              "MCLK, eight status LEDs with their drivers (U12 LM339 clip "
+              "detectors, Q1 clock-alive pump, Q2/Q3), two buttons, the HAT "
+              "ID EEPROM (U11, optional), the chassis-ground terminal and "
+              "lift network (J3, J4), and three test-point headers; L1 "
+              "replaces rev C's ferrite bead with a stocked choke.")
+        print()
+    elif rev_c:
         print(f"{total} components in {len(lines)} distinct lines, for the "
               "ONE fabricated rev C board (`hardware/kicad/rev_c`), which "
               "replaces the four milled boards.")
@@ -228,7 +272,17 @@ def main():
     print("and the LM311s, 14-pin for the 74HC04 / 74HCU04 / 74HC74 /")
     print("74HCT132, 16-pin for the 74HC157 / 74HC4040 / 74HC4049, 20-pin for")
     print("the 74HC244. The crystal Y1 solders in directly.")
-    if rev_c:
+    if rev_d:
+        print()
+        print("Also 8-pin for the LM358 and the 24LC32, 14-pin for the LM339. "
+              "J2 is a 2x20 FEMALE header on the copper side (a plain 8.5 mm "
+              "HAT socket; an 11 mm extended-height one if the Pi's PoE header "
+              "touches the leads at the socket's top end). L1 and L2 are the "
+              "shop's 10 uH 3 A choke on a 15.24 mm axial footprint. The LEDs "
+              "are 5 mm, colours as in the Value column; the buttons are 6 mm "
+              "tactile. Four M2.5 standoffs (11 mm) carry the Pi under the "
+              "board, four M3 the board in its enclosure.")
+    elif rev_c:
         print()
         print("J2 is a 2x20 FEMALE header on the copper side (a plain 8.5 mm "
               "HAT socket; an 11 mm extended-height one if the Pi's PoE header "

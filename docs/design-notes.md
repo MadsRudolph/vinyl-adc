@@ -651,3 +651,188 @@ Four things that are not in any datasheet and cost a day between them:
 
 The full account, with the regeneration commands, is in
 `hardware/kicad/PCB-NOTES.md`.
+
+---
+
+## 12. Rev D: the converter as a Raspberry Pi HAT (22 September 2026)
+
+Rev C put the whole converter on one fabricated 4-layer board and stopped
+there. Rev D is the same circuit designed *for* that board, with a fab
+sponsor (PCBWay) and the bench results of §10b′ and the bring-up log to act
+on. It is drawn by `hardware/kicad/tools/rev_d_layout.py` from the same
+block functions as the reference sheet, and `tools/check_rev_d.py` proves
+the netlist is the reference partition plus exactly the additions below —
+nothing inside the modulator loop changed. The board is
+`hardware/kicad/rev_d/`, 140 × 136 mm (§12f: the first layout was
+176 × 146 and was redone), `tools/hat_place.py` places it from
+`tools/rev_d_floor.py` and `tools/route_4layer.py` routes it. Rev E (§13)
+is the same circuit in SMD parts.
+
+### 12a. Two supply changes, both from measured numbers
+
+**A second 74HC244 in the charge pump (U10).** §10b measured the pump's
+16 Ω output resistance as the drivers' own on-resistance, and said the
+only thing that would move it was more paralleled buffers. Sixteen buffers
+halve it: at the stack's 30 mA that is about 0.5 V more negative rail,
+−3.8 → roughly −4.3 V under both channels. §10b′ showed the reference
+inverter is the first casualty of a weak rail; the LM358 fixed that, and
+this buys back the TL072 input common-mode margin §10b called the one
+thing worth acting on.
+
+**An analog supply island, +5VA (L2, C18, C19).** The 1-bit DAC's gate
+supply *is* the reference, so §6 wants that rail low-impedance and
+ratiometric, not filtered by a series resistor. The bring-up log (§8.5)
+then measured the Pi's 5 V costing 6–11 dB of idle noise against a bench
+supply, with the pump's 30 mA at 192 kHz on the same rail. A 10 µH choke
+(the shop's 3 A part, DCR tens of milliohms) into 470 µF is a 2.3 kHz
+corner: the pump's 192 kHz and the Pi's converter hash arrive ~35 dB down,
+while the DAC's signal-dependent mean current — 0.17 mA per gate — drops
+microvolts across the DCR, three orders below the cancellation it
+protects. Everything in the loop lives on the island: the four TL072s, the
+LM311s' bias and pull-up, the retiming flip-flops, the DAC gates and the
+LM358 reference. The clock tree, the pump, the level shifter and the Pi
+inlet stay on +5V. The board's inlet choke L1 is the same part, replacing
+rev C's ordered ferrite bead with a stocked one. On the PCB the split is a
+line on the +5V inner plane; the ground plane under it is unbroken, so no
+signal's return path crosses the split.
+
+### 12b. Front panel: what the LEDs measure
+
+| LED | Driven by | What it says |
+|---|---|---|
+| +5VA | R40 from the island | the analog rail is up, behind both chokes |
+| −5V | R41 from ground into the pump rail | the charge pump is pumping — a bring-up fault that happened |
+| CLK | U3B (spare 74HCT132) → 1n5 → 1N4148 pump → 10 µF → BC547 | LRCLK is *toggling*: 0.36 mA of pump current holds Q1 on; a stuck line drains the cap in ~100 ms and the LED goes out. A plain LED on the clock would glow half-bright forever |
+| CLIP L / R | U12 LM339 window on INT1 against ±2.0 V (22k1/100k off VREF_P/VREF_N), wired-OR, 1N4148 + 10 µF + 100 k stretch, BC557 | the first integrator is past the −4.4 dBFS peaks and inside its +3.2/−2.35 V saturation (§10c): "back the trim off" before the loop latches (§4a) |
+| REC / BUSY / READY | GPIO17 / 27 / 22 through 330 R | the ripper's state — the Pi's own LEDs are under the board |
+
+The clip threshold tracks the references, so it moves with full scale
+exactly as the trimmer setting does; the LM339 runs +5VA/−5V so a −2 V
+input is inside its common-mode range.
+
+### 12c. The HAT
+
+Pi 4 under the right-hand 56 mm on a 2×20 socket on the copper side, its
+USB/Ethernet stack over the top edge (rev C's arrangement, verified
+against KiCad's HAT template). New on the header: GPIO3 (pin 5) and
+GPIO23 (pin 16) as buttons — GPIO3 wakes a halted Pi, so SW1 is the power
+button with `dtoverlay=gpio-shutdown` — and ID_SD/ID_SC (pins 27/28) to a
+socketed 24LC32 with a write-protect jumper, the one part the shop cannot
+supply and the one the board works without. The Pi side of the inlet is
+named PI_5V so the 100 mA track gets the supply width.
+
+### 12d. Bench and hum
+
+Three 2×5 headers with a ground column (J22, J62 per channel: INT1, INT2,
+INT3, CMP, DACP; J5: MCLK, LRCLK, DIN, VREF_P, VREF_N) — two probes on
+header pins, never DIP legs. A tonearm/chassis terminal J3 beside the line
+inputs with a lift network (10 R ‖ 100 n ‖ antiparallel 1N4003) and J4 to
+bond it hard, for the −39 dBFS of 50 Hz in the bring-up log's open item
+3. And 33R2 (R14) in series with MCLK at its source: one driver, three
+loads along 100 mm of track, and that edge is the one whose jitter sets
+the noise floor (§5).
+
+### 12e. What was not done
+
+No SPICE bench for the clock-alive pump or the clip stretcher; both are
+diode-RC circuits whose numbers are in the block docstrings and cheap to
+check on the bench with the TP headers. The enclosure is not redrawn for
+the HAT boards with the Pi's ports on two edges. And the board is not built:
+the milled stack's 67.9 dB dynamic range (§13a of the bring-up log) is the
+number rev D has to beat, and whether the island and the stiffer pump move
+it is the experiment.
+
+### 12f. The layout, redone (24 September 2026)
+
+The first rev D layout packed every passive into a row of its own kind,
+first-fit, inside a band per block. From across the room it looked tidy;
+up close it was wrong in the way that matters on a board: a resistor sat
+wherever its row had space, not next to the pin it serves, so most traces
+ran diagonally across the board, and 176 × 146 mm was mostly empty. It was
+discarded.
+
+The second layout keeps the geography (inputs on the left edge, each
+channel reading left to right as its schematic band does, the digital
+column over the Pi's header, power at the far end from the inputs, LEDs
+and buttons on the front edge) and places everything else from the
+netlist. `tools/hat_place.py` takes anchors from the floorplan file
+(connectors, the front row, the Pi socket, starting points for the ICs),
+drops every other part at the free spot nearest the pins it connects to,
+then anneals: weighted half-perimeter wire length, plus 8 mm-equivalent
+per mm of distance between each decoupling cap and the supply pin it
+serves, plus a prohibitive cost for any +5V/+5VA pad landing in the other
+half of the In2 split, with no courtyards allowed to overlap. Channel R is
+a rigid copy of channel L (the same circuit on the same copper), and the
+charge pump's AC loop — drivers, flying cap, rectifier, reservoir — is
+weighted three times so it stays one tight group. Three things the
+annealer taught:
+
+* **Decoupling caps must go down straight after their ICs.** Placed in
+  wire-length order they arrive last, find the spot by the supply pin
+  taken by a resistor, and end up 20–70 mm away — and a hot anneal
+  knocks them out even when the greedy pass got them right. The fix was
+  both: place them first, and give the annealer a move that re-seeds a
+  part next to its own pins.
+* **Through-hole needs the room SMD does not.** The digital column over
+  the Pi holds five DIP-14/16s; with J5 and the EEPROM in it as well it
+  was 66 % full and the decaps spilled over the socket into channel L.
+  J5 moved beside the socket between the two channel TP headers (all
+  three probe headers now stand in one column), and the board is
+  140 × 136 — 26 % less than the first layout.
+* **FreeRouting 2.4.1 and SMD plane pads** — see §13.
+
+### 12g. Rules the layout needed
+
+KiCad wants two thermal spokes from every pad into a plane. A DIP's GND
+pin between two neighbours can only grow one into the inner ground plane
+(the other side is the neighbour's clearance), so `min_resolved_spokes`
+is 1 in the project rules: one 0.5 mm spoke carries far more than a logic
+ground pin needs, and a solid connection would sink a hand iron. KiCad 10
+keeps this in the `.kicad_pro` design settings, not in a `.kicad_dru` rule
+file — a custom rule there is silently ignored.
+
+## 13. Rev E: the same circuit in SMD parts (24 September 2026)
+
+With PCBWay making the board, nothing ties the circuit to the DTU shop's
+through-hole drawers any more. Rev E is rev D's circuit in common
+surface-mount parts: `hardware/kicad/tools/rev_e_layout.py` calls rev D's
+block functions unchanged and only swaps footprints and four part
+numbers, and `tools/check_rev_d.py vinyl_adc_rev_e` runs rev D's own gate
+on it, so the netlist is provably the same. 118 × 88 mm, the same
+geography as rev D at a quarter of the first layout's area.
+
+What was chosen, and why (full list in `hardware/kicad/rev_e/README.md`,
+BOM in `docs/bom-rev-e.md`):
+
+* **C0G for every capacitor in the signal path.** The integrators' 220 p,
+  the input filter's 1n5 and the crystal's 27 p are 0805 C0G; X7R changes
+  value with the voltage across it, which in an integrator is distortion.
+  X7R only for the 100 n decoupling.
+* **The 2u2 input coupling caps stay through-hole film.** 2.2 µF does not
+  exist in C0G, and those two capacitors sit in series with the audio.
+* **The 10 µ electrolytics become 1206 X5R ceramics.** The pump's flying
+  cap gains from the lower ESR; the clip and clock-alive stretch caps lose
+  about 40 % to DC bias, so those LEDs hold ~0.6 s instead of ~1 s.
+* **BC547/BC557 become BC847/BC857.** SOT-23 numbers its pins differently
+  from TO-92, so the schematic symbol changes too; the blocks connect by
+  pin name, so nothing else does.
+* **Bourns SRR1260-100M** for both 10 µH chokes: shielded, 27 mΩ, so the
+  island's 2.3 kHz corner and its microvolt drop (§12a) are unchanged.
+
+**Routing.** FreeRouting counts a plane net as connected wherever a
+through-hole pad meets the plane; a surface pad needs a via. FreeRouting
+2.4.1 fans most SMD pins out itself and leaves the rest unconnected. The
+obvious fix — fan every plane pad out first, as a hand layout would, and
+route round the stubs — does not work: with any copper already on the
+board, locked or not, its router throws a NullPointerException in
+`SearchTreeObject.shapeLayer` and never returns (it sat for 25 minutes
+twice before the log showed why). So rev E is routed first and fanned out
+after: `tools/fanout.py` gives every SMD plane pad one stub and one via,
+outward from its part, where the routed copper leaves room, and
+`--islands` then drops a via straight onto a track of each plane island
+DRC still reports (pads FreeRouting joined to each other but never to the
+plane). Fanning out only the pads DRC lists is not enough — most islands
+appear in its report as tracks, not pads; the route went from 69
+unconnected to 6 with the all-pads pass and to 0 with the islands pass.
+Result: 4.3 m of track, 277 vias, DRC clean.
+
