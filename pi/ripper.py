@@ -14,6 +14,8 @@ server fetches the outbox and drops the album into the Jellyfin music library.
 The audio path is: I2S words -> the two 1-bit modulator streams -> repair of stuck runs (a hardware fault
 marker, never produced by music) -> CIC + FIR decimation to 48 kHz (decimate.py) -> DC removal.
 Needs NumPy; `flac` and python3-mutagen for encoding and tagging.
+With a Discogs token in ~/vinyl/discogs.token the record collection is read too (discogs.py): the dashboard offers it as a
+picker, and identification prefers the pressings that are actually on the shelf.
 """
 import argparse,collections,hashlib,json,queue,re,shutil,signal,subprocess,threading,time,urllib.error,urllib.parse,urllib.request
 from collections import deque
@@ -21,6 +23,7 @@ from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
 from pathlib import Path
 import numpy as np
 import decimate as d
+import discogs
 
 FS=48000;BLOCK_FRAMES=24000;BLOCK_BYTES=BLOCK_FRAMES*8;CHUNK=4800           # 0.5 s blocks, 100 ms level chunks
 UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
@@ -38,7 +41,8 @@ UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
 DEFAULTS={'start_db':-55.,'start_seconds':2.,'stop_db':-54.,'stop_seconds':60.,'preroll_seconds':2.5,'min_side_seconds':90.,'max_side_seconds':2400.,
           'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.,
           'identify':True,'identify_at_seconds':480.,'finalize_after_hours':3.,'min_free_gb':3.,
-          'notify_url':''}          # a webhook that gets a JSON POST when a side starts, ends or lands in the library
+          'notify_url':'',          # a webhook that gets a JSON POST when a side starts, ends or lands in the library
+          'discogs_user':''}        # the Discogs collection to read; empty: whoever owns the token in ~/vinyl/discogs.token
 ACOUSTID='https://api.acoustid.org/v2/lookup'
 
 def db(x):return float(10*np.log10(x+1e-20))
@@ -100,14 +104,14 @@ def mb_search(q):
     for r in out:r['rank']=r['score']+(15 if set(re.findall(r'\w+',r['artist'].lower()))<=words else 0)      # the artist typed in full outranks tribute albums
     out.sort(key=lambda r:(-r['rank'],'Vinyl' not in r['formats']));return out
 def mb_release(mbid):
-    r=http_json(f'https://musicbrainz.org/ws/2/release/{mbid}?fmt=json&inc=recordings+artist-credits+media');tracks=[]
+    r=http_json(f'https://musicbrainz.org/ws/2/release/{mbid}?fmt=json&inc=recordings+artist-credits+media+release-groups');tracks=[]
     for m in r.get('media',[]):
         for t in m.get('tracks',[]):
             length=t.get('length') or (t.get('recording') or {}).get('length')
             tracks.append({'disc':m.get('position',1),'position':t.get('position'),'number':t.get('number',''),'title':t.get('title',''),'length':length/1000. if length else None,
                            'recording':(t.get('recording') or {}).get('id'),'artist':''.join(a.get('name','')+a.get('joinphrase','') for a in t.get('artist-credit',[]))})
     return {'mbid':mbid,'title':r.get('title',''),'artist':''.join(a.get('name','')+a.get('joinphrase','') for a in r.get('artist-credit',[])),'date':r.get('date',''),
-            'discs':len(r.get('media',[])),'tracks':tracks}
+            'discs':len(r.get('media',[])),'tracks':tracks,'group':(r.get('release-group') or {}).get('id')}
 
 def fingerprint(path,start,seconds=120.):
     """Chromaprint of `seconds` of a raw 24-bit side file from `start` seconds in (fpcalc from libchromaprint-tools)."""
@@ -116,7 +120,7 @@ def fingerprint(path,start,seconds=120.):
     out=subprocess.run(['fpcalc','-format','s24le','-rate',str(FS),'-channels','2','-length',str(int(seconds)),'-json','-'],input=bytes(raw),capture_output=True,check=True).stdout
     return json.loads(out)['fingerprint'],len(raw)//(6*FS)
 def acoustid_lookup(key,fp,duration):
-    body=urllib.parse.urlencode({'client':key,'duration':int(duration),'fingerprint':fp,'meta':'recordings releases tracks'}).encode()
+    body=urllib.parse.urlencode({'client':key,'duration':int(duration),'fingerprint':fp,'meta':'recordings releasegroups releases tracks'}).encode()   # releasegroups: other pressings of an owned record
     with MB_LOCK:
         req=urllib.request.Request(ACOUSTID,data=body,headers={'User-Agent':UA,'Content-Type':'application/x-www-form-urlencoded'})
         with urllib.request.urlopen(req,timeout=30) as r:return json.loads(r.read())
@@ -129,20 +133,24 @@ def same_song(title):
     t=re.sub(r'[\(\[][^\)\]]*[\)\]]','',title or '')
     return re.sub(r'\s+',' ',re.sub(r'[^a-z0-9 ]','',t.lower())).strip()
 
-def rank_releases(results,current=None,min_score=.5):
-    """Every (release, medium, track) an AcoustID match could be, best first: the album already in use, then vinyl pressings, then the match score."""
+def rank_releases(results,current=None,min_score=.5,owned=(),groups=()):
+    """Every (release, medium, track) an AcoustID match could be, best first: the album already in use, then a pressing on the
+    Discogs shelf (`owned` MBIDs), then another pressing of an owned album (`groups`), then vinyl pressings, then the match score.
+
+    AcoustID nests releases under their release groups when asked for both; the flat shape is still read."""
     found=[]
     for res in results:
         if res.get('score',0)<min_score:continue
         for rec in res.get('recordings') or []:
             artist=''.join(a.get('name','')+a.get('joinphrase','') for a in rec.get('artists') or [])
-            for rel in rec.get('releases') or []:
+            rels=[(r,None,'') for r in rec.get('releases') or []]+[(r,g.get('id'),g.get('title','')) for g in rec.get('releasegroups') or [] for r in g.get('releases') or []]
+            for rel,group,gtitle in rels:
                 for med in rel.get('mediums') or []:
                     for tr in med.get('tracks') or []:
-                        vinyl='vinyl' in (med.get('format') or '').lower()
-                        found.append({'score':res['score']+(100 if rel['id']==current else 0)+(2 if vinyl else 0)-(med.get('track_count') or 0)/100,
-                                      'release':rel['id'],'album':rel.get('title',''),'medium':med.get('position',1),'position':tr.get('position'),
-                                      'recording':rec['id'],'title':rec.get('title',''),'artist':artist,'vinyl':vinyl})
+                        vinyl='vinyl' in (med.get('format') or '').lower();mine=rel['id'] in owned;kin=bool(group) and group in groups
+                        found.append({'score':res['score']+(100 if rel['id']==current else 0)+(6 if mine else 3 if kin else 0)+(2 if vinyl else 0)-(med.get('track_count') or 0)/100,
+                                      'release':rel['id'],'album':rel.get('title') or gtitle,'medium':med.get('position',1),'position':tr.get('position'),'group':group,'owned':mine,
+                                      'recording':rec['id'],'title':rec.get('title',''),'artist':artist,'vinyl':vinyl,'match':res['score']})
     return sorted(found,key=lambda x:-x['score'])
 
 # ------------------------------------------------------------------ the ripper
@@ -159,6 +167,7 @@ class Ripper:
         self.acoustid=(self.home/'acoustid.key').read_text().strip() if (self.home/'acoustid.key').exists() else None
         self.ring=deque(maxlen=120);self.hold_until=0.;self.last_check=time.time()       # ring: the last 60 s of decimated audio, for measurements
         self.pre=deque();self.side=None;self.loud=deque(maxlen=int(self.cfg['start_seconds']*10));self.still=deque(maxlen=int(self.cfg['stop_seconds']*10));self.quiet=0.;self.gap_run=0;self.events=deque(maxlen=40);self.seq=0;self.manual=None;self.now_track=None
+        self.discogs=discogs.Collection(self.home,UA,lambda url:http_json(url),self.log,user=lambda:self.cfg.get('discogs_user',''))   # inert without ~/vinyl/discogs.token
     def recover_orphans(self):
         """A side file without a state entry means the process died while recording (power loss, kill). Rebuild its envelope and keep it."""
         known={Path(x['file']).name for x in self.store['sides']}
@@ -437,7 +446,8 @@ class Ripper:
         except Exception as e:side['ident']={'status':'failed','error':repr(e)};self.log(f'Identification failed: {e!r}');return
         start=matched_start if res.get('results') else .5
         with self.lock:current=self.store['albums'].get(side['album'] or self.store['current_album'] or '')
-        matches=rank_releases(res.get('results',[]),current['mbid'] if current else None)
+        owned,groups=self.discogs.owned()
+        matches=rank_releases(res.get('results',[]),current['mbid'] if current else None,owned=owned,groups=groups)
         if not matches:side['ident']={'status':'unknown','tries':(side.get('ident') or {}).get('tries',1)};self.log('AcoustID does not know this track; trying again after the next one' if self.side is side else 'AcoustID does not know this record; choose the album in the dashboard');return
         # the album in use wins whenever one of its recordings matched, even if AcoustID lists that recording under other pressings only
         recs={m['recording'] for m in matches};hit=next((i for i,t in enumerate(current['tracks']) if t['recording'] in recs),None) if current else None
@@ -454,14 +464,20 @@ class Ripper:
         if hit is None:
             best=matches[0]
             if current and current.get('status')=='in progress':self.jobs.put(('finalize',current['mbid']))   # a new record: send what the last one has
-            try:album=mb_release(best['release']);album.update(next_track=0,status='selected')
+            try:
+                album=None;mine=None if best['owned'] else self.discogs.owned_in_group(best.get('group'))
+                if mine:                # AcoustID named another pressing of an album on the shelf: take the one on the shelf if it carries the song
+                    alt=mb_release(mine)
+                    if any(t['recording']==best['recording'] or same_song(t['title'])==same_song(best['title']) for t in alt['tracks']):album=alt
+                album=album or mb_release(best['release']);album.update(next_track=0,status='selected')
             except Exception as e:side['ident']={'status':'failed','error':repr(e)};self.log(f'MusicBrainz lookup failed: {e!r}');return
             with self.lock:self.store['albums'].setdefault(album['mbid'],album);current=self.store['albums'][album['mbid']];self.store['current_album']=album['mbid']
-            self.log(f'Record identified: {current["artist"]} — {current["title"]}'+('' if best['vinyl'] else ' (no vinyl pressing matched; using another edition)'))
+            self.log(f'Record identified: {current["artist"]} — {current["title"]}'+(' (your Discogs pressing)' if current['mbid'] in owned else '' if best['vinyl'] else ' (no vinyl pressing matched; using another edition)'))
             hit=next((i for i,t in enumerate(current['tracks']) if t['recording']==best['recording']),None)
+            if hit is None:hit=next((i for i,t in enumerate(current['tracks']) if same_song(t['title'])==same_song(best['title'])),None)
             if hit is None:hit=next((i for i,t in enumerate(current['tracks']) if t['disc']==best['medium'] and t['position']==best['position']),0)
         with self.lock:
-            side['album']=current['mbid'];side['anchor']={'time':float(start),'index':hit};side['first']=None;side['ident']={'status':'ok','title':best['title'],'artist':best['artist'],'score':round(best['score']%100,2)};self.save()
+            side['album']=current['mbid'];side['anchor']={'time':float(start),'index':hit};side['first']=None;side['ident']={'status':'ok','title':best['title'],'artist':best['artist'],'score':round(best['match'],2)};self.save()
         self.log(f'Side {sid}: track {hit+1}, {best["title"]}, starts {start/60:.1f} min in')
     def housekeeping(self):
         """An album nobody has added to for a few hours is sent as it is: one side of a record still ends up in the library."""
@@ -547,11 +563,66 @@ class Ripper:
     def worker(self):
         while True:
             kind,arg=self.jobs.get()
-            try:{'split':self.split_side,'finalize':self.finalize,'identify':self.identify,'purge':self.purge}[kind](arg)
+            try:{'split':self.split_side,'finalize':self.finalize,'identify':self.identify,'purge':self.purge,'discogs':self.discogs_step}[kind](arg)
             except Exception as e:self.log(f'{kind} failed: {e!r}')
             finally:self.jobs.task_done()
+    # ---- the Discogs collection
+    def discogs_sync(self,full=None):
+        """Start or resume a Discogs sync as a job: it runs in steps on the worker thread, never on the capture thread."""
+        if not self.discogs.configured():return False
+        self.discogs.start(full)
+        with self.lock:
+            if self.discogs.queued:return True
+            self.discogs.queued=True
+        self.jobs.put(('discogs',None));return True
+    def discogs_step(self,_=None):
+        """About 20 s of sync, then back in the queue behind whatever came up meanwhile: a side that just closed is not kept waiting."""
+        more=self.discogs.step(stop=self.stop.is_set)
+        with self.lock:
+            self.discogs.queued=bool(more) and not self.stop.is_set()
+            if self.discogs.queued:self.jobs.put(('discogs',None))     # at shutdown it stops here; discogs.json says where to resume
+    def discogs_tick(self):
+        with self.lock:due=self.discogs.due()
+        if due:self.discogs_sync()
+    def discogs_clock(self):
+        """Once a minute on its own thread: the daily sync (at 04:00, or at startup when the cache is a day old) and the resumption of one a restart cut short."""
+        while True:
+            try:self.discogs_tick()
+            except Exception as e:self.log(f'Discogs check failed: {e!r}')
+            if self.stop.wait(60):return
+    def select(self,mbid,discogs_id=None):
+        """Make a release the album for the next side, fetching its tracklist from MusicBrainz first if it is new."""
+        with self.lock:album=self.store['albums'].get(mbid)
+        if album is None:album=mb_release(mbid);album.update(next_track=0,status='selected')
+        with self.lock:
+            album=self.store['albums'].setdefault(album['mbid'],album);self.store['current_album']=album['mbid']
+            if discogs_id:album['discogs']=int(discogs_id)
+            if self.side:self.side['album']=album['mbid']
+            self.save()
+        self.log(f'Album selected: {album["artist"]} — {album["title"]} ({len(album["tracks"])} tracks)');return album
+    def shelf(self):
+        """(owned MBIDs, owned release groups) once the collection has been read, else None: "not in your collection" means nothing before that."""
+        return self.discogs.owned() if self.discogs.configured() and self.discogs.data.get('synced') else None
+    def not_owned(self,a,shelf):
+        return None if shelf is None else a['mbid'] not in shelf[0] and not (a.get('group') and a['group'] in shelf[1])
+    def ripped(self):
+        with self.lock:return {m:a.get('status') for m,a in self.store['albums'].items()},collections.Counter(s['album'] for s in self.store['sides'] if s.get('album'))
+    def collection(self,q=''):
+        """The shelf for the dashboards: every record, and whether its MusicBrainz release has been ripped (ready or delivered) or has sides recorded."""
+        status,count=self.ripped();out=self.discogs.records(q)
+        for r in out:st=status.get(r['mbid']) if r['mbid'] else None;r.update(ripped=st in ('ready','delivered'),rip_status=st,sides_recorded=count.get(r['mbid'],0) if r['mbid'] else 0)
+        return {**self.discogs.status(),'records':out}
+    def collection_record(self,k):
+        r=self.discogs.record(k)
+        if r is None:return None
+        status,count=self.ripped();st=status.get(r['mbid']) if r['mbid'] else None
+        with self.lock:a=self.store['albums'].get(r['mbid'] or '')
+        r.update(ripped=st in ('ready','delivered'),rip_status=st,sides_recorded=count.get(r['mbid'],0) if r['mbid'] else 0,
+                 album={'status':a['status'],'next_track':a['next_track'],'track_count':len(a['tracks']),'folder':a.get('folder')} if a else None)
+        return r
     # ---- what the dashboard sees
     def snapshot(self):
+        shelf=self.shelf()
         with self.lock:
             s=self.side;album=self.store['albums'].get((s or {}).get('album') or self.store['current_album'] or '')
             if s:env=np.column_stack((np.array(s['peaks']),np.array(s['level']))) if s['peaks'] else np.zeros((0,3));gaps=s['gaps'];seconds=s['frames']/FS
@@ -561,7 +632,7 @@ class Ripper:
                 e=env[:n].reshape(-1,step,3);wave.update(left=[round(float(v),4) for v in e[:,:,0].max(axis=1)],right=[round(float(v),4) for v in e[:,:,1].max(axis=1)],level=[round(float(v),1) for v in e[:,:,2].max(axis=1)])
             now=None
             if album:
-                now={'mbid':album['mbid'],'artist':album['artist'],'title':album['title'],'date':album['date'],'status':album['status'],'next_track':album['next_track'],'track_count':len(album['tracks']),
+                now={'not_in_collection':self.not_owned(album,shelf),'mbid':album['mbid'],'artist':album['artist'],'title':album['title'],'date':album['date'],'status':album['status'],'next_track':album['next_track'],'track_count':len(album['tracks']),
                      'tracklist':[{'index':i,'label':f"{(str(x['disc'])+'-') if album['discs']>1 else ''}{x['number'] or x['position']} · {x['title']}"} for i,x in enumerate(album['tracks'])]}
                 if s:
                     start=s['first'] if s.get('first') is not None else album['next_track'];rest=album['tracks'][start:];t=max(0.,seconds-self.cfg['preroll_seconds']);acc=0.;idx=0
@@ -572,24 +643,47 @@ class Ripper:
                     now['ident']=s.get('ident')
                     if rest:now['track']={**rest[idx],'elapsed':round(t-acc,1),'number_in_album':start+idx+1};now['expected']=[round(float(v)+self.cfg['preroll_seconds'],1) for v in np.cumsum([x['length'] or 0 for x in rest])[:-1] if v]
             return {'seq':self.seq,'status':self.status,'message':self.message,'meters':self.meters,'recording':{'id':s['id'],'seconds':round(seconds,1),'quiet':round(sum(self.still)*.1,1)} if s else None,'wave':wave,'gaps':gaps,
-                    'now':now,'config':self.cfg,'acoustid':bool(self.acoustid),'hold':max(0.,self.hold_until-time.time()),'events':list(self.events),'albums':[{k:a.get(k) for k in ('mbid','artist','title','date','status','next_track','gain_db','folder')}|{'track_count':len(a['tracks'])} for a in self.store['albums'].values()],
+                    'now':now,'config':self.cfg,'acoustid':bool(self.acoustid),'discogs':self.discogs.status(),'hold':max(0.,self.hold_until-time.time()),'events':list(self.events),'albums':[{k:a.get(k) for k in ('mbid','artist','title','date','status','next_track','gain_db','folder','discogs')}|{'track_count':len(a['tracks']),'not_in_collection':self.not_owned(a,shelf)} for a in self.store['albums'].values()],
                     'sides':[{k:x.get(k) for k in ('id','started','seconds','status','album','tracks','recovered')} for x in self.store['sides'][-12:]],'current_album':self.store['current_album']}
 
 # ------------------------------------------------------------------ HTTP
 def make_handler(rip):
     page=(Path(__file__).with_name('ripper.html')).read_bytes
     class H(BaseHTTPRequestHandler):
+        cors=False                  # the collection is read by the Home Assistant dashboard too, which lives on another origin
         def log_message(self,*a):pass
-        def reply(self,body,ctype='application/json',code=200):
+        def reply(self,body,ctype='application/json',code=200,cache='no-store'):
             if not isinstance(body,bytes):body=json.dumps(body).encode()
-            self.send_response(code);self.send_header('Content-Type',ctype);self.send_header('Content-Length',str(len(body)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(body)
+            self.send_response(code);self.send_header('Content-Type',ctype);self.send_header('Content-Length',str(len(body)));self.send_header('Cache-Control',cache)
+            if self.cors:self.send_header('Access-Control-Allow-Origin','*')
+            self.end_headers();self.wfile.write(body)
+        def do_OPTIONS(self):           # the preflight a cross-origin POST with a JSON body sends first
+            self.cors=self.path.startswith(('/api/collection','/api/discogs','/covers/'));self.send_response(204)
+            if self.cors:self.send_header('Access-Control-Allow-Origin','*');self.send_header('Access-Control-Allow-Methods','GET, POST');self.send_header('Access-Control-Allow-Headers','Content-Type')
+            self.send_header('Content-Length','0');self.end_headers()
         def do_GET(self):
-            url=urllib.parse.urlparse(self.path);q=urllib.parse.parse_qs(url.query)
+            url=urllib.parse.urlparse(self.path);q=urllib.parse.parse_qs(url.query);self.cors=url.path.startswith(('/api/collection','/covers/'))
+            base=f"http://{self.headers.get('Host') or 'vinyladc.local:8091'}"        # covers as full URLs too, for pages on other origins
             try:
                 if url.path=='/':self.reply(page(),'text/html; charset=utf-8')
                 elif url.path=='/api/state':self.reply(rip.snapshot())
+                elif url.path=='/api/collection':
+                    out=rip.collection(q.get('q',[''])[0])
+                    for r in out['records']:r['cover_url']=base+r['cover'] if r['cover'] else None
+                    self.reply(out)
+                elif re.fullmatch(r'/api/collection/\d+',url.path):
+                    r=rip.collection_record(url.path.rsplit('/',1)[1])
+                    if r is None:return self.reply({'error':'not in the collection'},code=404)
+                    r['cover_url']=base+r['cover'] if r['cover'] else None;self.reply(r)
+                elif re.fullmatch(r'/covers/discogs/\d+\.jpg',url.path):
+                    f=rip.discogs.covers/url.path.rsplit('/',1)[1];data=f.read_bytes() if f.exists() else b''
+                    if not data:return self.reply({'error':'no cover'},code=404)
+                    self.reply(data,'image/jpeg',cache='public, max-age=604800')
                 elif url.path=='/api/search':
-                    try:self.reply({'results':mb_search(q.get('q',[''])[0])})
+                    try:
+                        res=mb_search(q.get('q',[''])[0]);mine=(rip.shelf() or (set(),set()))[0]
+                        for r in res:r['owned']=r['mbid'] in mine
+                        res.sort(key=lambda r:not r['owned']);self.reply({'results':res})     # a pressing on the Discogs shelf first, the rest as ranked
                     except urllib.error.HTTPError as e:self.reply({'error':f'MusicBrainz is busy (HTTP {e.code}). Wait a few seconds and search again.'})
                     except Exception as e:self.reply({'error':f'Could not reach MusicBrainz: {e}'})
                 elif url.path=='/outbox.json':
@@ -614,13 +708,16 @@ def make_handler(rip):
         def do_POST(self):
             body=json.loads(self.rfile.read(int(self.headers.get('Content-Length') or 0)) or b'{}')
             try:
-                if self.path=='/api/select':
-                    album=mb_release(body['mbid']);album.update(next_track=0,status='selected')
-                    with rip.lock:
-                        rip.store['albums'].setdefault(album['mbid'],album);rip.store['current_album']=album['mbid']
-                        if rip.side:rip.side['album']=album['mbid']
-                        rip.save()
-                    rip.log(f'Album selected: {album["artist"]} — {album["title"]} ({len(album["tracks"])} tracks)');self.reply({'ok':True})
+                self.cors=self.path.startswith(('/api/collection','/api/discogs'))
+                if self.path=='/api/select':rip.select(body['mbid']);self.reply({'ok':True})
+                elif re.fullmatch(r'/api/collection/\d+/select',self.path):      # "rip this record", from the shelf
+                    k=self.path.split('/')[3];r=rip.discogs.record(k)
+                    if r is None:return self.reply({'error':'That record is not in the Discogs collection (sync again?)'},code=404)
+                    if not r['mbid']:return self.reply({'error':f'“{r["title"]}” is not matched to a MusicBrainz release yet, so the ripper has no tracklist for it. Search MusicBrainz and pick the release by hand.','unmatched':True},code=409)
+                    a=rip.select(r['mbid'],k);self.reply({'ok':True,'mbid':a['mbid'],'artist':a['artist'],'title':a['title']})
+                elif self.path=='/api/discogs/sync':
+                    if not rip.discogs_sync(True):return self.reply({'error':'Discogs is not configured: put a personal access token in ~/vinyl/discogs.token on the Pi and restart the ripper'},code=400)
+                    self.reply({'ok':True})
                 elif self.path=='/api/next_track':          # "this side starts at track N": for the side being recorded and the next ones
                     with rip.lock:a=rip.store['albums'][body['mbid']];a['next_track']=max(0,min(len(a['tracks'])-1,int(body['index'])));rip.save()
                     self.reply({'ok':True})
@@ -671,7 +768,7 @@ def main():
     p.add_argument('--port',type=int,default=8091);p.add_argument('--home',default='~/vinyl');p.add_argument('--replay');p.add_argument('--fast',action='store_true',help='with --replay: do not pace to real time')
     a=p.parse_args();rip=Ripper(a.home,a.replay,a.fast);threading.Thread(target=rip.worker,daemon=True).start()
     if a.replay and a.fast:rip.capture_loop();print(json.dumps({'sides':rip.store['sides'],'events':[e['text'] for e in rip.events]},indent=1)[:3000]);return
-    loop=threading.Thread(target=rip.capture_loop);loop.start();print(f'Vinyl ripper dashboard on port {a.port}',flush=True)
+    loop=threading.Thread(target=rip.capture_loop);loop.start();threading.Thread(target=rip.discogs_clock,daemon=True).start();print(f'Vinyl ripper dashboard on port {a.port}',flush=True)
     server=ThreadingHTTPServer(('0.0.0.0',a.port),make_handler(rip));threading.Thread(target=server.serve_forever,daemon=True).start()
     def shutdown(*_):rip.stop.set()
     signal.signal(signal.SIGTERM,shutdown);signal.signal(signal.SIGINT,shutdown)
