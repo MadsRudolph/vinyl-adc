@@ -696,6 +696,10 @@ rev C's ordered ferrite bead with a stocked one. On the PCB the split is a
 line on the +5V inner plane; the ground plane under it is unbroken, so no
 signal's return path crosses the split.
 
+**Built 20 October 2026** (PCBWay): see `docs/bringup-log-2026-10-rev-d.md`. The CLIP
+comparators in §12b were drawn with their inputs swapped and light permanently;
+the erratum and the corrected wiring are in that log, §7.
+
 ### 12b. Front panel: what the LEDs measure
 
 | LED | Driven by | What it says |

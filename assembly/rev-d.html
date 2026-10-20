@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vinyl ADC · Rev D by PCBWay</title><link rel="stylesheet" href="style.css">
+<style>
+main{max-width:980px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:34px;line-height:1.15;margin:6px 0 10px}h2{font-size:21px;margin:40px 0 10px;color:var(--green)}
+.lede{font-size:16px;color:var(--muted);max-width:760px}
+figure{margin:22px 0}figure img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#0b100f;display:block}
+figcaption{color:var(--muted);font-size:13px;margin-top:8px}
+.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:560px;margin:10px 0}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.5px}
+td b{color:var(--green)}.note{border-left:3px solid var(--amber);padding:6px 14px;color:var(--text);background:var(--panel);border-radius:0 8px 8px 0}
+a{color:var(--green)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:27px}header{padding:0 16px}}
+</style>
+<body><header><a class="brand" href="./">◉ <span>VINYL ADC <small>ASSEMBLY BENCH</small></span></a><a class="button" style="margin-left:auto;text-decoration:none" href="./">Assembly guide</a></header>
+<main>
+<p class="eyebrow">REV D · 20 OCTOBER 2026 · BOARDS SPONSORED BY PCBWAY</p>
+<h1>From four milled boards to one four-layer HAT.</h1>
+<p class="lede">Every Vinyl ADC board before this one was isolation-milled, single-sided, at the university workshop. PCBWay offered to make the boards, so the converter was redrawn as what it should have been from the start: one board, a solid ground plane, and the Raspberry Pi plugged in underneath.</p>
+
+<figure><img src="sessions/2026-10-20/hero.jpg" alt="Rev D, the Vinyl ADC as one four-layer Raspberry Pi HAT" loading="lazy"><figcaption>Rev D, 140 × 136 mm. CAD render of the board as designed.</figcaption></figure>
+
+<h2>What changed</h2>
+<div class="wrap"><table>
+<tr><th></th><th>Milled stack (Sept 2026)</th><th>Rev D by PCBWay (Oct 2026)</th></tr>
+<tr><td>Boards</td><td>4 × 100 × 100 mm on a 16-pin bus</td><td><b>1 × 140 × 136 mm</b> Raspberry Pi HAT</td></tr>
+<tr><td>Copper</td><td>1 layer, milled, bare</td><td><b>4 layers</b>: signals, solid GND, split +5V/+5VA, signals</td></tr>
+<tr><td>Links</td><td>dozens of hand-soldered wire jumpers</td><td><b>none</b>: plated through-holes and vias</td></tr>
+<tr><td>Finish</td><td>none</td><td>solder mask both sides, silkscreen, HASL lead-free</td></tr>
+<tr><td>Power for best figures</td><td>bench supply; the Pi's 5 V cost 6–11 dB</td><td><b>the Pi's 5 V</b>, analog island behind its own choke</td></tr>
+<tr><td>Bring-up</td><td>two days, two hidden faults in one channel</td><td><b>both channels healthy from the first capture</b></td></tr>
+</table></div>
+
+<h2>Measured: milled against fabricated</h2>
+<p>The same measurement on both builds: stylus up, platter stopped, the same turntable and phono stage, the levels set so music peaks at about −6 dBFS, ten seconds of the ripper's own 48 kHz output. Left / right.</p>
+<div class="wrap"><table>
+<tr><th>20 Hz–20 kHz</th><th>Milled stack · bench supply · crystal clock</th><th>Rev D · Pi 5 V · Pi clock</th></tr>
+<tr><td>Idle floor, A-weighted</td><td>−61.1 / −62.1 dBFS</td><td><b>−69.7 / −68.2 dBFS</b></td></tr>
+<tr><td>Idle floor, 200 Hz–2 kHz</td><td>−68.6 / −69.4 dBFS</td><td><b>−73.7 / −73.6 dBFS</b></td></tr>
+<tr><td>Idle floor, 2–20 kHz</td><td>−59.6 / −60.6 dBFS</td><td><b>−76.5 / −70.5 dBFS</b></td></tr>
+<tr><td>Music peak to floor, A-weighted</td><td>54.2 / 55.2 dB</td><td><b>63.7 / 62.2 dB</b></td></tr>
+<tr><td>Music peak to floor, unweighted</td><td>48.9 / 49.2 dB</td><td><b>51.4 / 51.3 dB</b></td></tr>
+</table></div>
+<p class="note">Rev D was measured on the Raspberry Pi's supply, which cost the milled stack the most, and on the Pi's fractional-divider clock (about 1 ns of jitter) while its own crystal oscillator is debugged. These numbers are a floor for what the board can do, not its final figures. What is left in the unweighted figure is 50 Hz hum common to both channels: the turntable's grounding, not the converter.</p>
+
+<div class="grid">
+<figure><img src="sessions/2026-10-20/top.jpg" alt="Rev D seen from above" loading="lazy"><figcaption>Top view: channel L above channel R on the left, digital and supply over the Pi on the right, eight status LEDs and two buttons on the front edge.</figcaption></figure>
+<figure><img src="sessions/2026-10-20/orbit.gif" alt="Rev D turning through a full orbit" loading="lazy"><figcaption>CAD renders, not photographs. Raspberry Pi 4 model: <a href="https://github.com/FreeCAD/FreeCAD-library">FreeCAD parts library</a>, CC BY 3.0.</figcaption></figure>
+</div>
+
+<h2>The board, and the experience</h2>
+<p>Five boards: four layers, 1.6 mm FR-4, 1 oz copper, HASL lead-free. The order is placed as a normal PCBWay order from the Gerbers; the copper layer order goes in the order remarks for their engineers. The fault class that cost the most time in September (unplated holes, component-side joints no iron can reach, wire links) does not exist on a plated four-layer board, since every joint is made from one side through a plated hole, and both channels were healthy and matched at the first capture.</p>
+<p>The one rev D fault found so far is mine, not the fab's: the clip-LED comparators' inputs are swapped in the schematic, so both CLIP LEDs light permanently. The board runs with that comparator out of its socket meanwhile, and the fix is two resistors on the underside. Details in the <a href="https://github.com/MadsRudolph/vinyl-adc/blob/main/docs/bringup-log-2026-10-rev-d.md">rev D bring-up log</a>.</p>
+
+<h2>Next</h2>
+<p>The crystal oscillator, then the converter-only noise floor with the inputs shorted and the full Analog Discovery 3 audio plan (dynamic range, THD, frequency response) on rev D, against the milled stack's 67.9 dB.</p>
+
+<p style="margin-top:40px">Thanks to <a href="https://www.pcbway.com">PCBWay</a> for sponsoring the boards. Design files, Gerbers and every measurement: <a href="https://github.com/MadsRudolph/vinyl-adc">github.com/MadsRudolph/vinyl-adc</a>.</p>
+</main></body></html>

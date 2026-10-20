@@ -1,0 +1,6 @@
+# Intermediate render products: exported models, the downloaded Pi STEP,
+# generated .blend scenes and frame sequences. Only the final media in
+# media/showcase/rev-d/ are tracked.
+build/
+*.blend
+*.blend1

@@ -135,3 +135,22 @@ them a two-probe bench check); software for the three GPIO LEDs and SW2 in
 `ripper.py`. And building it, which is the point: the milled stack's
 67.9 dB dynamic range (bringup log §13a) is the number to beat, and
 whether the island and the stiffer pump move it is the experiment.
+
+## Built (20 October 2026)
+
+Five boards were made by PCBWay (sponsored): 4 layers, 1.6 mm FR-4, 1 oz
+copper, HASL lead-free. One is assembled and running under the Pi; both
+channels were healthy from the first capture. Bring-up, measurements against
+the milled stack, and the open items: `docs/bringup-log-2026-10-rev-d.md`.
+
+**Erratum: the CLIP L/R comparators.** U12's inputs are swapped in this
+board's schematic, so both CLIP LEDs light permanently (log §7). Run with U12
+out of its socket (the Pi flashes REC on a clip instead), or swap the
+thresholds: remove R44 and R46 and fit two 22k1 diagonally across their holes
+from the solder side, VREF_P→TH_N and VREF_N→TH_P. `tools/rev_d_layout.py` and
+`tools/check_rev_d.py` are corrected; the files in this folder are left as
+built, so `check_rev_d.py` now fails them on exactly these pins.
+
+**Clock:** the board's crystal oscillator did not start on the first board
+(not yet diagnosed). J1 on its Pi position with `sudo python3 ~/pi/gpclk.py`
+on the Pi clocks the converter from GPCLK0 meanwhile.

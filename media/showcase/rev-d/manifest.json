@@ -1,0 +1,46 @@
+{
+  "clips": [
+    {
+      "name": "orbit",
+      "seconds": 6,
+      "width": 960,
+      "height": 720,
+      "fps": 12,
+      "mp4_bytes": 2023515,
+      "gif_width": 720,
+      "gif_height": 540,
+      "gif_bytes": 8424460
+    },
+    {
+      "name": "explode",
+      "seconds": 6,
+      "width": 960,
+      "height": 720,
+      "fps": 12,
+      "mp4_bytes": 620991,
+      "gif_width": 720,
+      "gif_height": 540,
+      "gif_bytes": 3339273
+    }
+  ],
+  "stills": [
+    {
+      "name": "hero",
+      "width": 1920,
+      "height": 1280,
+      "png_bytes": 2210667
+    },
+    {
+      "name": "top",
+      "width": 1800,
+      "height": 1800,
+      "png_bytes": 3578269
+    },
+    {
+      "name": "detail",
+      "width": 1920,
+      "height": 1280,
+      "png_bytes": 2136965
+    }
+  ]
+}

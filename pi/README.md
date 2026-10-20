@@ -103,15 +103,19 @@ overlay and the ripper work unchanged.
 | Pi pin | GPIO | Board | Direction | Software |
 |---|---|---|---|---|
 | 12 / 35 / 38 | 18 / 19 / 20 | PI_BCLK / PI_LRCLK / PI_DIN | in (Pi is I²S consumer) | `vinyl-adc-overlay.dts`, as before |
-| 7 | 4 | GPCLK0 to J1 pin 3 | out, bring-up only | as before |
+| 7 | 4 | GPCLK0 to J1 | out, bring-up only | `sudo python3 gpclk.py` (6.144 MHz from PLLD; `gpclk.py 0` stops it; not kept over a reboot) |
 | 11 | 17 | LED REC (red) through 330 R | out, active high | ripper: side being recorded |
 | 13 | 27 | LED BUSY (yellow) | out, active high | ripper: identifying / encoding / delivering |
-| 15 | 22 | LED READY (green) | out, active high | ripper idle and the capture card open |
+| 15 | 22 | LED READY (green) | out, active high | ripper idle and the capture card open; blinks while the ADC sends no clocks |
 | 5 | 3 | SW1 SHUTDOWN / WAKE, to ground through 1 k | in, Pi's own 1k8 pull-up | `dtoverlay=gpio-shutdown` in `config.txt`; a halted Pi wakes on the same button |
-| 16 | 23 | SW2 USER, to ground through 1 k | in, needs the internal pull-up | ripper: start / stop a side (not written yet) |
+| 16 | 23 | SW2 USER, to ground through 1 k | in, needs the internal pull-up | ripper: start / stop a side (`panel.py`) |
 | 27 / 28 | ID_SD / ID_SC | 24LC32 HAT EEPROM, optional, J6 shorted to write | — | `eepflash.sh` from the `hats` repo; leave empty and keep `dtoverlay=vinyl-adc` |
 | 2, 4 / 1, 17 | 5V / 3V3 | board power through L1; 3V3 for the level shifter and the EEPROM | — | the board draws ~100 mA at 5 V |
 
-GPIO3 doubles as I²C1 SCL, which nothing on this Pi uses. The three LED
-lines and SW2 are plain `gpiozero` `LED` / `Button` objects; wiring them
-into `ripper.py` is a small follow-up.
+GPIO3 doubles as I²C1 SCL, which nothing on this Pi uses. The three LEDs
+and SW2 are driven by `panel.py`, which the ripper starts; it needs nothing
+but `gpiozero` (part of Pi OS) and does nothing off a Pi. SW2 is the
+dashboard's Record / Stop on a button, for the cases the needle detector
+cannot judge: a very quiet lead-in, or a side to cut short. It is ignored
+while the ADC sends no clocks. `dtoverlay=gpio-shutdown` was added to
+`config.txt` on 2026-10-20.
