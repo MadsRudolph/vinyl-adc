@@ -20,7 +20,9 @@ MEDIA = ROOT / 'media/showcase/rev-d'
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 ap = argparse.ArgumentParser()
-ap.add_argument('--shot', choices=['hero', 'top', 'detail', 'orbit', 'explode'], action='append')
+VSHOTS = {'v_fly': 150, 'v_orbit': 120, 'v_explode': 120, 'v_led': 120}  # vertical 1080x1920 @ 30 fps, for the short
+ap.add_argument('--shot', choices=['hero', 'top', 'detail', 'orbit', 'explode', *VSHOTS], action='append')
+ap.add_argument('--frames', help='first:last, for v_* shots (default all)')
 ap.add_argument('--preview', action='store_true')
 args = ap.parse_args(argv)
 SHOTS = args.shot or ['hero', 'top', 'detail', 'orbit', 'explode']
@@ -323,6 +325,26 @@ def render_setup(w, h, samples):
     sc.render.fps = 12
 
 
+def focus_on(cam, target):
+    e = bpy.data.objects.new('focus', None); bpy.context.scene.collection.objects.link(e)
+    e.location = target; cam.data.dof.focus_object = e
+    return e
+
+
+def aim(o, target):
+    d = Vector(target) - o.location
+    o.rotation_euler = d.to_track_quat('-Z', 'Y').to_euler()
+
+
+def vertical(samples=64):
+    lights('hero')
+    render_setup(1080, 1920, samples)
+    sc = bpy.context.scene
+    sc.render.fps = 30
+    sc.cycles.use_adaptive_sampling = True; sc.cycles.adaptive_threshold = 0.02
+    sc.render.use_persistent_data = True
+
+
 def smooth(t):
     return t * t * (3 - 2 * t)
 
@@ -378,7 +400,72 @@ def shot(name):
             else: u = 0
             hat.location = (0, 0, 0.045 * u)
             hat.keyframe_insert('location', frame=f)
+    elif name == 'v_fly':
+        # Low pass across the board, front-left to the digital side, focus riding ahead.
+        vertical()
+        cam = camera((0, 0, 0), (0, 0, 0), 30, fstop=2.8)
+        foc = focus_on(cam, (0, 0, 0))
+        n = VSHOTS[name]
+        for f in range(1, n + 1):
+            u = smooth((f - 1) / (n - 1))
+            cam.location = Vector((-0.085, -0.150, 0.055)).lerp(Vector((0.060, -0.115, 0.080)), u)
+            foc.location = Vector((-0.045, -0.035, 0.006)).lerp(Vector((0.035, 0.010, 0.006)), u)
+            aim(cam, foc.location)
+            cam.keyframe_insert('location', frame=f); cam.keyframe_insert('rotation_euler', frame=f)
+            foc.keyframe_insert('location', frame=f)
+    elif name == 'v_led':
+        # Macro slide along the front edge: CLIP, health, REC/BUSY/READY, then the two buttons.
+        vertical()
+        cam = camera((0, 0, 0), (0, 0, 0), 85, fstop=4)
+        foc = focus_on(cam, (0, 0, 0))
+        n = VSHOTS[name]
+        for f in range(1, n + 1):
+            u = smooth((f - 1) / (n - 1))
+            tgt = Vector((-0.060, -0.056, 0.004)).lerp(Vector((0.045, -0.056, 0.004)), u)
+            cam.location = tgt + Vector((-0.040, -0.105, 0.080))
+            foc.location = tgt
+            aim(cam, tgt)
+            cam.keyframe_insert('location', frame=f); cam.keyframe_insert('rotation_euler', frame=f)
+            foc.keyframe_insert('location', frame=f)
+    elif name == 'v_orbit':
+        vertical()
+        camera((0, -0.25, 0.175), (0, 0, -0.004), 35, fstop=8)
+        for o in (hat, pi):
+            o.parent = None
+        piv = bpy.data.objects.new('turntable', None); bpy.context.scene.collection.objects.link(piv)
+        hat.parent = piv; pi.parent = piv
+        n = VSHOTS[name]
+        for f in range(1, n + 1):  # a half turn, eased in and out
+            piv.rotation_euler = (0, 0, math.radians(-30) + math.pi * smooth((f - 1) / (n - 1)))
+            piv.keyframe_insert('rotation_euler', frame=f)
+    elif name == 'v_explode':
+        vertical()
+        camera((0.175, -0.245, 0.150), (0.0, 0.004, 0.030), 35, fstop=8)
+        n = VSHOTS[name]
+        for f in range(1, n + 1):  # 0.5 s seated, 1.5 s up 55 mm, hold, 1.2 s back down, hold
+            t = (f - 1) / 30.0
+            if t < 0.5: u = 0
+            elif t < 2.0: u = smooth((t - 0.5) / 1.5)
+            elif t < 2.5: u = 1
+            elif t < 3.7: u = 1 - smooth((t - 2.5) / 1.2)
+            else: u = 0
+            hat.location = (0, 0, 0.055 * u)
+            hat.keyframe_insert('location', frame=f)
     sc = bpy.context.scene
+    if name in VSHOTS:
+        frames = BUILD / 'frames' / name
+        frames.mkdir(parents=True, exist_ok=True)
+        n = VSHOTS[name]
+        sc.frame_start, sc.frame_end = 1, n
+        bpy.ops.wm.save_as_mainfile(filepath=str(BUILD / f'{name}.blend'))
+        a, b = (int(x) for x in args.frames.split(':')) if args.frames else (1, n)
+        for f in ((1, n // 2, n) if pv else range(a, b + 1)):
+            if (frames / f'{f:04}.png').exists() and not pv:
+                continue
+            sc.frame_set(f)
+            sc.render.filepath = str(frames / (f'preview-{f:04}.png' if pv else f'{f:04}.png'))
+            bpy.ops.render.render(write_still=True)
+        return
     if still:
         if pv:
             sc.cycles.samples = max(16, sc.cycles.samples // 4)

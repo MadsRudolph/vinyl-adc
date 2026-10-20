@@ -14,19 +14,46 @@ a{color:var(--green)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@
 <main>
 <p class="eyebrow">REV D · 20 OCTOBER 2026 · BOARDS SPONSORED BY PCBWAY</p>
 <h1>From four milled boards to one four-layer HAT.</h1>
-<p class="lede">Every Vinyl ADC board before this one was isolation-milled, single-sided, at the university workshop. PCBWay offered to make the boards, so the converter was redrawn as what it should have been from the start: one board, a solid ground plane, and the Raspberry Pi plugged in underneath.</p>
+<p class="lede">One board, four layers, made by <a href="https://www.pcbway.com">PCBWay</a>, and the best-measuring version of this converter so far. Every Vinyl ADC board before it was isolation-milled, single-sided, at the university workshop. When PCBWay offered to sponsor the fabrication, the converter could be drawn the way a mixed-signal circuit wants to be: one board, a solid ground plane, plated holes everywhere, and the Raspberry Pi plugged in underneath. Thank you, PCBWay.</p>
 
 <figure><img src="sessions/2026-10-20/hero.jpg" alt="Rev D, the Vinyl ADC as one four-layer Raspberry Pi HAT" loading="lazy"><figcaption>Rev D, 140 × 136 mm. CAD render of the board as designed.</figcaption></figure>
+
+<figure><img src="sessions/2026-10-20/milled-vs-rev-d.jpg" alt="The four milled boards stacked next to the PCBWay rev D board" loading="lazy"><figcaption>Before and after: the four-board milled stack, and rev D as PCBWay made it.</figcaption></figure>
+<div class="grid">
+<figure><img src="sessions/2026-10-20/bare-top.jpg" alt="The bare rev D board, component side" loading="lazy"><figcaption>The bare board as it arrived: component side.</figcaption></figure>
+<figure><img src="sessions/2026-10-20/bare-bottom.jpg" alt="The bare rev D board, copper side" loading="lazy"><figcaption>Copper side, where the Pi plugs in.</figcaption></figure>
+</div>
+
+<h2>What PCBWay made</h2>
+<div class="wrap"><table>
+<tr><th></th><th>Rev D, per board</th></tr>
+<tr><td>Stack-up</td><td><b>4 layers</b>: signals, solid GND plane, split +5V/+5VA, signals. 1.6 mm FR-4, 1 oz copper</td></tr>
+<tr><td>Finish</td><td>solder mask both sides, white silkscreen, HASL lead-free</td></tr>
+<tr><td>Holes</td><td><b>649 plated barrels</b>: 636 through-holes and 13 vias, on each of five boards</td></tr>
+<tr><td>Routing</td><td>1,020 tracks, the narrowest 0.25 mm; drills from 0.4 mm to 2.7 mm</td></tr>
+<tr><td>Legends</td><td>184 reference designators at 1 mm text height, the smallest labels 0.8 mm</td></tr>
+<tr><td>Parts</td><td>184, all through-hole, ICs socketed</td></tr>
+</table></div>
+
+<div class="grid">
+<figure><img src="sessions/2026-10-20/silkscreen.jpg" alt="Close-up of the silkscreen legends" loading="lazy"><figcaption>Legends under a millimetre tall come out clean and sharp.</figcaption></figure>
+<figure><img src="sessions/2026-10-20/plated-holes.jpg" alt="Close-up of plated through-holes with HASL finish" loading="lazy"><figcaption>Every barrel plated and tinned; vias tented under the mask.</figcaption></figure>
+</div>
+
+<h2>Why a fab board, for a converter</h2>
+<p><b>A real ground plane.</b> The modulator switches at 1.536 MHz next to integrators that resolve microvolts. On one milled layer, ground was whatever copper was left between tracks; on rev D a whole inner layer is ground, directly under every signal, and a large part of the improvement measured below is owed to it.</p>
+<p><b>Plated holes.</b> Every joint is soldered from one side and the barrel carries it through. The September fault that cost the most time, a −5 V rail that reached one board only through solder wicked up an unplated hole, cannot exist on this board.</p>
+<p><b>Repeatability.</b> Five identical boards. Every milled board was a one-off.</p>
 
 <h2>What changed</h2>
 <div class="wrap"><table>
 <tr><th></th><th>Milled stack (Sept 2026)</th><th>Rev D by PCBWay (Oct 2026)</th></tr>
 <tr><td>Boards</td><td>4 × 100 × 100 mm on a 16-pin bus</td><td><b>1 × 140 × 136 mm</b> Raspberry Pi HAT</td></tr>
-<tr><td>Copper</td><td>1 layer, milled, bare</td><td><b>4 layers</b>: signals, solid GND, split +5V/+5VA, signals</td></tr>
+<tr><td>Copper</td><td>1 layer, milled, bare</td><td><b>4 layers</b> with a solid ground plane</td></tr>
 <tr><td>Links</td><td>dozens of hand-soldered wire jumpers</td><td><b>none</b>: plated through-holes and vias</td></tr>
 <tr><td>Finish</td><td>none</td><td>solder mask both sides, silkscreen, HASL lead-free</td></tr>
 <tr><td>Power for best figures</td><td>bench supply; the Pi's 5 V cost 6–11 dB</td><td><b>the Pi's 5 V</b>, analog island behind its own choke</td></tr>
-<tr><td>Bring-up</td><td>two days, two hidden faults in one channel</td><td><b>both channels healthy from the first capture</b></td></tr>
+<tr><td>Bring-up</td><td>two days, two hidden faults in one channel</td><td><b>both channels healthy and matched at the first capture</b></td></tr>
 </table></div>
 
 <h2>Measured: milled against fabricated</h2>
@@ -39,19 +66,30 @@ a{color:var(--green)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@
 <tr><td>Music peak to floor, A-weighted</td><td>54.2 / 55.2 dB</td><td><b>63.7 / 62.2 dB</b></td></tr>
 <tr><td>Music peak to floor, unweighted</td><td>48.9 / 49.2 dB</td><td><b>51.4 / 51.3 dB</b></td></tr>
 </table></div>
-<p class="note">Rev D was measured on the Raspberry Pi's supply, which cost the milled stack the most, and on the Pi's fractional-divider clock (about 1 ns of jitter) while its own crystal oscillator is debugged. These numbers are a floor for what the board can do, not its final figures. What is left in the unweighted figure is 50 Hz hum common to both channels: the turntable's grounding, not the converter.</p>
+<p>About <b>8 dB more A-weighted range</b> from the groove to the file, and a floor 5–17 dB lower everywhere above 200 Hz.</p>
+<p class="note">Rev D was measured on the Raspberry Pi's supply, which cost the milled stack the most, and, at the time, on the Pi's fractional-divider clock (about 1 ns of jitter) because the crystal had a bad joint. What is left in the unweighted figure is 50 Hz hum common to both channels: the turntable's grounding, not the converter.</p>
 
 <div class="grid">
 <figure><img src="sessions/2026-10-20/top.jpg" alt="Rev D seen from above" loading="lazy"><figcaption>Top view: channel L above channel R on the left, digital and supply over the Pi on the right, eight status LEDs and two buttons on the front edge.</figcaption></figure>
 <figure><img src="sessions/2026-10-20/orbit.gif" alt="Rev D turning through a full orbit" loading="lazy"><figcaption>CAD renders, not photographs. Raspberry Pi 4 model: <a href="https://github.com/FreeCAD/FreeCAD-library">FreeCAD parts library</a>, CC BY 3.0.</figcaption></figure>
 </div>
 
-<h2>The board, and the experience</h2>
-<p>Five boards: four layers, 1.6 mm FR-4, 1 oz copper, HASL lead-free. The order is placed as a normal PCBWay order from the Gerbers; the copper layer order goes in the order remarks for their engineers. The fault class that cost the most time in September (unplated holes, component-side joints no iron can reach, wire links) does not exist on a plated four-layer board, since every joint is made from one side through a plated hole, and both channels were healthy and matched at the first capture.</p>
+<figure><img src="sessions/2026-10-20/assembled.jpg" alt="Rev D assembled on its Raspberry Pi 4, LEDs lit" loading="lazy"><figcaption>Assembled and running on its Raspberry Pi 4.</figcaption></figure>
+
+<h2>Bring-up</h2>
+<p>The milled stack took two days and two faults that hid each other before its right channel modulated. On rev D both channels were healthy, and matched, on the first capture. The order went in as a normal PCBWay order from the Gerbers, with the copper layer order in the remarks for their engineers.</p>
 <p>The one rev D fault found so far is mine, not the fab's: the clip-LED comparators' inputs are swapped in the schematic, so both CLIP LEDs light permanently. The board runs with that comparator out of its socket meanwhile, and the fix is two resistors on the underside. Details in the <a href="https://github.com/MadsRudolph/vinyl-adc/blob/main/docs/bringup-log-2026-10-rev-d.md">rev D bring-up log</a>.</p>
 
-<h2>Next</h2>
-<p>The crystal oscillator, then the converter-only noise floor with the inputs shorted and the full Analog Discovery 3 audio plan (dynamic range, THD, frequency response) on rev D, against the milled stack's 67.9 dB.</p>
+<h2>On the bench, with its own crystal</h2>
+<p>Analog Discovery 3 generator into the input, the other input shorted, Pi supply.</p>
+<div class="wrap"><table>
+<tr><th></th><th>Milled stack, best channel</th><th>Rev D, left</th><th>Rev D, right</th></tr>
+<tr><td>Dynamic range (AES17, A-weighted)</td><td>67.9 dB</td><td><b>78.7 dB</b></td><td>72.2 dB</td></tr>
+<tr><td>THD at −6 dBFS</td><td>0.03 %</td><td><b>0.019 %</b></td><td>0.052 %</td></tr>
+<tr><td>Crosstalk</td><td>−92.4 dB</td><td><b>−97.8 dB</b></td><td>−85.8 dB</td></tr>
+<tr><td>Response, 20 Hz–16 kHz</td><td>±0.06 dB</td><td>−0.30 / +0.08 dB</td><td>−0.33 / +0.08 dB</td></tr>
+</table></div>
+<p>The left channel is <b>11 dB better than anything the milled boards reached</b>, and 10 dB past the ~68 dB the design was simulated for. The right channel carries an extra in-band floor that the milled stack's right channel had too; it is traced to the right modulator's own loop and is next on the list.</p>
 
-<p style="margin-top:40px">Thanks to <a href="https://www.pcbway.com">PCBWay</a> for sponsoring the boards. Design files, Gerbers and every measurement: <a href="https://github.com/MadsRudolph/vinyl-adc">github.com/MadsRudolph/vinyl-adc</a>.</p>
+<p style="margin-top:40px">Boards sponsored by <a href="https://www.pcbway.com">PCBWay</a>: thank you for making the best version of this project possible. Design files, Gerbers and every measurement: <a href="https://github.com/MadsRudolph/vinyl-adc">github.com/MadsRudolph/vinyl-adc</a>.</p>
 </main></body></html>
