@@ -24,6 +24,7 @@ from pathlib import Path
 import numpy as np
 import decimate as d
 import discogs
+import panel
 
 FS=48000;BLOCK_FRAMES=24000;BLOCK_BYTES=BLOCK_FRAMES*8;CHUNK=4800           # 0.5 s blocks, 100 ms level chunks
 UA='VinylADC-Ripper/0.1 ( https://github.com/MadsRudolph/vinyl-adc )'
@@ -166,7 +167,7 @@ class Ripper:
         self.stop=threading.Event();self.recover_orphans()
         self.acoustid=(self.home/'acoustid.key').read_text().strip() if (self.home/'acoustid.key').exists() else None
         self.ring=deque(maxlen=120);self.hold_until=0.;self.last_check=time.time()       # ring: the last 60 s of decimated audio, for measurements
-        self.pre=deque();self.side=None;self.loud=deque(maxlen=int(self.cfg['start_seconds']*10));self.still=deque(maxlen=int(self.cfg['stop_seconds']*10));self.quiet=0.;self.gap_run=0;self.events=deque(maxlen=40);self.seq=0;self.manual=None;self.now_track=None
+        self.pre=deque();self.side=None;self.loud=deque(maxlen=int(self.cfg['start_seconds']*10));self.still=deque(maxlen=int(self.cfg['stop_seconds']*10));self.quiet=0.;self.gap_run=0;self.events=deque(maxlen=40);self.seq=0;self.manual=None;self.manual_from='dashboard';self.busy=None;self.now_track=None
         self.discogs=discogs.Collection(self.home,UA,lambda url:http_json(url),self.log,user=lambda:self.cfg.get('discogs_user',''))   # inert without ~/vinyl/discogs.token
     def recover_orphans(self):
         """A side file without a state entry means the process died while recording (power loss, kill). Rebuild its envelope and keep it."""
@@ -302,7 +303,7 @@ class Ripper:
         seconds=self.side['frames']/FS
         if seconds>=self.cfg['identify_at_seconds'] and not self.side.get('ident'):                       # tracks that run into each other: scan durations
             self.side['ident']={'status':'pending'};self.jobs.put(('identify',(self.side['id'],None)))
-        if self.manual=='stop':self.close_side('stopped from the dashboard')
+        if self.manual=='stop':self.close_side(f'stopped from the {self.manual_from}')
         elif len(self.still)==self.still.maxlen and sum(self.still)>=.8*len(self.still):self.quiet=cfg['stop_seconds'];self.close_side(f'{cfg["stop_seconds"]:.0f} s of silence')
         elif seconds>=cfg['max_side_seconds']:self.close_side('maximum side length reached')
         self.manual=None
@@ -563,9 +564,10 @@ class Ripper:
     def worker(self):
         while True:
             kind,arg=self.jobs.get()
+            if kind in ('split','finalize','identify'):self.busy=kind       # the BUSY LED; a Discogs step or a purge is not worth lighting it
             try:{'split':self.split_side,'finalize':self.finalize,'identify':self.identify,'purge':self.purge,'discogs':self.discogs_step}[kind](arg)
             except Exception as e:self.log(f'{kind} failed: {e!r}')
-            finally:self.jobs.task_done()
+            finally:self.busy=None;self.jobs.task_done()
     # ---- the Discogs collection
     def discogs_sync(self,full=None):
         """Start or resume a Discogs sync as a job: it runs in steps on the worker thread, never on the capture thread."""
@@ -740,7 +742,7 @@ def make_handler(rip):
                 elif self.path=='/api/clear':
                     with rip.lock:rip.store['current_album']=None;rip.save()
                     self.reply({'ok':True})
-                elif self.path=='/api/record':rip.manual=body.get('action');self.reply({'ok':True})
+                elif self.path=='/api/record':rip.manual_from='dashboard';rip.manual=body.get('action');self.reply({'ok':True})
                 elif self.path=='/api/finalize':rip.jobs.put(('finalize',body['mbid']));self.reply({'ok':True})
                 elif self.path=='/api/config':
                     with rip.lock:
@@ -767,6 +769,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--port',type=int,default=8091);p.add_argument('--home',default='~/vinyl');p.add_argument('--replay');p.add_argument('--fast',action='store_true',help='with --replay: do not pace to real time')
     a=p.parse_args();rip=Ripper(a.home,a.replay,a.fast);threading.Thread(target=rip.worker,daemon=True).start()
+    if not a.replay:panel.start(rip)
     if a.replay and a.fast:rip.capture_loop();print(json.dumps({'sides':rip.store['sides'],'events':[e['text'] for e in rip.events]},indent=1)[:3000]);return
     loop=threading.Thread(target=rip.capture_loop);loop.start();threading.Thread(target=rip.discogs_clock,daemon=True).start();print(f'Vinyl ripper dashboard on port {a.port}',flush=True)
     server=ThreadingHTTPServer(('0.0.0.0',a.port),make_handler(rip));threading.Thread(target=server.serve_forever,daemon=True).start()
