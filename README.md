@@ -28,7 +28,7 @@
 </p>
 
 <p align="center">
-  <img src="media/showcase/assembly.gif" alt="Vinyl ADC 3D Exploded Assembly Animation" width="720">
+  <img src="media/showcase/electronics.gif" alt="The four milled Vinyl ADC boards: power, right channel, left channel and digital" width="720">
 </p>
 
 <p align="center">
@@ -36,15 +36,15 @@
 </p>
 
 <details>
-<summary><strong>More views: product orbit and four-board close-up</strong></summary>
+<summary><strong>More views: the enclosure orbit and exploded assembly</strong></summary>
 
 ### Product orbit
 
 ![Vinyl ADC enclosure rotating through a full turn](media/showcase/orbit.gif)
 
-### Four-board close-up
+### Exploded assembly
 
-![Vinyl ADC power, right-channel, left-channel, and digital boards](media/showcase/electronics.gif)
+![Vinyl ADC 3D exploded assembly animation](media/showcase/assembly.gif)
 
 </details>
 
