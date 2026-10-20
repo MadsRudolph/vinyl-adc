@@ -155,18 +155,83 @@ proves the BC557s and the stretchers are sound.
   The rev D files are left as built. **Rev E's production files still carry the
   error** and must be regenerated before it is ordered.
 
-## 8. Open items
+## 8. The crystal, fixed (20 October, evening)
 
-1. **The crystal oscillator.** Find why it did not start (Y1, the 74HCU04 at U9,
-   J1), and repeat §5 on it: the GPCLK0 jitter is the largest known handicap in
-   the numbers above.
-2. **Converter-only floor:** inputs shorted, raw bitstream at 1.536 MHz, for the
-   number that compares the boards directly (milled stack: −76.75 / −77.49 dBFS,
+With J1 back on 1–2 and the oscillator's joints reflowed, J1.1 carries a clean
+0–5 V square at **6.145 MHz** (AD3, ×10 probe, two captures; the +0.02 % is the
+AD3's timebase, as in September). After a reboot with GPIO4 left as an input,
+the ripper came up idle in stereo, both channels Healthy: **rev D runs on its own
+crystal**. The cause was a joint, as on the milled board in September. U9 is a
+buffered 74HC04N, not the 74HCU04 the design calls for; it locks, but the HCU04
+is still the right part.
+
+## 9. AD3 audio plan on the crystal
+
+`assembly/bench/run.py audio`, AD3 W1 into the channel input, the other input
+shorted, Pi supply, own crystal. Runs `20261020T212653Z-audio-4ab32588` (left)
+and `20261020T213958Z-audio-b5fe494a` (right).
+
+| | Rev D left | Rev D right | Milled stack left (Sept, best) |
+|---|---|---|---|
+| Dynamic range, AES17, A-weighted | **78.7 dB** | 72.2 dB | 67.9 dB |
+| Idle noise (input at 0 V), A-weighted | −78.8 dBFS | −72.3 dBFS | −67.7 dBFS |
+| THD at −6 dBFS | 0.019 % | 0.052 % | 0.03 % |
+| 2nd / 3rd harmonic at −3 dBFS | −75.8 / −80.5 dBc | −62.0 / −79.2 dBc | |
+| Crosstalk | −97.8 dB | −85.8 dB | −92.4 dB |
+| Hum, 50 Hz | −107 dBFS | −117 dBFS | −99.5 dBFS |
+| Response 20 Hz / 16 kHz re 1 kHz | −0.30 / +0.08 dB | −0.33 / +0.08 dB | ±0.06 dB |
+| IMD CCIF (1 kHz product) / SMPTE | −85.2 dB / 0.137 % | −72.4 dB / 0.184 % | |
+| Full scale | 4.91 Vpk | 4.69 Vpk | 10.4 Vpk |
+
+The left channel beats the milled stack's best by about **11 dB** and clears the
+~68 dB the design was simulated for by 10 dB.
+
+**THD+N is not quoted.** The plan reports about −49 dB at −3 to −20 dBFS,
+which cannot coexist with 0.02 % THD and a −79 dBFS floor. A sine-fit residual
+gives −54 dB, constant with level: the tone carries ~0.2 % amplitude modulation
+at exactly 2 Hz (with 6 and 8 Hz lines) plus close-in sidebands within ±100 Hz.
+The phase is steady to 0.02°, so no samples are lost. September's left channel
+shows the identical 2 Hz line (−52.4 dB), so it is not new to rev D. The ripper
+works in 0.5 s blocks; the leading suspect is the Pi's 2 Hz load pattern moving
+the +5 V that the ratiometric references follow, the other is the AD3 generator.
+Untested (§10).
+
+## 10. The right channel's deficit is in its loop, and it is not new
+
+The right channel is 6.5 dB noisier, has a 14 dB stronger 2nd harmonic and an
+in-band line near 12.4 kHz. The milled stack's right channel had the same
+signature in September, which was blamed on its input trimmer. Only the two
+trimmers were carried over to rev D, so they were tested first.
+
+| Test | Result |
+|---|---|
+| RV60 wiped end to end and left mid-way (gain −7.6 dB, full scale 11.25 Vpk) | idle noise unchanged at −72.3 dBFS(A); 12.4 kHz line still there; 2nd harmonic unchanged at −66.7 dBc. Noise made before the trimmer would have moved with the gain: **the trimmer is cleared** |
+| DAC outputs, J22.10 / J62.10 | 0.032/4.824 V vs 0.026/4.821 V, duty 50.3/49.7 %, edges and overshoot alike: **DACs match** |
+| INT1, J22.2 / J62.2 | DC +32 / +43 mV, swing and in-band level alike; INT1_R carries the 12.4 kHz line |
+| Both inputs shorted, AD3 disconnected | left −78.2, right −72.3 dBFS(A): **not the AD3 ground** |
+| Raw bitstream, both inputs shorted | left in-band floor −130.1 / −127.1 / −122.9 dBFS/Hz at 1 / 5 / 20 kHz, right −122.6 / −121.7 / −120.3; shaping 30→80 kHz +66 / +69 dB/dec |
+
+The bitstreams settle it as far as probing can: above the audio band the two
+loops shape identically, but the right channel carries an extra, nearly **flat
+in-band floor** about 7.5 dB above the left's at 1 kHz, and its idle tone sits
+exactly where its offset predicts (density 0.4960 → 12.40 kHz; the left's
+0.4982 → 5.58 kHz, 10 dB weaker). A flat floor added at the loop input, which
+the input gain does not scale, points to noise injected at the first
+integrator: U60A's own noise, the DAC switching (U64, on +5VA), or digital
+coupling into INT1_R from the QR line to the interleave mux. September's
+"identical at the bitstream level" compared shaping, not this in-band floor.
+The decisive test, swapping U20–U24 with U60–U64 (all socketed), is not done.
+
+## 11. Open items
+
+1. ~~The crystal oscillator~~ fixed (§8). Repeat §5 (turntable floor) on it.
+2. ~~Converter-only floor~~ done (§10): raw bitstream, inputs shorted, 20 Hz–20 kHz
+   total −80.6 dBFS left, −73.5 dBFS right (milled stack −76.75 / −77.49 dBFS,
    test-and-verification §3).
-3. **The AD3 audio plan** (`assembly/bench/run.py audio`) on rev D: dynamic
-   range, THD, response, crosstalk, against the milled stack's 67.9 dB.
+3. ~~The AD3 audio plan~~ done (§9). Open: the 2 Hz modulation (scope VREF_P at
+   J5.8 with and without CPU load) and the right channel's floor (§10: chip swap).
 4. **Hum:** the turntable ground on J3, J4 fitted and lifted.
 5. **`gap_db`** on a full side (§6).
-6. **GPCLK0 at boot** while J1 stays on the Pi clock (`pi/gpclk.py` does not
-   survive a reboot).
+6. ~~GPCLK0 at boot~~ not needed while J1 is on the crystal (§8); `pi/gpclk.py`
+   stays as the fallback.
 7. **U12:** the threshold swap (§7), then refit it. **Rev E:** regenerate.
