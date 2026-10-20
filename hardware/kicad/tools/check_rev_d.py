@@ -109,14 +109,16 @@ def main():
         pin = "1" if u == "U6" else "3"
         expect(on(u, pin) == "MCLK", f"{u}.{pin} is on {on(u, pin)}, not MCLK")
     # clip detector reads the first integrators, thresholds off the references
-    expect(on("U12", "5") == on("U20", "1") == "INT1_L",
-           "U12A + is not on INT1_L")
-    expect(on("U12", "6") == "INT1_L", "U12B - is not on INT1_L")
-    expect(on("U12", "11") == on("U60", "1") == "INT1_R",
-           "U12C + is not on INT1_R")
-    expect(on("U12", "8") == "INT1_R", "U12D - is not on INT1_R")
-    expect(on("U12", "4") == on("U12", "10") == "TH_P", "TH_P wiring")
-    expect(on("U12", "7") == on("U12", "9") == "TH_N", "TH_N wiring")
+    # each section sinks (LED on) only outside the window: A/C + on TH_P,
+    # B/D - on TH_N.  The first boards had these swapped and lit always.
+    expect(on("U12", "4") == on("U20", "1") == "INT1_L",
+           "U12A - is not on INT1_L")
+    expect(on("U12", "7") == "INT1_L", "U12B + is not on INT1_L")
+    expect(on("U12", "10") == on("U60", "1") == "INT1_R",
+           "U12C - is not on INT1_R")
+    expect(on("U12", "9") == "INT1_R", "U12D + is not on INT1_R")
+    expect(on("U12", "5") == on("U12", "11") == "TH_P", "TH_P wiring")
+    expect(on("U12", "6") == on("U12", "8") == "TH_N", "TH_N wiring")
     expect(on("R44", "1") == "VREF_P" and on("R46", "1") == "VREF_N",
            "thresholds are not derived from VREF_P / VREF_N")
     expect(on("U12", "3") == "+5VA" and on("U12", "12") == "-5V",

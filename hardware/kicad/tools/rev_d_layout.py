@@ -392,8 +392,13 @@ def blk_clip_channel(sh, x, y, ch, r):
                   unit=r["units"][1], value="LM339")
     oa = ua.pin({1: 2, 3: 13}[r["units"][0]])
     ob = ub.pin({2: 1, 4: 14}[r["units"][1]])
-    for p, net in ((ua.pin("+"), f"INT1_{ch}"), (ua.pin("-"), "TH_P"),
-                   (ub.pin("+"), "TH_N"), (ub.pin("-"), f"INT1_{ch}")):
+    # An LM339 output sinks while + < -, and sinking is what lights the LED,
+    # so each section must sink OUTSIDE the window: A for INT1 > TH_P, B for
+    # INT1 < TH_N.  The first rev D boards had both pairs the other way
+    # round, sinking whenever INT1 sat inside +/-2 V, i.e. always (erratum
+    # in the 2026-10 bring-up log).
+    for p, net in ((ua.pin("+"), "TH_P"), (ua.pin("-"), f"INT1_{ch}"),
+                   (ub.pin("+"), f"INT1_{ch}"), (ub.pin("-"), "TH_N")):
         sh.seg(p, (p.x - G(6), p.y))
         sh.label((p.x - G(6), p.y), net, rot=LROT, kind="global")
     # wired-OR of the two open collectors, pulled up
