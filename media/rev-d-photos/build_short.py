@@ -93,6 +93,8 @@ SEGMENTS=[
   'Silkscreen\nthis sharp','0.8 mm legends'),
  (lambda o:photo('20261021_001213.jpg',2.8,(.42,.46,.70),(.56,.58,.52),o),2.8,
   'Every via tented','solder mask both sides'),
+ (lambda o:render('v_fly',o,first=21,last=140),4.0,
+  '184 parts','every one through-hole'),
  (lambda o:clip('20261021_001846.mp4',0.5,4.0,o,speed=1.6),4.0,
   'No ADC chip.','op-amps, comparators\nand 74HC logic'),
  (lambda o:render('v_led',o),4.0,
