@@ -1,0 +1,4 @@
+# Python env and scratch build output; out/ (print files) and solidcraft/ are kept
+.venv/
+build/
+*.bak

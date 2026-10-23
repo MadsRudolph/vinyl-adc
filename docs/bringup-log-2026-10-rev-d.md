@@ -149,6 +149,29 @@ proves the BC557s and the stretchers are sound.
   window. R44 (VREF_P→TH_P) and R46 (VREF_N→TH_N) stand 12 mm apart; removing
   them and fitting two 22k1 resistors diagonally across their holes *from the
   solder side*, VREF_P→TH_N and VREF_N→TH_P, is invisible from the top.
+- **Rework procedure** (22 October). U12 is socketed and runs from ±5 V, so its
+  inputs take −2 V without trouble, and after the swap every section sinks
+  outside the window: pin 5 INT1_L > pin 4 TH_P (−2 V) holds the output off
+  until INT1 falls below −2 V, pin 7 TH_N (+2 V) > pin 6 INT1_L until INT1
+  rises above +2 V, and pins 8–11 do the same for the right channel. The
+  dividers keep their 22k1/100k ratio, so the thresholds stay ±2.0 V.
+
+  ![Solder-side view of the rework](img/rev-d-clip-rework.png)
+
+  1. Desolder R44 and R46 and clear their four holes. The same two 22k1
+     resistors can go back in.
+  2. From the solder side, fit one 22k1 from R44.1 (VREF_P) to R46.2 (TH_N),
+     flat on the board. It runs 14.4 mm and clears the nearest pad (R45.2,
+     GND) by 1.5 mm.
+  3. Fit the other from R46.1 (VREF_N) to R44.2 (TH_P), 14.1 mm, with
+     sleeving on both legs. It crosses the first at mid-span and passes
+     within 1 mm of R47.2 (GND). Keep the two bodies at opposite ends of
+     their diagonals, as in the drawing.
+  4. Before refitting U12, check with the board powered: TH_P at U12.4/.10
+     reads about −1.99 V and TH_N at U12.7/.9 about +2.02 V.
+  5. Refit U12. Both CLIP LEDs should be dark at idle and light for about a
+     second on a peak beyond ±2 V at INT1. A 1 kHz sine from the AD3 stepped
+     up to clipping, against the dashboard's "■ CLIP", is the test.
 - **Source:** `tools/rev_d_layout.py` now wires each section to sink outside the
   window, and the gate checks the corrected wiring; regenerated in a scratch copy,
   rev D and rev E both pass, and the as-built rev D fails on exactly these pins.

@@ -1,0 +1,8672 @@
+{
+ "meta": {
+  "board": "Vinyl ADC rev D (PCBWay, 4-layer, 1.6 mm, all THT) + Raspberry Pi 4B underneath",
+  "source_pcb": "hardware/kicad/rev_d/vinyl_adc_rev_d.kicad_pcb",
+  "generated_by": "enclosure/rev-d/spec/extract_board_mech.py",
+  "units": "mm, degrees",
+  "frame": {
+   "origin": "board lower-left corner (front-left, LED edge at y=0)",
+   "x": "right",
+   "y": "toward the back (Pi USB/Ethernet end)",
+   "z": "up; 0 = top face of the HAT",
+   "from_kicad_page": "x = X - 51.06 ; y = 157.5 - Y",
+   "note": "rot_deg is KiCad orientation (CCW positive seen from the top, page frame)."
+  },
+  "confidence": "Positions, holes, outline: exact from the .kicad_pcb. Pi geometry: Pi 4B model + render placement (matches the HAT hole pattern to 0.01 mm). Heights: KiCad 3D models unless \"as_built\" says otherwise; as_built values are photo estimates -> MEASURE."
+ },
+ "board": {
+  "outline": {
+   "shape": "rectangle",
+   "x": [
+    0,
+    140.0
+   ],
+   "y": [
+    0,
+    136.0
+   ],
+   "corner_radius": 0.0
+  },
+  "thickness": 1.6,
+  "z_top": 0.0,
+  "z_bottom": -1.6,
+  "copper_layers": 4,
+  "zone_layers": [
+   "F.Cu"
+  ]
+ },
+ "holes": [
+  {
+   "ref": "H3",
+   "x": 136.5,
+   "y": 3.5,
+   "drill": 3.2,
+   "plated": false,
+   "thread": "M3",
+   "role": "HAT-to-enclosure",
+   "copper_clear_radius_pads": 6.024,
+   "copper_clear_radius_tracks": 8.103,
+   "max_head_or_washer_dia": 11.448
+  },
+  {
+   "ref": "H5",
+   "x": 136.5,
+   "y": 132.5,
+   "drill": 2.7,
+   "plated": false,
+   "thread": "M2.5",
+   "role": "Pi 4 stack (HAT + Pi share this hole axis)",
+   "copper_clear_radius_pads": 3.6,
+   "copper_clear_radius_tracks": 14.097,
+   "max_head_or_washer_dia": 6.6
+  },
+  {
+   "ref": "H7",
+   "x": 136.5,
+   "y": 74.5,
+   "drill": 2.7,
+   "plated": false,
+   "thread": "M2.5",
+   "role": "Pi 4 stack (HAT + Pi share this hole axis)",
+   "copper_clear_radius_pads": 4.262,
+   "copper_clear_radius_tracks": 4.457,
+   "max_head_or_washer_dia": 7.924
+  },
+  {
+   "ref": "H1",
+   "x": 3.5,
+   "y": 132.5,
+   "drill": 3.2,
+   "plated": false,
+   "thread": "M3",
+   "role": "HAT-to-enclosure",
+   "copper_clear_radius_pads": 5.11,
+   "copper_clear_radius_tracks": 6.485,
+   "max_head_or_washer_dia": 9.62
+  },
+  {
+   "ref": "H2",
+   "x": 3.5,
+   "y": 3.5,
+   "drill": 3.2,
+   "plated": false,
+   "thread": "M3",
+   "role": "HAT-to-enclosure",
+   "copper_clear_radius_pads": 7.006,
+   "copper_clear_radius_tracks": 10.222,
+   "max_head_or_washer_dia": 13.412
+  },
+  {
+   "ref": "H4",
+   "x": 87.5,
+   "y": 132.5,
+   "drill": 2.7,
+   "plated": false,
+   "thread": "M2.5",
+   "role": "Pi 4 stack (HAT + Pi share this hole axis)",
+   "copper_clear_radius_pads": 4.183,
+   "copper_clear_radius_tracks": 7.19,
+   "max_head_or_washer_dia": 7.766
+  },
+  {
+   "ref": "H6",
+   "x": 87.5,
+   "y": 74.5,
+   "drill": 2.7,
+   "plated": false,
+   "thread": "M2.5",
+   "role": "Pi 4 stack (HAT + Pi share this hole axis)",
+   "copper_clear_radius_pads": 3.707,
+   "copper_clear_radius_tracks": 1.826,
+   "max_head_or_washer_dia": 3.052
+  }
+ ],
+ "stack": {
+  "z_hat_top": 0.0,
+  "z_hat_bottom": -1.6,
+  "z_socket_bottom": -10.185,
+  "z_pi_pcb_top": -12.6,
+  "z_pi_pcb_bottom": -14.2,
+  "z_pi_lowest_part": -16.15,
+  "hat_to_pi_standoff": {
+   "length": 11.0,
+   "thread": "M2.5",
+   "type": "female-female (as BOM rev D)"
+  },
+  "note": "Pi PCB top is 11.0 below the HAT bottom: 8.5 mm socket + 2.5 mm header body."
+ },
+ "pi4": {
+  "pcb": {
+   "x": [
+    84.015,
+    140.019
+   ],
+   "y": [
+    71.0,
+    156.0
+   ],
+   "z": [
+    -14.2,
+    -12.6
+   ],
+   "size": [
+    56.0,
+    85.0
+   ],
+   "corner_radius": 3.0,
+   "orientation": "short axis along x, flush with the HAT right edge; SD end at y=71, USB/Ethernet end at y=156 (20 mm past the HAT back edge)"
+  },
+  "holes": [
+   {
+    "x": 87.52,
+    "y": 74.5,
+    "drill": 2.7,
+    "thread": "M2.5",
+    "pad_dia": 6.0
+   },
+   {
+    "x": 136.52,
+    "y": 74.5,
+    "drill": 2.7,
+    "thread": "M2.5",
+    "pad_dia": 6.0
+   },
+   {
+    "x": 87.52,
+    "y": 132.5,
+    "drill": 2.7,
+    "thread": "M2.5",
+    "pad_dia": 6.0
+   },
+   {
+    "x": 136.52,
+    "y": 132.5,
+    "drill": 2.7,
+    "thread": "M2.5",
+    "pad_dia": 6.0
+   }
+  ],
+  "gpio_header": {
+   "centre_x": 87.52,
+   "y": [
+    78.1,
+    128.9
+   ],
+   "pin1": [
+    88.77,
+    79.37
+   ]
+  },
+  "ports": [
+   {
+    "name": "USB-C power",
+    "faces": "right (+x)",
+    "centre": [
+     141.215,
+     82.2,
+     -11.02
+    ],
+    "receptacle_wh": [
+     9.0,
+     3.16
+    ],
+    "face_x": 141.215,
+    "plug_overmould_wh": [
+     12.5,
+     7.0
+    ],
+    "note": "wall cut-out must pass the plug overmould up to the receptacle face"
+   },
+   {
+    "name": "micro-HDMI 0",
+    "faces": "right (+x)",
+    "centre": [
+     141.215,
+     97.0,
+     -11.179
+    ],
+    "receptacle_wh": [
+     6.5,
+     2.843
+    ],
+    "face_x": 141.215,
+    "plug_overmould_wh": [
+     11.5,
+     7.5
+    ],
+    "note": "wall cut-out must pass the plug overmould up to the receptacle face"
+   },
+   {
+    "name": "micro-HDMI 1",
+    "faces": "right (+x)",
+    "centre": [
+     141.215,
+     110.5,
+     -11.179
+    ],
+    "receptacle_wh": [
+     6.5,
+     2.843
+    ],
+    "face_x": 141.215,
+    "plug_overmould_wh": [
+     11.5,
+     7.5
+    ],
+    "note": "wall cut-out must pass the plug overmould up to the receptacle face"
+   },
+   {
+    "name": "3.5 mm audio/composite",
+    "faces": "right (+x)",
+    "centre": [
+     142.515,
+     125.0,
+     -9.6
+    ],
+    "receptacle_wh": [
+     6.0,
+     6.0
+    ],
+    "face_x": 142.515,
+    "plug_overmould_wh": [
+     8.0,
+     8.0
+    ],
+    "note": "wall cut-out must pass the plug overmould up to the receptacle face"
+   },
+   {
+    "name": "Gigabit Ethernet RJ45",
+    "faces": "back (+y)",
+    "centre": [
+     94.287,
+     159.25,
+     -5.775
+    ],
+    "body_box": {
+     "x": [
+      86.21,
+      102.365
+     ],
+     "y": [
+      137.65,
+      159.25
+     ],
+     "z": [
+      -12.6,
+      1.05
+     ]
+    },
+    "face_y": 159.25,
+    "opening_wh": [
+     17.155,
+     14.65
+    ]
+   },
+   {
+    "name": "USB 3.0 pair (blue)",
+    "faces": "back (+y)",
+    "centre": [
+     113.015,
+     158.85,
+     -4.43
+    ],
+    "body_box": {
+     "x": [
+      105.515,
+      120.515
+     ],
+     "y": [
+      141.35,
+      158.85
+     ],
+     "z": [
+      -12.6,
+      3.74
+     ]
+    },
+    "face_y": 158.85,
+    "opening_wh": [
+     16.0,
+     17.34
+    ]
+   },
+   {
+    "name": "USB 2.0 pair",
+    "faces": "back (+y)",
+    "centre": [
+     131.015,
+     159.36,
+     -4.796
+    ],
+    "body_box": {
+     "x": [
+      123.565,
+      138.465
+     ],
+     "y": [
+      141.305,
+      159.36
+     ],
+     "z": [
+      -12.6,
+      3.007
+     ]
+    },
+    "face_y": 159.36,
+    "opening_wh": [
+     15.9,
+     16.607
+    ]
+   }
+  ],
+  "microsd": {
+   "box": {
+    "x": [
+     106.49,
+     117.49
+    ],
+    "y": [
+     66.5,
+     68.317
+    ],
+    "z": [
+     -15.43,
+     -14.58
+    ]
+   },
+   "faces": "front (-y), on the Pi underside, under the HAT",
+   "note": "Card tip at y~66.5 (socket mouth y~71), z -15.4..-14.6, card centre x~112. Not reachable from outside without a floor slot; removing the Pi is the normal route."
+  },
+  "soc": {
+   "box": {
+    "x": [
+     100.072,
+     114.703
+    ],
+    "y": [
+     92.916,
+     107.548
+    ],
+    "z": [
+     -11.1,
+     -10.3
+    ]
+   },
+   "note": "BCM2711 heat source; sits under the HAT. Ventilate the floor below it."
+  },
+  "envelope_all": {
+   "x": [
+    84.015,
+    142.515
+   ],
+   "y": [
+    66.5,
+    159.36
+   ],
+   "z": [
+    -16.15,
+    3.74
+   ]
+  },
+  "envelope_top_side": {
+   "x": [
+    84.015,
+    142.515
+   ],
+   "y": [
+    71.0,
+    159.36
+   ],
+   "z": [
+    -12.6,
+    3.74
+   ]
+  },
+  "envelope_bottom_side": {
+   "x": [
+    84.515,
+    139.515
+   ],
+   "y": [
+    66.5,
+    152.565
+   ],
+   "z": [
+    -16.15,
+    -14.205
+   ]
+  },
+  "power": "5 V 3 A via USB-C (right side wall). Pi 4 idles ~3 W, up to ~6 W."
+ },
+ "leds": {
+  "pitch": 9.5,
+  "pitch_min": 9.5,
+  "pitch_max": 9.5,
+  "row_y": 6.0,
+  "items": [
+   {
+    "ref": "D6",
+    "label": "CLIP L",
+    "colour": "RED",
+    "gpio": null,
+    "centre": [
+     12.27,
+     6.0
+    ],
+    "body_dia": 5.0,
+    "flange_dia": 5.8,
+    "flange_flat": "cathode side (pad 1, -x)",
+    "model_z_top": 11.595,
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ]
+   },
+   {
+    "ref": "D7",
+    "label": "CLIP R",
+    "colour": "RED",
+    "gpio": null,
+    "centre": [
+     21.77,
+     6.0
+    ],
+    "body_dia": 5.0,
+    "flange_dia": 5.8,
+    "flange_flat": "cathode side (pad 1, -x)",
+    "model_z_top": 11.595,
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ]
+   },
+   {
+    "ref": "D3",
+    "label": "+5VA",
+    "colour": "GREEN",
+    "gpio": null,
+    "centre": [
+     31.27,
+     6.0
+    ],
+    "body_dia": 5.0,
+    "flange_dia": 5.8,
+    "flange_flat": "cathode side (pad 1, -x)",
+    "model_z_top": 11.595,
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ]
+   },
+   {
+    "ref": "D4",
+    "label": "-5V",
+    "colour": "YELLOW",
+    "gpio": null,
+    "centre": [
+     40.77,
+     6.0
+    ],
+    "body_dia": 5.0,
+    "flange_dia": 5.8,
+    "flange_flat": "cathode side (pad 1, -x)",
+    "model_z_top": 11.595,
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ]
+   },
+   {
+    "ref": "D5",
+    "label": "CLK",
+    "colour": "GREEN",
+    "gpio": null,
+    "centre": [
+     50.27,
+     6.0
+    ],
+    "body_dia": 5.0,
+    "flange_dia": 5.8,
+    "flange_flat": "cathode side (pad 1, -x)",
+    "model_z_top": 11.595,
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ]
+   },
+   {
+    "ref": "D8",
+    "label": "REC",
+    "colour": "RED",
+    "gpio": "GPIO17",
+    "centre": [
+     59.77,
+     6.0
+    ],
+    "body_dia": 5.0,
+    "flange_dia": 5.8,
+    "flange_flat": "cathode side (pad 1, -x)",
+    "model_z_top": 11.595,
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ]
+   },
+   {
+    "ref": "D9",
+    "label": "BUSY",
+    "colour": "YELLOW",
+    "gpio": "GPIO27",
+    "centre": [
+     69.27,
+     6.0
+    ],
+    "body_dia": 5.0,
+    "flange_dia": 5.8,
+    "flange_flat": "cathode side (pad 1, -x)",
+    "model_z_top": 11.595,
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ]
+   },
+   {
+    "ref": "D10",
+    "label": "READY",
+    "colour": "GREEN",
+    "gpio": "GPIO22",
+    "centre": [
+     78.77,
+     6.0
+    ],
+    "body_dia": 5.0,
+    "flange_dia": 5.8,
+    "flange_flat": "cathode side (pad 1, -x)",
+    "model_z_top": 11.595,
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ]
+   }
+  ],
+  "note": "Centres are the optical axis (midpoint of the two pads), not the KiCad anchor (pad 1)."
+ },
+ "switches": [
+  {
+   "ref": "SW1",
+   "label": "SHUTDOWN / WAKE",
+   "gpio": "GPIO3",
+   "centre": [
+    107.25,
+    7.25
+   ],
+   "body": [
+    6.0,
+    6.0
+   ],
+   "body_height": 3.5,
+   "actuator_dia": 3.5,
+   "model_actuator_z_top": 4.295,
+   "z_top_est": 5.0,
+   "z_top_range": [
+    4.3,
+    9.5
+   ],
+   "travel": 0.25,
+   "actuation_force_gf": "160-260 (typical 6 mm tact)",
+   "pads": [
+    [
+     104.0,
+     9.5
+    ],
+    [
+     110.5,
+     9.5
+    ],
+    [
+     104.0,
+     5.0
+    ],
+    [
+     110.5,
+     5.0
+    ]
+   ]
+  },
+  {
+   "ref": "SW2",
+   "label": "USER",
+   "gpio": "GPIO23",
+   "centre": [
+    121.25,
+    7.25
+   ],
+   "body": [
+    6.0,
+    6.0
+   ],
+   "body_height": 3.5,
+   "actuator_dia": 3.5,
+   "model_actuator_z_top": 4.295,
+   "z_top_est": 5.0,
+   "z_top_range": [
+    4.3,
+    9.5
+   ],
+   "travel": 0.25,
+   "actuation_force_gf": "160-260 (typical 6 mm tact)",
+   "pads": [
+    [
+     118.0,
+     9.5
+    ],
+    [
+     124.5,
+     9.5
+    ],
+    [
+     118.0,
+     5.0
+    ],
+    [
+     124.5,
+     5.0
+    ]
+   ]
+  }
+ ],
+ "access": [
+  {
+   "ref": "J20",
+   "what": "LINE IN L (2-pole 5.08 screw terminal)",
+   "centre": [
+    4.7,
+    123.46
+   ],
+   "faces": "left (-x)",
+   "frequency": "install"
+  },
+  {
+   "ref": "J3",
+   "what": "TONEARM GND (2-pole 5.08 screw terminal)",
+   "centre": [
+    4.7,
+    84.96
+   ],
+   "faces": "left (-x)",
+   "frequency": "install"
+  },
+  {
+   "ref": "J60",
+   "what": "LINE IN R (2-pole 5.08 screw terminal)",
+   "centre": [
+    4.7,
+    65.46
+   ],
+   "faces": "left (-x)",
+   "frequency": "install"
+  },
+  {
+   "ref": "RV20",
+   "what": "TRIM L (47k trimmer)",
+   "centre": [
+    11.2,
+    112.54
+   ],
+   "faces": "top (screwdriver)",
+   "frequency": "rare, lid off OK"
+  },
+  {
+   "ref": "RV60",
+   "what": "TRIM R (47k trimmer)",
+   "centre": [
+    11.2,
+    54.54
+   ],
+   "faces": "top (screwdriver)",
+   "frequency": "rare, lid off OK"
+  },
+  {
+   "ref": "J1",
+   "what": "CLK SEL jumper 1x3 (1-2 XTAL, 2-3 GPCLK; currently 2-3)",
+   "centre": [
+    120.21,
+    110.0
+   ],
+   "faces": "top",
+   "frequency": "rare, lid off OK"
+  },
+  {
+   "ref": "J4",
+   "what": "GND LIFT/BOND jumper 1x2",
+   "centre": [
+    16.77,
+    86.0
+   ],
+   "faces": "top",
+   "frequency": "rare, lid off OK"
+  },
+  {
+   "ref": "J6",
+   "what": "EEPROM WP jumper 1x2",
+   "centre": [
+    125.48,
+    34.0
+   ],
+   "faces": "top",
+   "frequency": "never"
+  },
+  {
+   "ref": "J22",
+   "what": "TP L 2x5 test header (odd = GND)",
+   "centre": [
+    79.77,
+    108.92
+   ],
+   "faces": "top",
+   "frequency": "bench, lid off"
+  },
+  {
+   "ref": "J5",
+   "what": "TP DIG 2x5 test header",
+   "centre": [
+    79.77,
+    83.42
+   ],
+   "faces": "top",
+   "frequency": "bench, lid off"
+  },
+  {
+   "ref": "J62",
+   "what": "TP R 2x5 test header",
+   "centre": [
+    79.77,
+    50.92
+   ],
+   "faces": "top",
+   "frequency": "bench, lid off"
+  },
+  {
+   "ref": "SW1",
+   "what": "SHUTDOWN / WAKE button (GPIO3)",
+   "centre": [
+    107.25,
+    7.25
+   ],
+   "faces": "top (press -z)",
+   "frequency": "daily"
+  },
+  {
+   "ref": "SW2",
+   "what": "USER button (GPIO23)",
+   "centre": [
+    121.25,
+    7.25
+   ],
+   "faces": "top (press -z)",
+   "frequency": "daily"
+  }
+ ],
+ "keepouts": [
+  {
+   "name": "HAT top-side component envelope (model)",
+   "x": [
+    0,
+    140
+   ],
+   "y": [
+    0,
+    136
+   ],
+   "z": [
+    0,
+    13.795
+   ]
+  },
+  {
+   "name": "HAT top-side component envelope (as-built estimate, design to this)",
+   "x": [
+    0,
+    140
+   ],
+   "y": [
+    0,
+    136
+   ],
+   "z": [
+    0,
+    20.0
+   ],
+   "note": "Tallest fitted parts are estimated at 16-17 mm (C1/C18 electrolytics, C20/C60 MKT boxes). Lid underside >= 22.0 keeps >= 2 mm over a 20 mm part."
+  },
+  {
+   "name": "HAT solder side, lead protrusion (no Pi under it)",
+   "x": [
+    0,
+    140
+   ],
+   "y": [
+    0,
+    136
+   ],
+   "z": [
+    -4.1,
+    -1.6
+   ],
+   "note": "THT leads are clipped to ~1.5-2.5 mm; the rework wires for U12 are on this side. Nothing may touch the copper side except the posts at the M3 holes."
+  },
+  {
+   "name": "J2 2x20 socket (bottom side)",
+   "x": [
+    84.96,
+    90.04
+   ],
+   "y": [
+    78.1,
+    128.9
+   ],
+   "z": [
+    -10.185,
+    -1.685
+   ]
+  },
+  {
+   "name": "Raspberry Pi 4 (PCB + all parts incl. ports)",
+   "x": [
+    84.015,
+    142.515
+   ],
+   "y": [
+    66.5,
+    159.36
+   ],
+   "z": [
+    -16.15,
+    3.74
+   ]
+  },
+  {
+   "name": "Pi underside parts (microSD socket/card, test pads)",
+   "x": [
+    84.515,
+    139.515
+   ],
+   "y": [
+    66.5,
+    152.565
+   ],
+   "z": [
+    -16.15,
+    -14.205
+   ]
+  },
+  {
+   "name": "Pi USB/Ethernet block (behind the HAT, rises above the HAT top)",
+   "x": [
+    86.315,
+    138.465
+   ],
+   "y": [
+    137.65,
+    159.36
+   ],
+   "z": [
+    -9.586,
+    3.74
+   ]
+  },
+  {
+   "name": "Pi PoE 4-pin header tips (under the HAT, 1.0 mm below its copper side)",
+   "x": [
+    92.085,
+    95.225
+   ],
+   "y": [
+    131.13,
+    134.07
+   ],
+   "z": [
+    -2.8,
+    -2.6
+   ]
+  },
+  {
+   "name": "Terminal-block wire gutter (cables enter from -x)",
+   "x": [
+    -8.0,
+    0.0
+   ],
+   "y": [
+    60.0,
+    132.0
+   ],
+   "z": [
+    -1.6,
+    14.0
+   ],
+   "note": "J20 / J3 / J60 wires enter horizontally from the left; keep 8 mm for the wire bend and ferrules."
+  },
+  {
+   "name": "Test-point header probe clearance (J5, J22, J62, J1)",
+   "x": [
+    76.0,
+    84.0
+   ],
+   "y": [
+    44.0,
+    117.0
+   ],
+   "z": [
+    0,
+    20.0
+   ],
+   "note": "Scope probe hooks need ~10 mm above the 8.5 mm pins: reached with the lid removed."
+  }
+ ],
+ "parts": {
+  "U6": {
+   "value": "74HC157",
+   "footprint": "DIP-16_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    92.5,
+    86.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    101.39,
+    90.56
+   ],
+   "courtyard": {
+    "x": [
+     90.935,
+     111.845
+    ],
+    "y": [
+     85.255,
+     95.865
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     91.801,
+     110.978
+    ],
+    "y": [
+     86.623,
+     94.497
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 28.155,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "Q3": {
+   "value": "BC557",
+   "footprint": "TO-92_Inline",
+   "category": "transistor",
+   "anchor": [
+    24.5,
+    26.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    24.5,
+    28.02
+   ],
+   "courtyard": {
+    "x": [
+     21.725,
+     26.555
+    ],
+    "y": [
+     25.245,
+     30.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     22.257,
+     25.83
+    ],
+    "y": [
+     25.735,
+     30.305
+    ],
+    "z": [
+     2.495,
+     7.295
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 21.725
+  },
+  "C66": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    29.5,
+    53.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    29.5,
+    55.5
+   ],
+   "courtyard": {
+    "x": [
+     27.955,
+     31.045
+    ],
+    "y": [
+     51.905,
+     59.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     28.398,
+     30.602
+    ],
+    "y": [
+     52.75,
+     58.25
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 27.955
+  },
+  "R52": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    13.75,
+    19.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    13.75,
+    15.19
+   ],
+   "courtyard": {
+    "x": [
+     12.205,
+     15.295
+    ],
+    "y": [
+     10.285,
+     20.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     12.623,
+     14.877
+    ],
+    "y": [
+     11.08,
+     19.3
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.285
+  },
+  "D4": {
+   "value": "YELLOW",
+   "footprint": "LED_D5.0mm",
+   "category": "led",
+   "anchor": [
+    39.5,
+    6.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    40.77,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     37.515,
+     44.035
+    ],
+    "y": [
+     2.745,
+     9.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     38.27,
+     43.572
+    ],
+    "y": [
+     3.195,
+     8.805
+    ],
+    "z": [
+     2.995,
+     11.595
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 2.745,
+   "as_built": {
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ],
+    "note": "Photos show the 5 mm LEDs seated flush (flange on the board): 8.6 mm body + ~0.1. The KiCad model floats them 3 mm (top 11.59). MEASURE all eight."
+   }
+  },
+  "R30": {
+   "value": "8k25",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    64.0,
+    125.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    67.81,
+    125.75
+   ],
+   "courtyard": {
+    "x": [
+     62.905,
+     72.715
+    ],
+    "y": [
+     124.205,
+     127.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     63.7,
+     71.92
+    ],
+    "y": [
+     124.623,
+     126.877
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 8.705
+  },
+  "C43": {
+   "value": "10u",
+   "footprint": "CP_Radial_D5.0mm_P2.50mm",
+   "category": "electrolytic",
+   "anchor": [
+    44.25,
+    18.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    45.5,
+    18.0
+   ],
+   "courtyard": {
+    "x": [
+     42.708,
+     48.295
+    ],
+    "y": [
+     15.208,
+     20.792
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     43.111,
+     47.895
+    ],
+    "y": [
+     15.621,
+     20.379
+    ],
+    "z": [
+     0.002,
+     4.995
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 15.208
+  },
+  "R32": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    38.25,
+    123.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    38.25,
+    126.81
+   ],
+   "courtyard": {
+    "x": [
+     36.705,
+     39.795
+    ],
+    "y": [
+     121.905,
+     131.715
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     37.123,
+     39.377
+    ],
+    "y": [
+     122.7,
+     130.92
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 4.285
+  },
+  "U24": {
+   "value": "74HC04",
+   "footprint": "DIP-14_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    33.75,
+    98.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    41.37,
+    102.56
+   ],
+   "courtyard": {
+    "x": [
+     32.175,
+     50.565
+    ],
+    "y": [
+     97.255,
+     107.865
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     32.586,
+     49.218
+    ],
+    "y": [
+     98.623,
+     106.497
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 28.135,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "C29": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    45.75,
+    123.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    45.75,
+    125.5
+   ],
+   "courtyard": {
+    "x": [
+     44.205,
+     47.295
+    ],
+    "y": [
+     121.905,
+     129.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     44.648,
+     46.852
+    ],
+    "y": [
+     122.75,
+     128.25
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 6.905
+  },
+  "C60": {
+   "value": "2u2",
+   "footprint": "C_Rect_L11.0mm_W6.3mm_P10.00mm_MKT",
+   "category": "film_cap_box",
+   "anchor": [
+    10.75,
+    45.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    15.75,
+    45.75
+   ],
+   "courtyard": {
+    "x": [
+     9.655,
+     21.845
+    ],
+    "y": [
+     42.305,
+     49.195
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     10.5,
+     21.0
+    ],
+    "y": [
+     45.5,
+     46.0
+    ],
+    "z": [
+     9.495,
+     9.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 9.655,
+   "as_built": {
+    "z_top_est": 16.0,
+    "envelope_xy": [
+     [
+      6.5,
+      25.5
+     ],
+     [
+      38.5,
+      53.0
+     ]
+    ],
+    "note": "As C20 (MKT 373 1.5 uF box). MEASURE."
+   }
+  },
+  "R55": {
+   "value": "330R",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    70.5,
+    19.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    70.5,
+    15.44
+   ],
+   "courtyard": {
+    "x": [
+     68.955,
+     72.045
+    ],
+    "y": [
+     10.535,
+     20.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     69.373,
+     71.627
+    ],
+    "y": [
+     11.33,
+     19.55
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.535
+  },
+  "C8": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    99.75,
+    28.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    99.75,
+    25.5
+   ],
+   "courtyard": {
+    "x": [
+     98.205,
+     101.295
+    ],
+    "y": [
+     21.905,
+     29.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     98.648,
+     100.852
+    ],
+    "y": [
+     22.75,
+     28.25
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 21.905
+  },
+  "R77": {
+   "value": "2k21",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    73.25,
+    40.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    77.06,
+    40.25
+   ],
+   "courtyard": {
+    "x": [
+     72.155,
+     81.965
+    ],
+    "y": [
+     38.705,
+     41.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     72.95,
+     81.17
+    ],
+    "y": [
+     39.123,
+     41.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 38.705
+  },
+  "R44": {
+   "value": "22k1",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    69.5,
+    87.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    69.5,
+    83.69
+   ],
+   "courtyard": {
+    "x": [
+     67.955,
+     71.045
+    ],
+    "y": [
+     78.785,
+     88.595
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     68.373,
+     70.627
+    ],
+    "y": [
+     79.58,
+     87.8
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 47.405
+  },
+  "H3": {
+   "value": "MountingHole_3.2mm_M3",
+   "footprint": "MountingHole_3.2mm_M3",
+   "category": "mounting_hole",
+   "anchor": [
+    136.5,
+    3.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    136.5,
+    3.5
+   ],
+   "courtyard": {
+    "x": [
+     133.008,
+     139.995
+    ],
+    "y": [
+     0.002,
+     6.998
+    ]
+   },
+   "model_bbox": null,
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 0.002
+  },
+  "J1": {
+   "value": "CLK SEL",
+   "footprint": "PinHeader_1x03_P2.54mm_Vertical",
+   "category": "pin_header",
+   "anchor": [
+    122.75,
+    110.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    120.21,
+    110.0
+   ],
+   "courtyard": {
+    "x": [
+     115.855,
+     124.565
+    ],
+    "y": [
+     108.185,
+     111.815
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     116.4,
+     124.02
+    ],
+    "y": [
+     108.73,
+     111.27
+    ],
+    "z": [
+     2.535,
+     8.535
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 15.435
+  },
+  "U60": {
+   "value": "TL072",
+   "footprint": "DIP-8_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    25.0,
+    60.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    21.19,
+    56.19
+   ],
+   "courtyard": {
+    "x": [
+     15.815,
+     26.565
+    ],
+    "y": [
+     50.885,
+     61.495
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     16.555,
+     25.825
+    ],
+    "y": [
+     52.253,
+     60.127
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 15.815,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "C70": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    55.0,
+    35.75
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    52.5,
+    35.75
+   ],
+   "courtyard": {
+    "x": [
+     48.905,
+     56.095
+    ],
+    "y": [
+     34.205,
+     37.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     49.75,
+     55.25
+    ],
+    "y": [
+     34.648,
+     36.852
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 34.205
+  },
+  "H5": {
+   "value": "MountingHole_2.7mm_M2.5",
+   "footprint": "MountingHole_2.7mm_M2.5",
+   "category": "mounting_hole",
+   "anchor": [
+    136.5,
+    132.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    136.5,
+    132.5
+   ],
+   "courtyard": {
+    "x": [
+     133.507,
+     139.495
+    ],
+    "y": [
+     129.503,
+     135.497
+    ]
+   },
+   "model_bbox": null,
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 0.503
+  },
+  "R64": {
+   "value": "10k5",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    56.5,
+    64.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    56.5,
+    68.31
+   ],
+   "courtyard": {
+    "x": [
+     54.955,
+     58.045
+    ],
+    "y": [
+     63.405,
+     73.215
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     55.373,
+     57.627
+    ],
+    "y": [
+     64.2,
+     72.42
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 54.955
+  },
+  "U62": {
+   "value": "TL072",
+   "footprint": "DIP-8_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    43.75,
+    61.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    39.94,
+    57.19
+   ],
+   "courtyard": {
+    "x": [
+     34.565,
+     45.315
+    ],
+    "y": [
+     51.885,
+     62.495
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     35.305,
+     44.575
+    ],
+    "y": [
+     53.253,
+     61.127
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 34.565,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "R65": {
+   "value": "13k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    65.75,
+    56.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    65.75,
+    60.31
+   ],
+   "courtyard": {
+    "x": [
+     64.205,
+     67.295
+    ],
+    "y": [
+     55.405,
+     65.215
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     64.623,
+     66.877
+    ],
+    "y": [
+     56.2,
+     64.42
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 55.405
+  },
+  "U20": {
+   "value": "TL072",
+   "footprint": "DIP-8_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    25.0,
+    118.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    21.19,
+    114.19
+   ],
+   "courtyard": {
+    "x": [
+     15.815,
+     26.565
+    ],
+    "y": [
+     108.885,
+     119.495
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     16.555,
+     25.825
+    ],
+    "y": [
+     110.253,
+     118.127
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 15.815,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "R71": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    42.0,
+    65.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    42.0,
+    68.81
+   ],
+   "courtyard": {
+    "x": [
+     40.455,
+     43.545
+    ],
+    "y": [
+     63.905,
+     73.715
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     40.873,
+     43.127
+    ],
+    "y": [
+     64.7,
+     72.92
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 40.455
+  },
+  "D15": {
+   "value": "1N4003",
+   "footprint": "D_DO-41_SOD81_P10.16mm_Horizontal",
+   "category": "diode",
+   "anchor": [
+    4.0,
+    76.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    9.08,
+    76.5
+   ],
+   "courtyard": {
+    "x": [
+     2.605,
+     15.555
+    ],
+    "y": [
+     74.855,
+     78.145
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     3.6,
+     14.56
+    ],
+    "y": [
+     75.322,
+     77.678
+    ],
+    "z": [
+     0.485,
+     3.2
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 2.605
+  },
+  "R46": {
+   "value": "22k1",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    57.5,
+    87.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    57.5,
+    83.44
+   ],
+   "courtyard": {
+    "x": [
+     55.955,
+     59.045
+    ],
+    "y": [
+     78.535,
+     88.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     56.373,
+     58.627
+    ],
+    "y": [
+     79.33,
+     87.55
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 47.655
+  },
+  "R21": {
+   "value": "20k5",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    11.25,
+    126.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    15.06,
+    126.5
+   ],
+   "courtyard": {
+    "x": [
+     10.155,
+     19.965
+    ],
+    "y": [
+     124.955,
+     128.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     10.95,
+     19.17
+    ],
+    "y": [
+     125.373,
+     127.627
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 7.955
+  },
+  "C13": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    92.5,
+    97.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    95.0,
+    97.75
+   ],
+   "courtyard": {
+    "x": [
+     91.405,
+     98.595
+    ],
+    "y": [
+     96.205,
+     99.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     92.25,
+     97.75
+    ],
+    "y": [
+     96.648,
+     98.852
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 36.705
+  },
+  "RV60": {
+   "value": "47k",
+   "footprint": "PinHeader_1x03_P2.54mm_Horizontal",
+   "category": "trimmer",
+   "anchor": [
+    11.2,
+    52.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    11.2,
+    54.54
+   ],
+   "courtyard": {
+    "x": [
+     0.615,
+     13.015
+    ],
+    "y": [
+     50.185,
+     58.895
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     1.16,
+     11.52
+    ],
+    "y": [
+     50.73,
+     58.48
+    ],
+    "z": [
+     0.249,
+     13.795
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 0.615,
+   "as_built": {
+    "z_top_est": 12.0,
+    "note": "As RV20."
+   }
+  },
+  "C65": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    25.0,
+    48.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    25.0,
+    45.75
+   ],
+   "courtyard": {
+    "x": [
+     23.455,
+     26.545
+    ],
+    "y": [
+     42.155,
+     49.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     23.898,
+     26.102
+    ],
+    "y": [
+     43.0,
+     48.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 23.455
+  },
+  "D9": {
+   "value": "YELLOW",
+   "footprint": "LED_D5.0mm",
+   "category": "led",
+   "anchor": [
+    68.0,
+    6.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    69.27,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     66.015,
+     72.535
+    ],
+    "y": [
+     2.745,
+     9.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     66.77,
+     72.072
+    ],
+    "y": [
+     3.195,
+     8.805
+    ],
+    "z": [
+     2.995,
+     11.595
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 2.745,
+   "as_built": {
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ],
+    "note": "Photos show the 5 mm LEDs seated flush (flange on the board): 8.6 mm body + ~0.1. The KiCad model floats them 3 mm (top 11.59). MEASURE all eight."
+   }
+  },
+  "R61": {
+   "value": "20k5",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    11.25,
+    68.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    15.06,
+    68.5
+   ],
+   "courtyard": {
+    "x": [
+     10.155,
+     19.965
+    ],
+    "y": [
+     66.955,
+     70.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     10.95,
+     19.17
+    ],
+    "y": [
+     67.373,
+     69.627
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 10.155
+  },
+  "R73": {
+   "value": "22k1",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    76.25,
+    64.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    76.25,
+    68.56
+   ],
+   "courtyard": {
+    "x": [
+     74.705,
+     77.795
+    ],
+    "y": [
+     63.655,
+     73.465
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     75.123,
+     77.377
+    ],
+    "y": [
+     64.45,
+     72.67
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 62.205
+  },
+  "C23": {
+   "value": "220p",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    23.5,
+    97.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    26.0,
+    97.75
+   ],
+   "courtyard": {
+    "x": [
+     22.405,
+     29.595
+    ],
+    "y": [
+     96.205,
+     99.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     23.25,
+     28.75
+    ],
+    "y": [
+     96.648,
+     98.852
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 22.405
+  },
+  "R12": {
+   "value": "475R",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    94.25,
+    121.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    94.25,
+    125.06
+   ],
+   "courtyard": {
+    "x": [
+     92.705,
+     95.795
+    ],
+    "y": [
+     120.155,
+     129.965
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     93.123,
+     95.377
+    ],
+    "y": [
+     120.95,
+     129.17
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 6.035
+  },
+  "C41": {
+   "value": "10u",
+   "footprint": "CP_Radial_D5.0mm_P2.50mm",
+   "category": "electrolytic",
+   "anchor": [
+    97.5,
+    8.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    97.5,
+    6.75
+   ],
+   "courtyard": {
+    "x": [
+     94.708,
+     100.295
+    ],
+    "y": [
+     3.958,
+     9.542
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     95.121,
+     99.879
+    ],
+    "y": [
+     4.363,
+     9.139
+    ],
+    "z": [
+     0.002,
+     4.995
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 3.958
+  },
+  "R34": {
+   "value": "165k",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    80.5,
+    118.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    80.5,
+    122.56
+   ],
+   "courtyard": {
+    "x": [
+     78.955,
+     82.045
+    ],
+    "y": [
+     117.655,
+     127.465
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     79.373,
+     81.627
+    ],
+    "y": [
+     118.45,
+     126.67
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 8.535
+  },
+  "D16": {
+   "value": "1N4003",
+   "footprint": "D_DO-41_SOD81_P10.16mm_Horizontal",
+   "category": "diode",
+   "anchor": [
+    11.25,
+    81.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    16.33,
+    81.5
+   ],
+   "courtyard": {
+    "x": [
+     9.855,
+     22.805
+    ],
+    "y": [
+     79.855,
+     83.145
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     10.85,
+     21.81
+    ],
+    "y": [
+     80.322,
+     82.678
+    ],
+    "z": [
+     0.485,
+     3.205
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 9.855
+  },
+  "R35": {
+   "value": "22k1",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    69.25,
+    119.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    73.06,
+    119.25
+   ],
+   "courtyard": {
+    "x": [
+     68.155,
+     77.965
+    ],
+    "y": [
+     117.705,
+     120.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     68.95,
+     77.17
+    ],
+    "y": [
+     118.123,
+     120.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 15.205
+  },
+  "R54": {
+   "value": "330R",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    53.5,
+    16.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    57.31,
+    16.0
+   ],
+   "courtyard": {
+    "x": [
+     52.405,
+     62.215
+    ],
+    "y": [
+     14.455,
+     17.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     53.2,
+     61.42
+    ],
+    "y": [
+     14.873,
+     17.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 14.455
+  },
+  "D5": {
+   "value": "GREEN",
+   "footprint": "LED_D5.0mm",
+   "category": "led",
+   "anchor": [
+    49.0,
+    6.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    50.27,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     47.015,
+     53.535
+    ],
+    "y": [
+     2.745,
+     9.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     47.77,
+     53.072
+    ],
+    "y": [
+     3.195,
+     8.805
+    ],
+    "z": [
+     2.995,
+     11.595
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 2.745,
+   "as_built": {
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ],
+    "note": "Photos show the 5 mm LEDs seated flush (flange on the board): 8.6 mm body + ~0.1. The KiCad model floats them 3 mm (top 11.59). MEASURE all eight."
+   }
+  },
+  "Y1": {
+   "value": "6.144MHz",
+   "footprint": "Crystal_HC49-U_Vertical",
+   "category": "crystal",
+   "anchor": [
+    105.0,
+    123.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    102.56,
+    123.0
+   ],
+   "courtyard": {
+    "x": [
+     96.568,
+     108.552
+    ],
+    "y": [
+     120.125,
+     125.875
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     97.11,
+     108.01
+    ],
+    "y": [
+     120.675,
+     125.325
+    ],
+    "z": [
+     0.095,
+     13.095
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 10.125
+  },
+  "U3": {
+   "value": "74HCT132",
+   "footprint": "DIP-14_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    117.75,
+    86.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    125.37,
+    90.56
+   ],
+   "courtyard": {
+    "x": [
+     116.175,
+     134.565
+    ],
+    "y": [
+     85.255,
+     95.865
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     116.586,
+     133.218
+    ],
+    "y": [
+     86.623,
+     94.497
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 5.435,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "U9": {
+   "value": "74HCU04",
+   "footprint": "DIP-14_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    116.5,
+    125.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    124.12,
+    129.31
+   ],
+   "courtyard": {
+    "x": [
+     114.925,
+     133.315
+    ],
+    "y": [
+     124.005,
+     134.615
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     115.336,
+     131.968
+    ],
+    "y": [
+     125.373,
+     133.247
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 1.385,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "R28": {
+   "value": "5k90",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    62.25,
+    93.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    66.06,
+    93.75
+   ],
+   "courtyard": {
+    "x": [
+     61.155,
+     70.965
+    ],
+    "y": [
+     92.205,
+     95.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     61.95,
+     70.17
+    ],
+    "y": [
+     92.623,
+     94.877
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 40.705
+  },
+  "U1": {
+   "value": "74HC244",
+   "footprint": "DIP-20_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    106.75,
+    76.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    110.56,
+    65.07
+   ],
+   "courtyard": {
+    "x": [
+     105.255,
+     115.865
+    ],
+    "y": [
+     52.075,
+     78.065
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     106.623,
+     114.497
+    ],
+    "y": [
+     53.412,
+     77.573
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 24.135,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "SW2": {
+   "value": "USER  GPIO23",
+   "footprint": "SW_PUSH_6mm",
+   "category": "switch",
+   "anchor": [
+    118.0,
+    9.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    121.25,
+    7.25
+   ],
+   "courtyard": {
+    "x": [
+     116.455,
+     126.045
+    ],
+    "y": [
+     3.455,
+     11.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     117.85,
+     124.45
+    ],
+    "y": [
+     4.25,
+     10.25
+    ],
+    "z": [
+     1.205,
+     4.295
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 3.455,
+   "as_built": {
+    "z_top_est": 5.0,
+    "z_top_range": [
+     4.3,
+     9.5
+    ],
+    "note": "As SW1."
+   }
+  },
+  "R63": {
+   "value": "14k7",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    53.0,
+    73.5
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    49.19,
+    73.5
+   ],
+   "courtyard": {
+    "x": [
+     44.285,
+     54.095
+    ],
+    "y": [
+     71.955,
+     75.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     45.08,
+     53.3
+    ],
+    "y": [
+     72.373,
+     74.627
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 44.285
+  },
+  "J6": {
+   "value": "WP",
+   "footprint": "PinHeader_1x02_P2.54mm_Vertical",
+   "category": "pin_header",
+   "anchor": [
+    126.75,
+    34.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    125.48,
+    34.0
+   ],
+   "courtyard": {
+    "x": [
+     122.385,
+     128.565
+    ],
+    "y": [
+     32.185,
+     35.815
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     122.94,
+     128.02
+    ],
+    "y": [
+     32.73,
+     35.27
+    ],
+    "z": [
+     2.535,
+     8.535
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 11.435
+  },
+  "R37": {
+   "value": "2k21",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    73.25,
+    98.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    77.06,
+    98.25
+   ],
+   "courtyard": {
+    "x": [
+     72.155,
+     81.965
+    ],
+    "y": [
+     96.705,
+     99.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     72.95,
+     81.17
+    ],
+    "y": [
+     97.123,
+     99.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 36.205
+  },
+  "C22": {
+   "value": "220p",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    49.75,
+    119.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    49.75,
+    121.75
+   ],
+   "courtyard": {
+    "x": [
+     48.205,
+     51.295
+    ],
+    "y": [
+     118.155,
+     125.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     48.648,
+     50.852
+    ],
+    "y": [
+     119.0,
+     124.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 10.655
+  },
+  "R23": {
+   "value": "14k7",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    53.0,
+    131.5
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    49.19,
+    131.5
+   ],
+   "courtyard": {
+    "x": [
+     44.285,
+     54.095
+    ],
+    "y": [
+     129.955,
+     133.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     45.08,
+     53.3
+    ],
+    "y": [
+     130.373,
+     132.627
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 2.955
+  },
+  "C10": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    114.25,
+    94.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    114.25,
+    91.75
+   ],
+   "courtyard": {
+    "x": [
+     112.705,
+     115.795
+    ],
+    "y": [
+     88.155,
+     95.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     113.148,
+     115.352
+    ],
+    "y": [
+     89.0,
+     94.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 24.205
+  },
+  "U12": {
+   "value": "LM339",
+   "footprint": "DIP-14_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    37.75,
+    79.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    45.37,
+    83.06
+   ],
+   "courtyard": {
+    "x": [
+     36.175,
+     54.565
+    ],
+    "y": [
+     77.755,
+     88.365
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     36.586,
+     53.218
+    ],
+    "y": [
+     79.123,
+     86.997
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 36.175,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "C16": {
+   "value": "27p",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    111.0,
+    124.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    111.0,
+    126.75
+   ],
+   "courtyard": {
+    "x": [
+     109.455,
+     112.545
+    ],
+    "y": [
+     123.155,
+     130.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     109.898,
+     112.102
+    ],
+    "y": [
+     124.0,
+     129.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 5.655
+  },
+  "R49": {
+   "value": "100k",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    29.0,
+    11.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    29.0,
+    15.06
+   ],
+   "courtyard": {
+    "x": [
+     27.455,
+     30.545
+    ],
+    "y": [
+     10.155,
+     19.965
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     27.873,
+     30.127
+    ],
+    "y": [
+     10.95,
+     19.17
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.155
+  },
+  "J62": {
+   "value": "TP R",
+   "footprint": "PinHeader_2x05_P2.54mm_Vertical",
+   "category": "pin_header",
+   "anchor": [
+    78.5,
+    56.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    79.77,
+    50.92
+   ],
+   "courtyard": {
+    "x": [
+     76.685,
+     82.865
+    ],
+    "y": [
+     44.025,
+     57.815
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     77.23,
+     82.31
+    ],
+    "y": [
+     44.57,
+     57.27
+    ],
+    "z": [
+     2.535,
+     8.535
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 44.025
+  },
+  "R69": {
+   "value": "8k25",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    31.5,
+    61.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    31.5,
+    64.81
+   ],
+   "courtyard": {
+    "x": [
+     29.955,
+     33.045
+    ],
+    "y": [
+     59.905,
+     69.715
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     30.373,
+     32.627
+    ],
+    "y": [
+     60.7,
+     68.92
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 29.955
+  },
+  "C17": {
+   "value": "27p",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    113.25,
+    118.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    115.75,
+    118.0
+   ],
+   "courtyard": {
+    "x": [
+     112.155,
+     119.345
+    ],
+    "y": [
+     116.455,
+     119.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     113.0,
+     118.5
+    ],
+    "y": [
+     116.898,
+     119.102
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 16.455
+  },
+  "C40": {
+   "value": "1n5",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    129.75,
+    28.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    129.75,
+    25.5
+   ],
+   "courtyard": {
+    "x": [
+     128.205,
+     131.295
+    ],
+    "y": [
+     21.905,
+     29.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     128.648,
+     130.852
+    ],
+    "y": [
+     22.75,
+     28.25
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 8.705
+  },
+  "L2": {
+   "value": "10u",
+   "footprint": "L_Axial_L12.0mm_D5.0mm_P15.24mm_Horizontal_Fastron_MISC",
+   "category": "inductor",
+   "anchor": [
+    136.3,
+    55.62
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    136.3,
+    48.0
+   ],
+   "courtyard": {
+    "x": [
+     133.505,
+     139.095
+    ],
+    "y": [
+     38.885,
+     57.115
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     133.905,
+     138.689
+    ],
+    "y": [
+     39.93,
+     56.07
+    ],
+    "z": [
+     0.095,
+     5.095
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 0.905
+  },
+  "Q1": {
+   "value": "BC547",
+   "footprint": "TO-92_Inline",
+   "category": "transistor",
+   "anchor": [
+    66.0,
+    11.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    66.0,
+    13.02
+   ],
+   "courtyard": {
+    "x": [
+     63.225,
+     68.055
+    ],
+    "y": [
+     10.245,
+     15.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     63.757,
+     67.33
+    ],
+    "y": [
+     10.735,
+     15.305
+    ],
+    "z": [
+     2.495,
+     7.295
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.245
+  },
+  "R56": {
+   "value": "330R",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    91.75,
+    6.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    87.94,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     83.035,
+     92.845
+    ],
+    "y": [
+     4.455,
+     7.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     83.83,
+     92.05
+    ],
+    "y": [
+     4.873,
+     7.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 4.455
+  },
+  "C11": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    123.5,
+    97.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    126.0,
+    97.75
+   ],
+   "courtyard": {
+    "x": [
+     122.405,
+     129.595
+    ],
+    "y": [
+     96.205,
+     99.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     123.25,
+     128.75
+    ],
+    "y": [
+     96.648,
+     98.852
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 10.405
+  },
+  "J20": {
+   "value": "LINE IN L",
+   "footprint": "TerminalBlock_bornier-2_P5.08mm",
+   "category": "terminal_block",
+   "anchor": [
+    4.7,
+    126.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    4.7,
+    123.46
+   ],
+   "courtyard": {
+    "x": [
+     0.655,
+     8.745
+    ],
+    "y": [
+     118.165,
+     128.755
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     1.33,
+     6.9
+    ],
+    "y": [
+     118.586,
+     126.74
+    ],
+    "z": [
+     2.395,
+     13.795
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 0.655,
+   "as_built": {
+    "z_top_est": 13.8,
+    "wire_entry_face": "-x (left edge)",
+    "note": "Model is a Phoenix MKDS substitute (13.8 mm). The fitted green DTU 2-pole blocks look ~10-11 mm; 13.8 kept as the conservative envelope. Wire entry faces -x (left edge), screw heads face +z."
+   }
+  },
+  "R20": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    7.25,
+    103.75
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    7.25,
+    99.94
+   ],
+   "courtyard": {
+    "x": [
+     5.705,
+     8.795
+    ],
+    "y": [
+     95.035,
+     104.845
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     6.123,
+     8.377
+    ],
+    "y": [
+     95.83,
+     104.05
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 5.705
+  },
+  "R16": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    23.5,
+    19.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    23.5,
+    15.19
+   ],
+   "courtyard": {
+    "x": [
+     21.955,
+     25.045
+    ],
+    "y": [
+     10.285,
+     20.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     22.373,
+     24.627
+    ],
+    "y": [
+     11.08,
+     19.3
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.285
+  },
+  "H7": {
+   "value": "MountingHole_2.7mm_M2.5",
+   "footprint": "MountingHole_2.7mm_M2.5",
+   "category": "mounting_hole",
+   "anchor": [
+    136.5,
+    74.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    136.5,
+    74.5
+   ],
+   "courtyard": {
+    "x": [
+     133.507,
+     139.495
+    ],
+    "y": [
+     71.503,
+     77.497
+    ]
+   },
+   "model_bbox": null,
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 0.505
+  },
+  "C67": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    65.25,
+    53.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    67.75,
+    53.0
+   ],
+   "courtyard": {
+    "x": [
+     64.155,
+     71.345
+    ],
+    "y": [
+     51.455,
+     54.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     65.0,
+     70.5
+    ],
+    "y": [
+     51.898,
+     54.102
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 51.455
+  },
+  "R67": {
+   "value": "255k",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    34.75,
+    72.25
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    30.94,
+    72.25
+   ],
+   "courtyard": {
+    "x": [
+     26.035,
+     35.845
+    ],
+    "y": [
+     70.705,
+     73.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     26.83,
+     35.05
+    ],
+    "y": [
+     71.123,
+     73.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 26.035
+  },
+  "C2": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    89.0,
+    70.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    89.0,
+    67.75
+   ],
+   "courtyard": {
+    "x": [
+     87.455,
+     90.545
+    ],
+    "y": [
+     64.155,
+     71.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     87.898,
+     90.102
+    ],
+    "y": [
+     65.0,
+     70.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 49.455
+  },
+  "R43": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    81.75,
+    13.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    77.94,
+    13.0
+   ],
+   "courtyard": {
+    "x": [
+     73.035,
+     82.845
+    ],
+    "y": [
+     11.455,
+     14.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     73.83,
+     82.05
+    ],
+    "y": [
+     11.873,
+     14.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 11.455
+  },
+  "U10": {
+   "value": "74HC244",
+   "footprint": "DIP-20_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    122.75,
+    72.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    126.56,
+    61.32
+   ],
+   "courtyard": {
+    "x": [
+     121.255,
+     131.865
+    ],
+    "y": [
+     48.325,
+     74.315
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     122.623,
+     130.497
+    ],
+    "y": [
+     49.662,
+     73.823
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 8.135,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "J60": {
+   "value": "LINE IN R",
+   "footprint": "TerminalBlock_bornier-2_P5.08mm",
+   "category": "terminal_block",
+   "anchor": [
+    4.7,
+    68.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    4.7,
+    65.46
+   ],
+   "courtyard": {
+    "x": [
+     0.655,
+     8.745
+    ],
+    "y": [
+     60.165,
+     70.755
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     1.33,
+     6.9
+    ],
+    "y": [
+     60.586,
+     68.74
+    ],
+    "z": [
+     2.395,
+     13.795
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 0.655,
+   "as_built": {
+    "z_top_est": 13.8,
+    "wire_entry_face": "-x (left edge)",
+    "note": "Model is a Phoenix MKDS substitute (13.8 mm). The fitted green DTU 2-pole blocks look ~10-11 mm; 13.8 kept as the conservative envelope. Wire entry faces -x (left edge), screw heads face +z."
+   }
+  },
+  "D3": {
+   "value": "GREEN",
+   "footprint": "LED_D5.0mm",
+   "category": "led",
+   "anchor": [
+    30.0,
+    6.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    31.27,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     28.015,
+     34.535
+    ],
+    "y": [
+     2.745,
+     9.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     28.77,
+     34.072
+    ],
+    "y": [
+     3.195,
+     8.805
+    ],
+    "z": [
+     2.995,
+     11.595
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 2.745,
+   "as_built": {
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ],
+    "note": "Photos show the 5 mm LEDs seated flush (flange on the board): 8.6 mm body + ~0.1. The KiCad model floats them 3 mm (top 11.59). MEASURE all eight."
+   }
+  },
+  "C63": {
+   "value": "220p",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    23.5,
+    39.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    26.0,
+    39.75
+   ],
+   "courtyard": {
+    "x": [
+     22.405,
+     29.595
+    ],
+    "y": [
+     38.205,
+     41.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     23.25,
+     28.75
+    ],
+    "y": [
+     38.648,
+     40.852
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 22.405
+  },
+  "R53": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    41.0,
+    30.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    44.81,
+    30.0
+   ],
+   "courtyard": {
+    "x": [
+     39.905,
+     49.715
+    ],
+    "y": [
+     28.455,
+     31.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     40.7,
+     48.92
+    ],
+    "y": [
+     28.873,
+     31.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 28.455
+  },
+  "C4": {
+   "value": "10u",
+   "footprint": "CP_Radial_D5.0mm_P2.50mm",
+   "category": "electrolytic",
+   "anchor": [
+    109.0,
+    48.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    110.25,
+    48.0
+   ],
+   "courtyard": {
+    "x": [
+     107.458,
+     113.045
+    ],
+    "y": [
+     45.208,
+     50.792
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     107.861,
+     112.645
+    ],
+    "y": [
+     45.621,
+     50.379
+    ],
+    "z": [
+     0.002,
+     4.995
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 26.955
+  },
+  "U64": {
+   "value": "74HC04",
+   "footprint": "DIP-14_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    33.75,
+    40.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    41.37,
+    44.56
+   ],
+   "courtyard": {
+    "x": [
+     32.175,
+     50.565
+    ],
+    "y": [
+     39.255,
+     49.865
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     32.586,
+     49.218
+    ],
+    "y": [
+     40.623,
+     48.497
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 32.175,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "H1": {
+   "value": "MountingHole_3.2mm_M3",
+   "footprint": "MountingHole_3.2mm_M3",
+   "category": "mounting_hole",
+   "anchor": [
+    3.5,
+    132.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    3.5,
+    132.5
+   ],
+   "courtyard": {
+    "x": [
+     0.008,
+     6.995
+    ],
+    "y": [
+     129.002,
+     135.998
+    ]
+   },
+   "model_bbox": null,
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 0.002
+  },
+  "R14": {
+   "value": "33R2",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    102.0,
+    82.25
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    98.19,
+    82.25
+   ],
+   "courtyard": {
+    "x": [
+     93.285,
+     103.095
+    ],
+    "y": [
+     80.705,
+     83.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     94.08,
+     102.3
+    ],
+    "y": [
+     81.123,
+     83.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 36.905
+  },
+  "R5": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    94.75,
+    43.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    90.94,
+    43.0
+   ],
+   "courtyard": {
+    "x": [
+     86.035,
+     95.845
+    ],
+    "y": [
+     41.455,
+     44.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     86.83,
+     95.05
+    ],
+    "y": [
+     41.873,
+     44.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 41.455
+  },
+  "R22": {
+   "value": "14k7",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    28.0,
+    122.5
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    24.19,
+    122.5
+   ],
+   "courtyard": {
+    "x": [
+     19.285,
+     29.095
+    ],
+    "y": [
+     120.955,
+     124.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     20.08,
+     28.3
+    ],
+    "y": [
+     121.373,
+     123.627
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 11.955
+  },
+  "R29": {
+   "value": "8k25",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    31.5,
+    119.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    31.5,
+    122.81
+   ],
+   "courtyard": {
+    "x": [
+     29.955,
+     33.045
+    ],
+    "y": [
+     117.905,
+     127.715
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     30.373,
+     32.627
+    ],
+    "y": [
+     118.7,
+     126.92
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 8.285
+  },
+  "U23": {
+   "value": "74HC74",
+   "footprint": "DIP-14_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    55.0,
+    98.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    62.62,
+    102.06
+   ],
+   "courtyard": {
+    "x": [
+     53.425,
+     71.815
+    ],
+    "y": [
+     96.755,
+     107.365
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     53.836,
+     70.468
+    ],
+    "y": [
+     98.123,
+     105.997
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 28.635,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "C71": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    30.25,
+    48.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    30.25,
+    45.75
+   ],
+   "courtyard": {
+    "x": [
+     28.705,
+     31.795
+    ],
+    "y": [
+     42.155,
+     49.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     29.148,
+     31.352
+    ],
+    "y": [
+     43.0,
+     48.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 28.705
+  },
+  "R27": {
+   "value": "255k",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    34.75,
+    130.25
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    30.94,
+    130.25
+   ],
+   "courtyard": {
+    "x": [
+     26.035,
+     35.845
+    ],
+    "y": [
+     128.705,
+     131.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     26.83,
+     35.05
+    ],
+    "y": [
+     129.123,
+     131.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 4.205
+  },
+  "R26": {
+   "value": "13k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    60.5,
+    122.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    60.5,
+    126.31
+   ],
+   "courtyard": {
+    "x": [
+     58.955,
+     62.045
+    ],
+    "y": [
+     121.405,
+     131.215
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     59.373,
+     61.627
+    ],
+    "y": [
+     122.2,
+     130.42
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 4.785
+  },
+  "R48": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    52.25,
+    22.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    52.25,
+    26.56
+   ],
+   "courtyard": {
+    "x": [
+     50.705,
+     53.795
+    ],
+    "y": [
+     21.655,
+     31.465
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     51.123,
+     53.377
+    ],
+    "y": [
+     22.45,
+     30.67
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 21.655
+  },
+  "J22": {
+   "value": "TP L",
+   "footprint": "PinHeader_2x05_P2.54mm_Vertical",
+   "category": "pin_header",
+   "anchor": [
+    78.5,
+    114.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    79.77,
+    108.92
+   ],
+   "courtyard": {
+    "x": [
+     76.685,
+     82.865
+    ],
+    "y": [
+     102.025,
+     115.815
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     77.23,
+     82.31
+    ],
+    "y": [
+     102.57,
+     115.27
+    ],
+    "z": [
+     2.535,
+     8.535
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 20.185
+  },
+  "D1": {
+   "value": "1N5817",
+   "footprint": "D_DO-41_SOD81_P10.16mm_Horizontal",
+   "category": "diode",
+   "anchor": [
+    119.5,
+    46.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    124.58,
+    46.25
+   ],
+   "courtyard": {
+    "x": [
+     118.105,
+     131.055
+    ],
+    "y": [
+     44.605,
+     47.895
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     119.1,
+     130.06
+    ],
+    "y": [
+     45.072,
+     47.428
+    ],
+    "z": [
+     0.485,
+     3.205
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 8.945
+  },
+  "U21": {
+   "value": "LM311",
+   "footprint": "DIP-8_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    62.25,
+    118.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    58.44,
+    114.69
+   ],
+   "courtyard": {
+    "x": [
+     53.065,
+     63.815
+    ],
+    "y": [
+     109.385,
+     119.995
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     53.805,
+     63.075
+    ],
+    "y": [
+     110.753,
+     118.627
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 16.005,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "U11": {
+   "value": "24LC32",
+   "footprint": "DIP-8_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    118.75,
+    22.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    122.56,
+    26.56
+   ],
+   "courtyard": {
+    "x": [
+     117.185,
+     127.935
+    ],
+    "y": [
+     21.255,
+     31.865
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     117.925,
+     127.195
+    ],
+    "y": [
+     22.623,
+     30.497
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 12.065,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "R72": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    38.25,
+    65.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    38.25,
+    68.81
+   ],
+   "courtyard": {
+    "x": [
+     36.705,
+     39.795
+    ],
+    "y": [
+     63.905,
+     73.715
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     37.123,
+     39.377
+    ],
+    "y": [
+     64.7,
+     72.92
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 36.705
+  },
+  "C20": {
+   "value": "2u2",
+   "footprint": "C_Rect_L11.0mm_W6.3mm_P10.00mm_MKT",
+   "category": "film_cap_box",
+   "anchor": [
+    10.75,
+    103.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    15.75,
+    103.75
+   ],
+   "courtyard": {
+    "x": [
+     9.655,
+     21.845
+    ],
+    "y": [
+     100.305,
+     107.195
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     10.5,
+     21.0
+    ],
+    "y": [
+     103.5,
+     104.0
+    ],
+    "z": [
+     9.495,
+     9.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 9.655,
+   "as_built": {
+    "z_top_est": 16.0,
+    "envelope_xy": [
+     [
+      6.5,
+      25.5
+     ],
+     [
+      96.5,
+      111.0
+     ]
+    ],
+    "note": "Fitted part is a Philips/BC MKT 373 1.5 uF 100 V box, much larger than the 11 x 6.3 footprint; it sits over the RV20/terminal side. Envelope estimated from photos. MEASURE."
+   }
+  },
+  "R60": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    7.25,
+    45.75
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    7.25,
+    41.94
+   ],
+   "courtyard": {
+    "x": [
+     5.705,
+     8.795
+    ],
+    "y": [
+     37.035,
+     46.845
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     6.123,
+     8.377
+    ],
+    "y": [
+     37.83,
+     46.05
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 5.705
+  },
+  "R57": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    89.0,
+    16.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    92.81,
+    16.0
+   ],
+   "courtyard": {
+    "x": [
+     87.905,
+     97.715
+    ],
+    "y": [
+     14.455,
+     17.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     88.7,
+     96.92
+    ],
+    "y": [
+     14.873,
+     17.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 14.455
+  },
+  "C69": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    45.75,
+    65.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    45.75,
+    67.5
+   ],
+   "courtyard": {
+    "x": [
+     44.205,
+     47.295
+    ],
+    "y": [
+     63.905,
+     71.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     44.648,
+     46.852
+    ],
+    "y": [
+     64.75,
+     70.25
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 44.205
+  },
+  "U8": {
+   "value": "74HC4049",
+   "footprint": "DIP-16_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    92.5,
+    109.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    101.39,
+    113.31
+   ],
+   "courtyard": {
+    "x": [
+     90.935,
+     111.845
+    ],
+    "y": [
+     108.005,
+     118.615
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     91.801,
+     110.978
+    ],
+    "y": [
+     109.373,
+     117.247
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 17.385,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "J3": {
+   "value": "TONEARM GND",
+   "footprint": "TerminalBlock_bornier-2_P5.08mm",
+   "category": "terminal_block",
+   "anchor": [
+    4.7,
+    87.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    4.7,
+    84.96
+   ],
+   "courtyard": {
+    "x": [
+     0.655,
+     8.745
+    ],
+    "y": [
+     79.665,
+     90.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     1.33,
+     6.9
+    ],
+    "y": [
+     80.086,
+     88.24
+    ],
+    "z": [
+     2.395,
+     13.795
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 0.655,
+   "as_built": {
+    "z_top_est": 13.8,
+    "wire_entry_face": "-x (left edge)",
+    "note": "Model is a Phoenix MKDS substitute (13.8 mm). The fitted green DTU 2-pole blocks look ~10-11 mm; 13.8 kept as the conservative envelope. Wire entry faces -x (left edge), screw heads face +z."
+   }
+  },
+  "C21": {
+   "value": "1n5",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    3.25,
+    98.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    3.25,
+    96.0
+   ],
+   "courtyard": {
+    "x": [
+     1.705,
+     4.795
+    ],
+    "y": [
+     92.405,
+     99.595
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     2.148,
+     4.352
+    ],
+    "y": [
+     93.25,
+     98.75
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 1.705
+  },
+  "D14": {
+   "value": "1N4148",
+   "footprint": "D_DO-35_SOD27_P7.62mm_Horizontal",
+   "category": "diode",
+   "anchor": [
+    37.75,
+    30.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    37.75,
+    26.69
+   ],
+   "courtyard": {
+    "x": [
+     36.455,
+     39.045
+    ],
+    "y": [
+     21.785,
+     31.595
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     36.867,
+     38.633
+    ],
+    "y": [
+     22.63,
+     30.75
+    ],
+    "z": [
+     0.485,
+     2.505
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 21.785
+  },
+  "U22": {
+   "value": "TL072",
+   "footprint": "DIP-8_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    43.75,
+    119.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    39.94,
+    115.19
+   ],
+   "courtyard": {
+    "x": [
+     34.565,
+     45.315
+    ],
+    "y": [
+     109.885,
+     120.495
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     35.305,
+     44.575
+    ],
+    "y": [
+     111.253,
+     119.127
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 15.505,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "U4": {
+   "value": "74HC4040",
+   "footprint": "DIP-16_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    119.5,
+    105.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    110.61,
+    101.44
+   ],
+   "courtyard": {
+    "x": [
+     100.155,
+     121.065
+    ],
+    "y": [
+     96.135,
+     106.745
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     101.022,
+     120.199
+    ],
+    "y": [
+     97.503,
+     105.377
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 18.935,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "R3": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    100.0,
+    18.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    103.81,
+    18.25
+   ],
+   "courtyard": {
+    "x": [
+     98.905,
+     108.715
+    ],
+    "y": [
+     16.705,
+     19.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     99.7,
+     107.92
+    ],
+    "y": [
+     17.123,
+     19.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 16.705
+  },
+  "RV20": {
+   "value": "47k",
+   "footprint": "PinHeader_1x03_P2.54mm_Horizontal",
+   "category": "trimmer",
+   "anchor": [
+    11.2,
+    110.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    11.2,
+    112.54
+   ],
+   "courtyard": {
+    "x": [
+     0.615,
+     13.015
+    ],
+    "y": [
+     108.185,
+     116.895
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     1.16,
+     11.52
+    ],
+    "y": [
+     108.73,
+     116.48
+    ],
+    "z": [
+     0.249,
+     13.795
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 0.615,
+   "as_built": {
+    "z_top_est": 12.0,
+    "note": "Trimmer body type not visible in photos (footprint is a 1x3 horizontal header). Reserve 12 mm, screwdriver from the top with the lid off."
+   }
+  },
+  "D13": {
+   "value": "1N4148",
+   "footprint": "D_DO-35_SOD27_P7.62mm_Horizontal",
+   "category": "diode",
+   "anchor": [
+    34.5,
+    30.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    34.5,
+    26.69
+   ],
+   "courtyard": {
+    "x": [
+     33.205,
+     35.795
+    ],
+    "y": [
+     21.785,
+     31.595
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     33.617,
+     35.383
+    ],
+    "y": [
+     22.63,
+     30.75
+    ],
+    "z": [
+     0.485,
+     2.505
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 21.785
+  },
+  "C9": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    112.5,
+    133.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    110.0,
+    133.0
+   ],
+   "courtyard": {
+    "x": [
+     106.405,
+     113.595
+    ],
+    "y": [
+     131.455,
+     134.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     107.25,
+     112.75
+    ],
+    "y": [
+     131.898,
+     134.102
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 1.455
+  },
+  "R74": {
+   "value": "165k",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    80.5,
+    60.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    80.5,
+    64.56
+   ],
+   "courtyard": {
+    "x": [
+     78.955,
+     82.045
+    ],
+    "y": [
+     59.655,
+     69.465
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     79.373,
+     81.627
+    ],
+    "y": [
+     60.45,
+     68.67
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 57.955
+  },
+  "R10": {
+   "value": "1M",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    114.5,
+    122.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    118.31,
+    122.25
+   ],
+   "courtyard": {
+    "x": [
+     113.405,
+     123.215
+    ],
+    "y": [
+     120.705,
+     123.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     114.2,
+     122.42
+    ],
+    "y": [
+     121.123,
+     123.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 12.205
+  },
+  "R45": {
+   "value": "100k",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    65.5,
+    80.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    65.5,
+    83.81
+   ],
+   "courtyard": {
+    "x": [
+     63.955,
+     67.045
+    ],
+    "y": [
+     78.905,
+     88.715
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     64.373,
+     66.627
+    ],
+    "y": [
+     79.7,
+     87.92
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 47.285
+  },
+  "R33": {
+   "value": "22k1",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    76.25,
+    122.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    76.25,
+    126.56
+   ],
+   "courtyard": {
+    "x": [
+     74.705,
+     77.795
+    ],
+    "y": [
+     121.655,
+     131.465
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     75.123,
+     77.377
+    ],
+    "y": [
+     122.45,
+     130.67
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 4.535
+  },
+  "D10": {
+   "value": "GREEN",
+   "footprint": "LED_D5.0mm",
+   "category": "led",
+   "anchor": [
+    77.5,
+    6.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    78.77,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     75.515,
+     82.035
+    ],
+    "y": [
+     2.745,
+     9.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     76.27,
+     81.572
+    ],
+    "y": [
+     3.195,
+     8.805
+    ],
+    "z": [
+     2.995,
+     11.595
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 2.745,
+   "as_built": {
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ],
+    "note": "Photos show the 5 mm LEDs seated flush (flange on the board): 8.6 mm body + ~0.1. The KiCad model floats them 3 mm (top 11.59). MEASURE all eight."
+   }
+  },
+  "R68": {
+   "value": "5k90",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    62.25,
+    35.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    66.06,
+    35.75
+   ],
+   "courtyard": {
+    "x": [
+     61.155,
+     70.965
+    ],
+    "y": [
+     34.205,
+     37.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     61.95,
+     70.17
+    ],
+    "y": [
+     34.623,
+     36.877
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 34.205
+  },
+  "D7": {
+   "value": "RED",
+   "footprint": "LED_D5.0mm",
+   "category": "led",
+   "anchor": [
+    20.5,
+    6.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    21.77,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     18.515,
+     25.035
+    ],
+    "y": [
+     2.745,
+     9.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     19.27,
+     24.572
+    ],
+    "y": [
+     3.195,
+     8.805
+    ],
+    "z": [
+     2.995,
+     11.595
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 2.745,
+   "as_built": {
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ],
+    "note": "Photos show the 5 mm LEDs seated flush (flange on the board): 8.6 mm body + ~0.1. The KiCad model floats them 3 mm (top 11.59). MEASURE all eight."
+   }
+  },
+  "R66": {
+   "value": "13k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    60.5,
+    64.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    60.5,
+    68.31
+   ],
+   "courtyard": {
+    "x": [
+     58.955,
+     62.045
+    ],
+    "y": [
+     63.405,
+     73.215
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     59.373,
+     61.627
+    ],
+    "y": [
+     64.2,
+     72.42
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 58.955
+  },
+  "C5": {
+   "value": "220u",
+   "footprint": "CP_Radial_D8.0mm_P3.50mm",
+   "category": "electrolytic",
+   "anchor": [
+    104.25,
+    38.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    106.0,
+    38.0
+   ],
+   "courtyard": {
+    "x": [
+     101.703,
+     110.295
+    ],
+    "y": [
+     33.704,
+     42.296
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     102.113,
+     109.891
+    ],
+    "y": [
+     34.106,
+     41.894
+    ],
+    "z": [
+     0.002,
+     7.995
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 29.705,
+   "as_built": {
+    "z_top_est": 13.0,
+    "z_top_range": [
+     11.5,
+     16.0
+    ],
+    "note": "220 uF 8 mm. MEASURE."
+   }
+  },
+  "R13": {
+   "value": "475R",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    121.25,
+    118.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    125.06,
+    118.0
+   ],
+   "courtyard": {
+    "x": [
+     120.155,
+     129.965
+    ],
+    "y": [
+     116.455,
+     119.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     120.95,
+     129.17
+    ],
+    "y": [
+     116.873,
+     119.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 10.035
+  },
+  "R62": {
+   "value": "14k7",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    28.0,
+    64.5
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    24.19,
+    64.5
+   ],
+   "courtyard": {
+    "x": [
+     19.285,
+     29.095
+    ],
+    "y": [
+     62.955,
+     66.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     20.08,
+     28.3
+    ],
+    "y": [
+     63.373,
+     65.627
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 19.285
+  },
+  "R4": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    97.5,
+    44.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    101.31,
+    44.75
+   ],
+   "courtyard": {
+    "x": [
+     96.405,
+     106.215
+    ],
+    "y": [
+     43.205,
+     46.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     97.2,
+     105.42
+    ],
+    "y": [
+     43.623,
+     45.877
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 33.785
+  },
+  "D8": {
+   "value": "RED",
+   "footprint": "LED_D5.0mm",
+   "category": "led",
+   "anchor": [
+    58.5,
+    6.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    59.77,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     56.515,
+     63.035
+    ],
+    "y": [
+     2.745,
+     9.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     57.27,
+     62.572
+    ],
+    "y": [
+     3.195,
+     8.805
+    ],
+    "z": [
+     2.995,
+     11.595
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 2.745,
+   "as_built": {
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ],
+    "note": "Photos show the 5 mm LEDs seated flush (flange on the board): 8.6 mm body + ~0.1. The KiCad model floats them 3 mm (top 11.59). MEASURE all eight."
+   }
+  },
+  "R11": {
+   "value": "2k2",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    120.75,
+    114.25
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    116.94,
+    114.25
+   ],
+   "courtyard": {
+    "x": [
+     112.035,
+     121.845
+    ],
+    "y": [
+     112.705,
+     115.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     112.83,
+     121.05
+    ],
+    "y": [
+     113.123,
+     115.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 18.155
+  },
+  "C24": {
+   "value": "220p",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    37.0,
+    94.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    39.5,
+    94.25
+   ],
+   "courtyard": {
+    "x": [
+     35.905,
+     43.095
+    ],
+    "y": [
+     92.705,
+     95.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     36.75,
+     42.25
+    ],
+    "y": [
+     93.148,
+     95.352
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 35.905
+  },
+  "R1": {
+   "value": "4R75",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    94.25,
+    46.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    94.25,
+    50.31
+   ],
+   "courtyard": {
+    "x": [
+     92.705,
+     95.795
+    ],
+    "y": [
+     45.405,
+     55.215
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     93.123,
+     95.377
+    ],
+    "y": [
+     46.2,
+     54.42
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 44.205
+  },
+  "C26": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    29.5,
+    111.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    29.5,
+    113.5
+   ],
+   "courtyard": {
+    "x": [
+     27.955,
+     31.045
+    ],
+    "y": [
+     109.905,
+     117.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     28.398,
+     30.602
+    ],
+    "y": [
+     110.75,
+     116.25
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 18.905
+  },
+  "R36": {
+   "value": "22k1",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    65.0,
+    129.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    68.81,
+    129.75
+   ],
+   "courtyard": {
+    "x": [
+     63.905,
+     73.715
+    ],
+    "y": [
+     128.205,
+     131.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     64.7,
+     72.92
+    ],
+    "y": [
+     128.623,
+     130.877
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 4.705
+  },
+  "R58": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    127.25,
+    13.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    131.06,
+    13.5
+   ],
+   "courtyard": {
+    "x": [
+     126.155,
+     135.965
+    ],
+    "y": [
+     11.955,
+     15.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     126.95,
+     135.17
+    ],
+    "y": [
+     12.373,
+     14.627
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 4.035
+  },
+  "R31": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    42.0,
+    123.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    42.0,
+    126.81
+   ],
+   "courtyard": {
+    "x": [
+     40.455,
+     43.545
+    ],
+    "y": [
+     121.905,
+     131.715
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     40.873,
+     43.127
+    ],
+    "y": [
+     122.7,
+     130.92
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 4.285
+  },
+  "D2": {
+   "value": "1N5817",
+   "footprint": "D_DO-41_SOD81_P10.16mm_Horizontal",
+   "category": "diode",
+   "anchor": [
+    115.5,
+    48.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    115.5,
+    42.92
+   ],
+   "courtyard": {
+    "x": [
+     113.855,
+     117.145
+    ],
+    "y": [
+     36.445,
+     49.395
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     114.322,
+     116.678
+    ],
+    "y": [
+     37.44,
+     48.4
+    ],
+    "z": [
+     0.485,
+     3.205
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 22.855
+  },
+  "J5": {
+   "value": "TP DIG",
+   "footprint": "PinHeader_2x05_P2.54mm_Vertical",
+   "category": "pin_header",
+   "anchor": [
+    78.5,
+    88.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    79.77,
+    83.42
+   ],
+   "courtyard": {
+    "x": [
+     76.685,
+     82.865
+    ],
+    "y": [
+     76.525,
+     90.315
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     77.23,
+     82.31
+    ],
+    "y": [
+     77.07,
+     89.77
+    ],
+    "z": [
+     2.535,
+     8.535
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 45.685
+  },
+  "C1": {
+   "value": "470u",
+   "footprint": "CP_Radial_D10.0mm_P5.00mm",
+   "category": "electrolytic",
+   "anchor": [
+    94.25,
+    73.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    96.75,
+    73.0
+   ],
+   "courtyard": {
+    "x": [
+     91.457,
+     102.045
+    ],
+    "y": [
+     67.707,
+     78.293
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     91.863,
+     101.633
+    ],
+    "y": [
+     68.117,
+     77.89
+    ],
+    "z": [
+     0.0,
+     9.995
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 37.955,
+   "as_built": {
+    "z_top_est": 17.0,
+    "z_top_range": [
+     12.5,
+     20.0
+    ],
+    "note": "470 uF, blue sleeve, visibly taller than its 10 mm diameter (photo). MEASURE."
+   }
+  },
+  "C7": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    110.75,
+    18.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    113.25,
+    18.25
+   ],
+   "courtyard": {
+    "x": [
+     109.655,
+     116.845
+    ],
+    "y": [
+     16.705,
+     19.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     110.5,
+     116.0
+    ],
+    "y": [
+     17.148,
+     19.352
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 16.705
+  },
+  "H2": {
+   "value": "MountingHole_3.2mm_M3",
+   "footprint": "MountingHole_3.2mm_M3",
+   "category": "mounting_hole",
+   "anchor": [
+    3.5,
+    3.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    3.5,
+    3.5
+   ],
+   "courtyard": {
+    "x": [
+     0.008,
+     6.995
+    ],
+    "y": [
+     0.002,
+     6.998
+    ]
+   },
+   "model_bbox": null,
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 0.002
+  },
+  "C15": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    92.5,
+    106.75
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    92.5,
+    104.25
+   ],
+   "courtyard": {
+    "x": [
+     90.955,
+     94.045
+    ],
+    "y": [
+     100.655,
+     107.845
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     91.398,
+     93.602
+    ],
+    "y": [
+     101.5,
+     107.0
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 28.155
+  },
+  "R51": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    29.0,
+    21.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    29.0,
+    25.06
+   ],
+   "courtyard": {
+    "x": [
+     27.455,
+     30.545
+    ],
+    "y": [
+     20.155,
+     29.965
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     27.873,
+     30.127
+    ],
+    "y": [
+     20.95,
+     29.17
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 20.155
+  },
+  "D11": {
+   "value": "1N4148",
+   "footprint": "D_DO-35_SOD27_P7.62mm_Horizontal",
+   "category": "diode",
+   "anchor": [
+    129.75,
+    19.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    133.56,
+    19.25
+   ],
+   "courtyard": {
+    "x": [
+     128.655,
+     138.465
+    ],
+    "y": [
+     17.955,
+     20.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     129.5,
+     137.62
+    ],
+    "y": [
+     18.367,
+     20.133
+    ],
+    "z": [
+     0.485,
+     2.505
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 1.535
+  },
+  "C45": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    118.75,
+    33.75
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    116.25,
+    33.75
+   ],
+   "courtyard": {
+    "x": [
+     112.655,
+     119.845
+    ],
+    "y": [
+     32.205,
+     35.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     113.5,
+     119.0
+    ],
+    "y": [
+     32.648,
+     34.852
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 20.155
+  },
+  "C64": {
+   "value": "220p",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    37.0,
+    36.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    39.5,
+    36.25
+   ],
+   "courtyard": {
+    "x": [
+     35.905,
+     43.095
+    ],
+    "y": [
+     34.705,
+     37.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     36.75,
+     42.25
+    ],
+    "y": [
+     35.148,
+     37.352
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 34.705
+  },
+  "C3": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    117.75,
+    76.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    117.75,
+    74.0
+   ],
+   "courtyard": {
+    "x": [
+     116.205,
+     119.295
+    ],
+    "y": [
+     70.405,
+     77.595
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     116.648,
+     118.852
+    ],
+    "y": [
+     71.25,
+     76.75
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 20.705
+  },
+  "R15": {
+   "value": "3k92",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    119.25,
+    38.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    123.06,
+    38.0
+   ],
+   "courtyard": {
+    "x": [
+     118.155,
+     127.965
+    ],
+    "y": [
+     36.455,
+     39.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     118.95,
+     127.17
+    ],
+    "y": [
+     36.873,
+     39.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 12.035
+  },
+  "C6": {
+   "value": "220u",
+   "footprint": "CP_Radial_D8.0mm_P3.50mm",
+   "category": "electrolytic",
+   "anchor": [
+    90.5,
+    25.75
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    90.5,
+    24.0
+   ],
+   "courtyard": {
+    "x": [
+     86.203,
+     94.795
+    ],
+    "y": [
+     19.704,
+     28.296
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     86.606,
+     94.394
+    ],
+    "y": [
+     20.109,
+     27.887
+    ],
+    "z": [
+     0.002,
+     7.995
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 19.704,
+   "as_built": {
+    "z_top_est": 13.0,
+    "z_top_range": [
+     11.5,
+     16.0
+    ],
+    "note": "220 uF 8 mm. MEASURE."
+   }
+  },
+  "C49": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    133.75,
+    70.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    133.75,
+    67.75
+   ],
+   "courtyard": {
+    "x": [
+     132.205,
+     135.295
+    ],
+    "y": [
+     64.155,
+     71.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     132.648,
+     134.852
+    ],
+    "y": [
+     65.0,
+     70.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 4.705
+  },
+  "R2": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    126.5,
+    18.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    122.69,
+    18.0
+   ],
+   "courtyard": {
+    "x": [
+     117.785,
+     127.595
+    ],
+    "y": [
+     16.455,
+     19.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     118.58,
+     126.8
+    ],
+    "y": [
+     16.873,
+     19.127
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 12.405
+  },
+  "H4": {
+   "value": "MountingHole_2.7mm_M2.5",
+   "footprint": "MountingHole_2.7mm_M2.5",
+   "category": "mounting_hole",
+   "anchor": [
+    87.5,
+    132.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    87.5,
+    132.5
+   ],
+   "courtyard": {
+    "x": [
+     84.507,
+     90.495
+    ],
+    "y": [
+     129.503,
+     135.497
+    ]
+   },
+   "model_bbox": null,
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 0.503
+  },
+  "R47": {
+   "value": "100k",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    61.5,
+    79.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    61.5,
+    83.06
+   ],
+   "courtyard": {
+    "x": [
+     59.955,
+     63.045
+    ],
+    "y": [
+     78.155,
+     87.965
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     60.373,
+     62.627
+    ],
+    "y": [
+     78.95,
+     87.17
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 48.035
+  },
+  "C28": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    48.25,
+    111.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    48.25,
+    113.5
+   ],
+   "courtyard": {
+    "x": [
+     46.705,
+     49.795
+    ],
+    "y": [
+     109.905,
+     117.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     47.148,
+     49.352
+    ],
+    "y": [
+     110.75,
+     116.25
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 18.905
+  },
+  "R41": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    40.25,
+    11.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    40.25,
+    15.06
+   ],
+   "courtyard": {
+    "x": [
+     38.705,
+     41.795
+    ],
+    "y": [
+     10.155,
+     19.965
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     39.123,
+     41.377
+    ],
+    "y": [
+     10.95,
+     19.17
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.155
+  },
+  "R17": {
+   "value": "10R0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    11.2,
+    85.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    11.2,
+    89.56
+   ],
+   "courtyard": {
+    "x": [
+     9.655,
+     12.745
+    ],
+    "y": [
+     84.655,
+     94.465
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     10.073,
+     12.327
+    ],
+    "y": [
+     85.45,
+     93.67
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 9.655
+  },
+  "C62": {
+   "value": "220p",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    49.75,
+    61.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    49.75,
+    63.75
+   ],
+   "courtyard": {
+    "x": [
+     48.205,
+     51.295
+    ],
+    "y": [
+     60.155,
+     67.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     48.648,
+     50.852
+    ],
+    "y": [
+     61.0,
+     66.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 48.205
+  },
+  "SW1": {
+   "value": "SHUTDOWN / WAKE  GPIO3",
+   "footprint": "SW_PUSH_6mm",
+   "category": "switch",
+   "anchor": [
+    104.0,
+    9.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    107.25,
+    7.25
+   ],
+   "courtyard": {
+    "x": [
+     102.455,
+     112.045
+    ],
+    "y": [
+     3.455,
+     11.045
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     103.85,
+     110.45
+    ],
+    "y": [
+     4.25,
+     10.25
+    ],
+    "z": [
+     1.205,
+     4.295
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 3.455,
+   "as_built": {
+    "z_top_est": 5.0,
+    "z_top_range": [
+     4.3,
+     9.5
+    ],
+    "note": "6 x 6 mm tact switch; model plunger top 4.3. Real plunger height depends on the variant fitted (4.3/5/7/9.5 mm). MEASURE before cutting button stems."
+   }
+  },
+  "R25": {
+   "value": "13k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    65.75,
+    114.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    65.75,
+    118.31
+   ],
+   "courtyard": {
+    "x": [
+     64.205,
+     67.295
+    ],
+    "y": [
+     113.405,
+     123.215
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     64.623,
+     66.877
+    ],
+    "y": [
+     114.2,
+     122.42
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 12.785
+  },
+  "D6": {
+   "value": "RED",
+   "footprint": "LED_D5.0mm",
+   "category": "led",
+   "anchor": [
+    11.0,
+    6.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    12.27,
+    6.0
+   ],
+   "courtyard": {
+    "x": [
+     9.015,
+     15.535
+    ],
+    "y": [
+     2.745,
+     9.255
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     9.77,
+     15.072
+    ],
+    "y": [
+     3.195,
+     8.805
+    ],
+    "z": [
+     2.995,
+     11.595
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 2.745,
+   "as_built": {
+    "z_top_est": 8.7,
+    "z_top_range": [
+     8.6,
+     11.6
+    ],
+    "note": "Photos show the 5 mm LEDs seated flush (flange on the board): 8.6 mm body + ~0.1. The KiCad model floats them 3 mm (top 11.59). MEASURE all eight."
+   }
+  },
+  "C46": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    97.5,
+    12.0
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    95.0,
+    12.0
+   ],
+   "courtyard": {
+    "x": [
+     91.405,
+     98.595
+    ],
+    "y": [
+     10.455,
+     13.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     92.25,
+     97.75
+    ],
+    "y": [
+     10.898,
+     13.102
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.455
+  },
+  "C42": {
+   "value": "10u",
+   "footprint": "CP_Radial_D5.0mm_P2.50mm",
+   "category": "electrolytic",
+   "anchor": [
+    18.0,
+    26.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    18.0,
+    28.0
+   ],
+   "courtyard": {
+    "x": [
+     15.208,
+     20.795
+    ],
+    "y": [
+     25.208,
+     30.792
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     15.621,
+     20.379
+    ],
+    "y": [
+     25.611,
+     30.387
+    ],
+    "z": [
+     0.002,
+     4.995
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 15.208
+  },
+  "U61": {
+   "value": "LM311",
+   "footprint": "DIP-8_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    62.25,
+    60.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    58.44,
+    56.69
+   ],
+   "courtyard": {
+    "x": [
+     53.065,
+     63.815
+    ],
+    "y": [
+     51.385,
+     61.995
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     53.805,
+     63.075
+    ],
+    "y": [
+     52.753,
+     60.627
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 51.385,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "R42": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    44.25,
+    11.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    48.06,
+    11.75
+   ],
+   "courtyard": {
+    "x": [
+     43.155,
+     52.965
+    ],
+    "y": [
+     10.205,
+     13.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     43.95,
+     52.17
+    ],
+    "y": [
+     10.623,
+     12.877
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.205
+  },
+  "C68": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    48.25,
+    53.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    48.25,
+    55.5
+   ],
+   "courtyard": {
+    "x": [
+     46.705,
+     49.795
+    ],
+    "y": [
+     51.905,
+     59.095
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     47.148,
+     49.352
+    ],
+    "y": [
+     52.75,
+     58.25
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 46.705
+  },
+  "D12": {
+   "value": "1N4148",
+   "footprint": "D_DO-35_SOD27_P7.62mm_Horizontal",
+   "category": "diode",
+   "anchor": [
+    110.75,
+    14.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    114.56,
+    14.25
+   ],
+   "courtyard": {
+    "x": [
+     109.655,
+     119.465
+    ],
+    "y": [
+     12.955,
+     15.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     110.5,
+     118.62
+    ],
+    "y": [
+     13.367,
+     15.133
+    ],
+    "z": [
+     0.485,
+     2.505
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 12.955
+  },
+  "U63": {
+   "value": "74HC74",
+   "footprint": "DIP-14_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    55.0,
+    40.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    62.62,
+    44.06
+   ],
+   "courtyard": {
+    "x": [
+     53.425,
+     71.815
+    ],
+    "y": [
+     38.755,
+     49.365
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     53.836,
+     70.468
+    ],
+    "y": [
+     40.123,
+     47.997
+    ],
+    "z": [
+     1.771,
+     3.675
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 38.755,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "R40": {
+   "value": "1k00",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    33.0,
+    19.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    33.0,
+    15.44
+   ],
+   "courtyard": {
+    "x": [
+     31.455,
+     34.545
+    ],
+    "y": [
+     10.535,
+     20.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     31.873,
+     34.127
+    ],
+    "y": [
+     11.33,
+     19.55
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 10.535
+  },
+  "C31": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    30.25,
+    106.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    30.25,
+    103.75
+   ],
+   "courtyard": {
+    "x": [
+     28.705,
+     31.795
+    ],
+    "y": [
+     100.155,
+     107.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     29.148,
+     31.352
+    ],
+    "y": [
+     101.0,
+     106.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 28.655
+  },
+  "R59": {
+   "value": "100k",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    48.75,
+    23.25
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    44.94,
+    23.25
+   ],
+   "courtyard": {
+    "x": [
+     40.035,
+     49.845
+    ],
+    "y": [
+     21.705,
+     24.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     40.83,
+     49.05
+    ],
+    "y": [
+     22.123,
+     24.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 21.705
+  },
+  "C48": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    15.5,
+    89.25
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    15.5,
+    91.75
+   ],
+   "courtyard": {
+    "x": [
+     13.955,
+     17.045
+    ],
+    "y": [
+     88.155,
+     95.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     14.398,
+     16.602
+    ],
+    "y": [
+     89.0,
+     94.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 13.955
+  },
+  "C44": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    34.75,
+    79.25
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    32.25,
+    79.25
+   ],
+   "courtyard": {
+    "x": [
+     28.655,
+     35.845
+    ],
+    "y": [
+     77.705,
+     80.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     29.5,
+     35.0
+    ],
+    "y": [
+     78.148,
+     80.352
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 28.655
+  },
+  "C27": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    65.25,
+    111.0
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    67.75,
+    111.0
+   ],
+   "courtyard": {
+    "x": [
+     64.155,
+     71.345
+    ],
+    "y": [
+     109.455,
+     112.545
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     65.0,
+     70.5
+    ],
+    "y": [
+     109.898,
+     112.102
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 23.455
+  },
+  "J4": {
+   "value": "GND LIFT",
+   "footprint": "PinHeader_1x02_P2.54mm_Vertical",
+   "category": "pin_header",
+   "anchor": [
+    15.5,
+    86.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    16.77,
+    86.0
+   ],
+   "courtyard": {
+    "x": [
+     13.685,
+     19.865
+    ],
+    "y": [
+     84.185,
+     87.815
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     14.23,
+     19.31
+    ],
+    "y": [
+     84.73,
+     87.27
+    ],
+    "z": [
+     2.535,
+     8.535
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 13.685
+  },
+  "C61": {
+   "value": "1n5",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    3.25,
+    40.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    3.25,
+    38.0
+   ],
+   "courtyard": {
+    "x": [
+     1.705,
+     4.795
+    ],
+    "y": [
+     34.405,
+     41.595
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     2.148,
+     4.352
+    ],
+    "y": [
+     35.25,
+     40.75
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 1.705
+  },
+  "C30": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    55.0,
+    93.75
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    52.5,
+    93.75
+   ],
+   "courtyard": {
+    "x": [
+     48.905,
+     56.095
+    ],
+    "y": [
+     92.205,
+     95.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     49.75,
+     55.25
+    ],
+    "y": [
+     92.648,
+     94.852
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 40.705
+  },
+  "R76": {
+   "value": "22k1",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    65.0,
+    71.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    68.81,
+    71.75
+   ],
+   "courtyard": {
+    "x": [
+     63.905,
+     73.715
+    ],
+    "y": [
+     70.205,
+     73.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     64.7,
+     72.92
+    ],
+    "y": [
+     70.623,
+     72.877
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 62.705
+  },
+  "U2": {
+   "value": "LM358",
+   "footprint": "DIP-8_W7.62mm_LongPads",
+   "category": "ic_dip",
+   "anchor": [
+    112.0,
+    29.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    108.19,
+    25.44
+   ],
+   "courtyard": {
+    "x": [
+     102.815,
+     113.565
+    ],
+    "y": [
+     20.135,
+     30.745
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     103.555,
+     112.825
+    ],
+    "y": [
+     21.503,
+     29.377
+    ],
+    "z": [
+     0.375,
+     3.675
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 20.135,
+   "as_built": {
+    "z_top_est": 8.175,
+    "note": "Many DIPs are in turned-pin sockets (bring-up log): add ~4.5 mm (socket + seat) to the model height."
+   }
+  },
+  "L1": {
+   "value": "10u",
+   "footprint": "L_Axial_L12.0mm_D5.0mm_P15.24mm_Horizontal_Fastron_MISC",
+   "category": "inductor",
+   "anchor": [
+    101.0,
+    50.0
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    101.0,
+    57.62
+   ],
+   "courtyard": {
+    "x": [
+     98.205,
+     103.795
+    ],
+    "y": [
+     48.505,
+     66.735
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     98.611,
+     103.395
+    ],
+    "y": [
+     49.55,
+     65.69
+    ],
+    "z": [
+     0.095,
+     5.095
+    ]
+   },
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 36.205
+  },
+  "R24": {
+   "value": "10k5",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    56.5,
+    122.5
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    56.5,
+    126.31
+   ],
+   "courtyard": {
+    "x": [
+     54.955,
+     58.045
+    ],
+    "y": [
+     121.405,
+     131.215
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     55.373,
+     57.627
+    ],
+    "y": [
+     122.2,
+     130.42
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 4.785
+  },
+  "C25": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    25.0,
+    106.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    25.0,
+    103.75
+   ],
+   "courtyard": {
+    "x": [
+     23.455,
+     26.545
+    ],
+    "y": [
+     100.155,
+     107.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     23.898,
+     26.102
+    ],
+    "y": [
+     101.0,
+     106.5
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 23.455
+  },
+  "Q2": {
+   "value": "BC557",
+   "footprint": "TO-92_Inline",
+   "category": "transistor",
+   "anchor": [
+    9.0,
+    19.0
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    9.0,
+    17.73
+   ],
+   "courtyard": {
+    "x": [
+     6.945,
+     11.775
+    ],
+    "y": [
+     14.955,
+     20.505
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     7.67,
+     11.243
+    ],
+    "y": [
+     15.445,
+     20.015
+    ],
+    "z": [
+     2.495,
+     7.295
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 6.945
+  },
+  "R75": {
+   "value": "22k1",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    69.25,
+    61.25
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    73.06,
+    61.25
+   ],
+   "courtyard": {
+    "x": [
+     68.155,
+     77.965
+    ],
+    "y": [
+     59.705,
+     62.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     68.95,
+     77.17
+    ],
+    "y": [
+     60.123,
+     62.377
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 59.705
+  },
+  "C19": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    87.25,
+    32.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    87.25,
+    35.25
+   ],
+   "courtyard": {
+    "x": [
+     85.705,
+     88.795
+    ],
+    "y": [
+     31.655,
+     38.845
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     86.148,
+     88.352
+    ],
+    "y": [
+     32.5,
+     38.0
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 31.655
+  },
+  "C50": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    34.75,
+    87.25
+   ],
+   "rot_deg": 180.0,
+   "side": "top",
+   "pad_centroid": [
+    32.25,
+    87.25
+   ],
+   "courtyard": {
+    "x": [
+     28.655,
+     35.845
+    ],
+    "y": [
+     85.705,
+     88.795
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     29.5,
+     35.0
+    ],
+    "y": [
+     86.148,
+     88.352
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 28.655
+  },
+  "R50": {
+   "value": "10k0",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    18.0,
+    23.25
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    18.0,
+    19.44
+   ],
+   "courtyard": {
+    "x": [
+     16.455,
+     19.545
+    ],
+    "y": [
+     14.535,
+     24.345
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     16.873,
+     19.127
+    ],
+    "y": [
+     15.33,
+     23.55
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 14.535
+  },
+  "C18": {
+   "value": "470u",
+   "footprint": "CP_Radial_D10.0mm_P5.00mm",
+   "category": "electrolytic",
+   "anchor": [
+    95.0,
+    32.75
+   ],
+   "rot_deg": 90.0,
+   "side": "top",
+   "pad_centroid": [
+    95.0,
+    35.25
+   ],
+   "courtyard": {
+    "x": [
+     89.707,
+     100.295
+    ],
+    "y": [
+     29.957,
+     40.543
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     90.11,
+     99.883
+    ],
+    "y": [
+     30.363,
+     40.133
+    ],
+    "z": [
+     0.0,
+     9.995
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 29.957,
+   "as_built": {
+    "z_top_est": 17.0,
+    "z_top_range": [
+     12.5,
+     20.0
+    ],
+    "note": "470 uF, black. MEASURE."
+   }
+  },
+  "H6": {
+   "value": "MountingHole_2.7mm_M2.5",
+   "footprint": "MountingHole_2.7mm_M2.5",
+   "category": "mounting_hole",
+   "anchor": [
+    87.5,
+    74.5
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    87.5,
+    74.5
+   ],
+   "courtyard": {
+    "x": [
+     84.507,
+     90.495
+    ],
+    "y": [
+     71.503,
+     77.497
+    ]
+   },
+   "model_bbox": null,
+   "nearest_edge": "right(x=140)",
+   "edge_distance": 49.505
+  },
+  "R70": {
+   "value": "8k25",
+   "footprint": "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+   "category": "resistor",
+   "anchor": [
+    64.0,
+    67.75
+   ],
+   "rot_deg": 0.0,
+   "side": "top",
+   "pad_centroid": [
+    67.81,
+    67.75
+   ],
+   "courtyard": {
+    "x": [
+     62.905,
+     72.715
+    ],
+    "y": [
+     66.205,
+     69.295
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     63.7,
+     71.92
+    ],
+    "y": [
+     66.623,
+     68.877
+    ],
+    "z": [
+     0.016,
+     2.495
+    ]
+   },
+   "nearest_edge": "left(x=0)",
+   "edge_distance": 62.905
+  },
+  "C47": {
+   "value": "100n",
+   "footprint": "C_Disc_D5.0mm_W2.5mm_P5.00mm",
+   "category": "ceramic_cap",
+   "anchor": [
+    129.75,
+    9.5
+   ],
+   "rot_deg": -90.0,
+   "side": "top",
+   "pad_centroid": [
+    129.75,
+    7.0
+   ],
+   "courtyard": {
+    "x": [
+     128.205,
+     131.295
+    ],
+    "y": [
+     3.405,
+     10.595
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     128.648,
+     130.852
+    ],
+    "y": [
+     4.25,
+     9.75
+    ],
+    "z": [
+     0.095,
+     5.088
+    ]
+   },
+   "nearest_edge": "front(y=0)",
+   "edge_distance": 3.405
+  },
+  "J2": {
+   "value": "RASPBERRY PI 4",
+   "footprint": "PinSocket_2x20_P2.54mm_Vertical",
+   "category": "pi_socket",
+   "anchor": [
+    88.77,
+    79.37
+   ],
+   "rot_deg": 0.0,
+   "side": "bottom",
+   "pad_centroid": [
+    87.5,
+    103.5
+   ],
+   "courtyard": {
+    "x": [
+     84.415,
+     90.585
+    ],
+    "y": [
+     77.555,
+     129.445
+    ]
+   },
+   "model_bbox": {
+    "x": [
+     84.96,
+     90.04
+    ],
+    "y": [
+     78.1,
+     128.9
+    ],
+    "z": [
+     -10.185,
+     -1.685
+    ]
+   },
+   "nearest_edge": "back(y=136)",
+   "edge_distance": 6.555
+  }
+ }
+}

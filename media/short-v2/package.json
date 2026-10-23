@@ -1,0 +1,18 @@
+{
+  "name": "vinyl-adc-short",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render src/index.ts Short out/vinyl-adc-rev-d-short.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.537",
+    "@remotion/google-fonts": "^4.0.537",
+    "@remotion/media-utils": "^4.0.537",
+    "@types/react": "^18.3.31",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.537",
+    "typescript": "^5.9.3"
+  }
+}

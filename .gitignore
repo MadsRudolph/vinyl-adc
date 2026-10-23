@@ -11,3 +11,6 @@ __pycache__/
 assembly/site-dist/
 DebugErc.log
 sim/listen-out/
+
+# Local Claude Code settings and agent worktrees
+.claude/

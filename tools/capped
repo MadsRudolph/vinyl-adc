@@ -1,0 +1,11 @@
+#!/bin/sh
+# Run a heavy job (Blender, Remotion, the fit check) in its own systemd scope with a
+# memory cap. Without it the job shares the terminal's scope, and when RAM + swap run
+# out systemd-oomd kills the whole terminal, Claude session included (21 Oct, twice).
+#   tools/capped [-m 8G] blender -b ...        MEM=6G tools/capped ./render.sh Cine
+MEM=${MEM:-8G}
+[ "$1" = "-m" ] && { MEM=$2; shift 2; }
+exec systemd-run --user --scope --quiet --collect \
+    -p MemoryHigh="$MEM" -p MemoryMax="$MEM" -p MemorySwapMax=2G \
+    -p ManagedOOMMemoryPressure=kill \
+    "$@"

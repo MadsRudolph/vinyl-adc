@@ -1,0 +1,8 @@
+# Downloaded and generated: npm install, Remotion renders, voice/sfx output,
+# raw phone footage and licensed music. Rebuild with npm install + render.sh.
+node_modules/
+build/
+out/
+audio/
+public/
+serve/

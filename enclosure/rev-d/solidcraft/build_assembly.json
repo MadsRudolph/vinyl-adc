@@ -1,0 +1,595 @@
+{
+ "commands": [
+  {
+   "command": "document.metadata.set",
+   "params": {
+    "values": {
+     "project": "Vinyl ADC",
+     "part_number": "VADC-ENC-D",
+     "revision": "D",
+     "author": "Mads Rudolph",
+     "description": "Rev D enclosure assembly: tray, faceplate, 8 light pipes, 2 buttons, acrylic lid, the rev D HAT and a Raspberry Pi 4B. Built by solidcraft/build_assembly.json from cad/enclosure.py outputs."
+    }
+   }
+  },
+  {
+   "command": "parameters.add",
+   "params": {
+    "name": "lid_t",
+    "expression": "3.0 mm",
+    "comment": "acrylic lid thickness (enclosure.py LID_T)",
+    "favorite": true
+   }
+  },
+  {
+   "command": "parameters.add",
+   "params": {
+    "name": "lid_under_z",
+    "expression": "22.0 mm",
+    "comment": "lid underside height above the HAT top (enclosure.py LID_UNDER_Z)"
+   }
+  },
+  {
+   "command": "parameters.add",
+   "params": {
+    "name": "led_pitch",
+    "expression": "9.5 mm",
+    "comment": "light pipe pitch (enclosure.py LED_PITCH)"
+   }
+  },
+  {
+   "command": "material.create",
+   "params": {
+    "name": "PETG",
+    "density_g_cm3": 1.27,
+    "color": "#202022"
+   }
+  },
+  {
+   "command": "material.create",
+   "params": {
+    "name": "Cast acrylic",
+    "density_g_cm3": 1.18,
+    "color": "#d9ebf2",
+    "opacity": 0.3
+   }
+  },
+  {
+   "command": "file.insert_step",
+   "params": {
+    "path": "/home/mads/Projects/vinyl-adc/enclosure/rev-d/out/enclosure.step",
+    "name": "enclosure",
+    "names": "product"
+   }
+  },
+  {
+   "command": "component.unlock",
+   "params": {
+    "component": "enclosure"
+   }
+  },
+  {
+   "command": "solid.remove",
+   "params": {
+    "bodies": [
+     "lid_acrylic"
+    ]
+   }
+  },
+  {
+   "command": "component.delete",
+   "params": {
+    "component": "lid_acrylic"
+   }
+  },
+  {
+   "command": "occurrence.copy",
+   "params": {
+    "component": "pipe_1",
+    "translate": [
+     9.5,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "command": "occurrence.copy",
+   "params": {
+    "component": "pipe_1",
+    "translate": [
+     19.0,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "command": "occurrence.copy",
+   "params": {
+    "component": "pipe_1",
+    "translate": [
+     28.5,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "command": "occurrence.copy",
+   "params": {
+    "component": "pipe_1",
+    "translate": [
+     38.0,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "command": "occurrence.copy",
+   "params": {
+    "component": "pipe_1",
+    "translate": [
+     47.5,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "command": "occurrence.copy",
+   "params": {
+    "component": "pipe_1",
+    "translate": [
+     57.0,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "command": "occurrence.copy",
+   "params": {
+    "component": "pipe_1",
+    "translate": [
+     66.5,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "command": "component.rename",
+   "params": {
+    "component": "pipe_1",
+    "name": "light_pipe"
+   }
+  },
+  {
+   "command": "component.activate",
+   "params": {
+    "component": "root"
+   }
+  },
+  {
+   "command": "component.create",
+   "params": {
+    "name": "lid_acrylic"
+   }
+  },
+  {
+   "command": "sketch.create",
+   "params": {
+    "plane": "XY",
+    "offset": "lid_under_z",
+    "name": "lid outline (lid.dxf CUT)"
+   }
+  },
+  {
+   "command": "sketch.insert_dxf",
+   "params": {
+    "path": "/home/mads/Projects/vinyl-adc/enclosure/rev-d/solidcraft/parts/lid_cut.dxf",
+    "at": [
+     -14.9,
+     10.3
+    ]
+   }
+  },
+  {
+   "command": "sketch.finish",
+   "params": {}
+  },
+  {
+   "command": "solid.extrude",
+   "params": {
+    "distance": "lid_t",
+    "profiles": [
+     {
+      "point": [
+       66.1,
+       88.2
+      ]
+     }
+    ],
+    "operation": "new"
+   }
+  },
+  {
+   "command": "body.rename",
+   "params": {
+    "body": "Body1",
+    "name": "lid_acrylic"
+   }
+  },
+  {
+   "command": "component.activate",
+   "params": {
+    "component": "root"
+   }
+  },
+  {
+   "command": "file.insert_step",
+   "params": {
+    "path": "/home/mads/Projects/vinyl-adc/enclosure/rev-d/solidcraft/parts/hat_rev_d.step",
+    "name": "hat_rev_d"
+   }
+  },
+  {
+   "command": "occurrence.move",
+   "params": {
+    "occurrence": "hat_rev_d:1",
+    "space": "world",
+    "translate": [
+     0,
+     0,
+     -1.6
+    ]
+   }
+  },
+  {
+   "command": "file.insert_step",
+   "params": {
+    "path": "/home/mads/Projects/vinyl-adc/hardware/kicad/rev_d/render/build/pi4/pi4b.step",
+    "name": "raspberry_pi_4b"
+   }
+  },
+  {
+   "command": "occurrence.move",
+   "params": {
+    "occurrence": "raspberry_pi_4b:1",
+    "space": "world",
+    "axis": [
+     1,
+     1,
+     1
+    ],
+    "angle": "120 deg",
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "command": "occurrence.move",
+   "params": {
+    "occurrence": "raspberry_pi_4b:1",
+    "space": "world",
+    "translate": [
+     140.0,
+     71.0,
+     -12.6
+    ]
+   }
+  },
+  {
+   "command": "occurrence.ground",
+   "params": {
+    "occurrence": "enclosure:1",
+    "grounded": true
+   }
+  },
+  {
+   "command": "occurrence.ground",
+   "params": {
+    "occurrence": "tray:1",
+    "grounded": true
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "tray:1",
+    "b": "faceplate:1",
+    "name": "faceplate to tray (2 floor-tab screws)"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "faceplate:1",
+    "b": "light_pipe:1",
+    "name": "light pipe 1 in faceplate bore"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "faceplate:1",
+    "b": "light_pipe:2",
+    "name": "light pipe 2 in faceplate bore"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "faceplate:1",
+    "b": "light_pipe:3",
+    "name": "light pipe 3 in faceplate bore"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "faceplate:1",
+    "b": "light_pipe:4",
+    "name": "light pipe 4 in faceplate bore"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "faceplate:1",
+    "b": "light_pipe:5",
+    "name": "light pipe 5 in faceplate bore"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "faceplate:1",
+    "b": "light_pipe:6",
+    "name": "light pipe 6 in faceplate bore"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "faceplate:1",
+    "b": "light_pipe:7",
+    "name": "light pipe 7 in faceplate bore"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "faceplate:1",
+    "b": "light_pipe:8",
+    "name": "light pipe 8 in faceplate bore"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "slider",
+    "a": "faceplate:1",
+    "b": "button_sw1:1",
+    "name": "button SW1 in guide bore",
+    "limits": [
+     [
+      -0.6,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "slider",
+    "a": "faceplate:1",
+    "b": "button_sw2:1",
+    "name": "button SW2 in guide bore",
+    "limits": [
+     [
+      -0.6,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "tray:1",
+    "b": "lid_acrylic:1",
+    "name": "lid in rebate (4 x M3)"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "tray:1",
+    "b": "hat_rev_d:1",
+    "name": "HAT on M3 posts H1/H2/H3"
+   }
+  },
+  {
+   "command": "joint.as_built",
+   "params": {
+    "type": "rigid",
+    "a": "hat_rev_d:1",
+    "b": "raspberry_pi_4b:1",
+    "name": "Pi on J2 + 11 mm standoffs"
+   }
+  },
+  {
+   "command": "appearance.assign",
+   "params": {
+    "bodies": [
+     "tray"
+    ],
+    "color": "#0a0a0b"
+   }
+  },
+  {
+   "command": "appearance.assign",
+   "params": {
+    "bodies": [
+     "faceplate"
+    ],
+    "color": "#b3b5b8"
+   }
+  },
+  {
+   "command": "appearance.assign",
+   "params": {
+    "bodies": [
+     "pipe_1"
+    ],
+    "color": "#e6e6d9"
+   }
+  },
+  {
+   "command": "appearance.assign",
+   "params": {
+    "bodies": [
+     "button_sw1"
+    ],
+    "color": "#d9611a"
+   }
+  },
+  {
+   "command": "appearance.assign",
+   "params": {
+    "bodies": [
+     "button_sw2"
+    ],
+    "color": "#d9611a"
+   }
+  },
+  {
+   "command": "material.assign",
+   "params": {
+    "bodies": [
+     "tray",
+     "faceplate",
+     "pipe_1",
+     "button_sw1",
+     "button_sw2"
+    ],
+    "material": "PETG"
+   }
+  },
+  {
+   "command": "material.assign",
+   "params": {
+    "bodies": [
+     "lid_acrylic"
+    ],
+    "material": "Cast acrylic"
+   }
+  },
+  {
+   "command": "appearance.assign",
+   "params": {
+    "bodies": [
+     "lid_acrylic"
+    ],
+    "appearance": "Glass - Clear"
+   }
+  },
+  {
+   "command": "component.rename",
+   "params": {
+    "component": "root",
+    "name": "vinyl_adc_rev_d_assembly"
+   }
+  },
+  {
+   "command": "joint.solve",
+   "params": {}
+  },
+  {
+   "command": "view.save",
+   "params": {
+    "name": "Overview",
+    "camera": {
+     "target": [
+      66.0,
+      78.0,
+      0.0
+     ],
+     "yaw": -0.785398,
+     "pitch": 0.6155,
+     "distance": 380.0,
+     "fov": 0.0
+    }
+   }
+  },
+  {
+   "command": "view.save",
+   "params": {
+    "name": "Rear ports",
+    "camera": {
+     "target": [
+      66.0,
+      78.0,
+      0.0
+     ],
+     "yaw": -2.35619,
+     "pitch": 0.42,
+     "distance": 380.0,
+     "fov": 0.0
+    }
+   }
+  },
+  {
+   "command": "view.save",
+   "params": {
+    "name": "Front panel",
+    "camera": {
+     "target": [
+      66.0,
+      78.0,
+      0.0
+     ],
+     "yaw": 0.0,
+     "pitch": 0.15,
+     "distance": 380.0,
+     "fov": 0.0
+    }
+   }
+  },
+  {
+   "command": "view.save",
+   "params": {
+    "name": "Top",
+    "camera": {
+     "target": [
+      66.0,
+      78.0,
+      0.0
+     ],
+     "yaw": 0.0,
+     "pitch": 1.5707,
+     "distance": 380.0,
+     "fov": 0.0
+    }
+   }
+  }
+ ]
+}

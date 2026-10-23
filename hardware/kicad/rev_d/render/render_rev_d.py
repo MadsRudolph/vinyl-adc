@@ -1,6 +1,6 @@
 """Showcase renders of the rev D HAT (Cycles, headless).
 
-    blender -b --factory-startup --python hardware/kicad/rev_d/render/render_rev_d.py -- [--shot NAME] [--preview]
+    tools/capped blender -b --factory-startup --python hardware/kicad/rev_d/render/render_rev_d.py -- [--shot NAME] [--preview]
 
 Shots: hero, top, detail (stills, straight into media/showcase/rev-d/) and
 orbit, explode (72-frame seamless loops into build/frames/<clip>/, encoded by
@@ -20,7 +20,8 @@ MEDIA = ROOT / 'media/showcase/rev-d'
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 ap = argparse.ArgumentParser()
-VSHOTS = {'v_fly': 150, 'v_orbit': 120, 'v_explode': 120, 'v_led': 120}  # vertical 1080x1920 @ 30 fps, for the short
+VSHOTS = {'v_fly': 150, 'v_orbit': 120, 'v_explode': 120, 'v_led': 120,
+          'c_sweep': 150, 'c_rack': 120, 'c_scan': 120, 'c_float': 150}  # c_*: the cinematic edit  # vertical 1080x1920 @ 30 fps, for the short
 ap.add_argument('--shot', choices=['hero', 'top', 'detail', 'orbit', 'explode', *VSHOTS], action='append')
 ap.add_argument('--frames', help='first:last, for v_* shots (default all)')
 ap.add_argument('--preview', action='store_true')
@@ -345,6 +346,28 @@ def vertical(samples=64):
     sc.render.use_persistent_data = True
 
 
+def cinema(samples=48):
+    """Low-key product-film look: near-black glossy floor, one soft top light, everything else from keyed lights."""
+    render_setup(1080, 1920, samples)
+    sc = bpy.context.scene
+    sc.render.fps = 30
+    sc.cycles.use_adaptive_sampling = True; sc.cycles.adaptive_threshold = 0.02
+    sc.render.use_persistent_data = True
+    sc.view_settings.look = 'AgX - High Contrast'
+    g = bpy.data.objects['ground']; m = g.data.materials[0].node_tree.nodes['Principled BSDF']
+    m.inputs['Base Color'].default_value = (0.003, 0.003, 0.0035, 1); m.inputs['Roughness'].default_value = 0.42
+    sc.world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.0015, 0.0015, 0.002, 1)
+    area('soft', (0.0, 0.05, 0.75), (0, 0, 0), 0.5, 1.6, (0.85, 0.9, 1.0))
+
+
+def strip(name, energy, colour, length=0.6, width=0.02):
+    """A long thin light, for sweeps."""
+    l = bpy.data.lights.new(name, 'AREA'); l.shape = 'RECTANGLE'; l.size = length; l.size_y = width
+    l.energy = energy; l.color = colour
+    o = bpy.data.objects.new(name, l); bpy.context.scene.collection.objects.link(o)
+    return o
+
+
 def smooth(t):
     return t * t * (3 - 2 * t)
 
@@ -451,6 +474,65 @@ def shot(name):
             else: u = 0
             hat.location = (0, 0, 0.055 * u)
             hat.keyframe_insert('location', frame=f)
+    elif name == 'c_sweep':
+        # out of the dark: a warm strip light sweeps front to back over a low, slow push-in
+        cinema()
+        cam = camera((0, 0, 0), (0, 0, 0), 40, fstop=4)
+        foc = focus_on(cam, (0, -0.02, 0.006))
+        st = strip('sweep', 16, (1.0, 0.78, 0.55))
+        n = VSHOTS[name]
+        for f in range(1, n + 1):
+            u = (f - 1) / (n - 1); e = smooth(u)
+            cam.location = Vector((-0.03, -0.235, 0.060)).lerp(Vector((-0.01, -0.165, 0.072)), e)
+            aim(cam, (0.0, -0.01, 0.0)); cam.keyframe_insert('location', frame=f); cam.keyframe_insert('rotation_euler', frame=f)
+            y = -0.25 + 0.50 * smooth(min(1, u * 1.25))
+            st.location = (0, y, 0.16); st.rotation_euler = (math.radians(-25 + 50 * u), 0, 0)
+            st.keyframe_insert('location', frame=f); st.keyframe_insert('rotation_euler', frame=f)
+    elif name == 'c_rack':
+        # extreme low macro over the analog section, focus pulled from the near ICs to the LED row
+        cinema()
+        area('rimc', (0.10, 0.35, 0.10), (0, 0, 0), 0.3, 6, (0.6, 0.8, 1.0), size_y=0.05)
+        area('keyc', (-0.30, -0.25, 0.20), (0, 0, 0), 0.25, 3, (1.0, 0.85, 0.7))
+        cam = camera((0, 0, 0), (0, 0, 0), 65, fstop=2.0)
+        foc = focus_on(cam, (0, 0, 0))
+        n = VSHOTS[name]
+        for f in range(1, n + 1):
+            u = smooth((f - 1) / (n - 1))
+            cam.location = Vector((-0.050, 0.075, 0.048)).lerp(Vector((-0.025, 0.055, 0.052)), u)
+            aim(cam, (-0.005, -0.055, 0.004))
+            foc.location = Vector((-0.042, 0.035, 0.008)).lerp(Vector((-0.010, -0.056, 0.006)), smooth(min(1, max(0, (f - 30) / 60))))
+            for o, a in ((cam, 'location'), (cam, 'rotation_euler'), (foc, 'location')): o.keyframe_insert(a, frame=f)
+    elif name == 'c_scan':
+        # top-down, a cold scan line passes over the board and leaves it lit
+        cinema(40)
+        bpy.data.lights['soft'].energy = 0.15
+        cam = camera((0, 0.0, 0.33), (0, 0.0, 0), 40)
+        cam.rotation_euler = (0, 0, math.radians(90))
+        st = strip('scan', 2.5, (0.55, 0.85, 1.0), length=0.5, width=0.008)
+        fill = area('after', (0, 0.0, 0.6), (0, 0, 0), 0.6, 0.0, (1, 1, 1))
+        n = VSHOTS[name]
+        for f in range(1, n + 1):
+            u = (f - 1) / (n - 1)
+            st.location = (-0.11 + 0.22 * smooth(min(1, u * 1.3)), 0, 0.11); st.rotation_euler = (0, 0, math.radians(90))
+            st.keyframe_insert('location', frame=f)
+            fill.data.energy = 1.4 * smooth(max(0, (u - 0.55) / 0.45)); fill.data.keyframe_insert('energy', frame=f)
+            cam.location.z = 0.33 - 0.05 * smooth(u); cam.keyframe_insert('location', frame=f)
+    elif name == 'c_float':
+        # the HAT hovers above its Pi and turns slowly, backlit, in a black void
+        cinema()
+        bpy.data.objects.remove(bpy.data.objects['ground'])
+        area('back', (0.0, 0.45, 0.16), (0, 0, 0.03), 0.35, 7, (0.55, 0.75, 1.0), size_y=0.06)
+        area('side', (-0.40, -0.05, 0.15), (0, 0, 0.03), 0.3, 4, (1.0, 0.8, 0.6))
+        camera((0.0, -0.27, 0.12), (0, 0, 0.028), 42, fstop=5.6)
+        for o in (hat, pi):
+            o.parent = None
+        piv = bpy.data.objects.new('turntable', None); bpy.context.scene.collection.objects.link(piv)
+        hat.parent = piv; pi.parent = piv
+        n = VSHOTS[name]
+        for f in range(1, n + 1):
+            u = (f - 1) / (n - 1)
+            piv.rotation_euler = (0, 0, math.radians(-35 + 70 * smooth(u))); piv.keyframe_insert('rotation_euler', frame=f)
+            hat.location = (0, 0, 0.040 + 0.004 * math.sin(2 * math.pi * u)); hat.keyframe_insert('location', frame=f)
     sc = bpy.context.scene
     if name in VSHOTS:
         frames = BUILD / 'frames' / name
