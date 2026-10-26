@@ -374,7 +374,7 @@ class Ripper:
             if err>max(45.,.08*(ta-t0)) or err<0:partial.add(first);self.log(f'Side {sid}: the {(ta-t0)/60:.1f} min before “{album["tracks"][hit]["title"]}” is not a whole track (needle dropped mid-track); it will not be kept')
             before=[snap(ta-v) for v in reversed(back)];rest=album['tracks'][hit:];k,fwd,err=fit([x['length'] for x in rest],t1-ta);after=[snap(ta+v) for v in fwd]
             if not rest:self.log(f'Album already complete; side {sid} left unassigned');return
-            cuts=before+[ta]+after;k=m+k
+            cuts=before+[ta]+after;raw=[ta-v for v in reversed(back)]+[ta]+[ta+v for v in fwd];k=m+k
         else:
             if first is None:first=anchor['index'] if anchor else side['first'] if side.get('first') is not None else album['next_track']
             first=int(first);rest=album['tracks'][first:]
@@ -382,9 +382,13 @@ class Ripper:
             k,fwd,err=fit([x['length'] for x in rest],T);partial=set()
             if err>max(45.,.08*T):self.log(f'Side {sid}: recorded {T/60:.1f} min, which does not match a whole number of tracks; check the album choice')
             if not all(x['length'] for x in rest):gaps=[g for g in side['gaps'] if t0+20<(g[0]+g[1])/2<t1-20];k=min(len(gaps)+1,len(rest));fwd=[(g[0]+g[1])/2-t0 for g in gaps[:k-1]]
-            cuts=[snap(t0+v) for v in fwd]
+            cuts=[snap(t0+v) for v in fwd];raw=[t0+v for v in fwd]
         if err<0:partial.add(first+k-1);self.log(f'Side {sid}: the needle was lifted during “{album["tracks"][first+k-1]["title"]}”; that track will not be kept')
-        edges=[t0]+cuts+[t1];tracks=[{'index':first+i,'start':round(edges[i],2),'end':round(edges[i+1],2),'snapped':i==0 or any(abs(edges[i]-(g[0]+g[1])/2)<.01 for g in side['gaps']),'partial':first+i in partial} for i in range(k)]
+        edges=[t0]+cuts+[t1]
+        for i in range(1,len(edges)-1):                 # a snap can throw a very short track (a 5 s spoken greeting) past its neighbour or the end of the side: then the unsnapped estimate stands
+            if not edges[i-1]+1<edges[i]<edges[i+1]-1:edges[i]=raw[i-1]
+            edges[i]=min(max(edges[i],edges[i-1]+1),t1-(len(edges)-1-i))
+        tracks=[{'index':first+i,'start':round(edges[i],2),'end':round(edges[i+1],2),'snapped':i==0 or any(abs(edges[i]-(g[0]+g[1])/2)<.01 for g in side['gaps']),'partial':first+i in partial} for i in range(k)]
         with self.lock:
             have={tr['index'] for s in self.store['sides'] if s is not side and s['album']==album['mbid'] for tr in s['tracks'] if not tr.get('partial')}
             if all(tr['index'] in have for tr in tracks if not tr.get('partial')):          # the same side played again: the library already has it
@@ -521,10 +525,16 @@ class Ripper:
         if album.get('status') not in ('encoding','ready','delivered'):album['status']='complete' if len(done)>=len(album['tracks']) else ('in progress' if done else 'selected')
     # ---- encoding
     def finalize(self,mbid):
-        import mutagen.flac
         with self.lock:album=self.store['albums'][mbid];sides=[{**s,'tracks':[t for t in s['tracks'] if not t.get('partial')]} for s in self.store['sides'] if s['album']==mbid];sides=[s for s in sides if s['tracks']]
         if not sides:self.log('Nothing recorded for this album yet');return
-        with self.lock:album['status']='encoding'
+        with self.lock:before=album['status'];album['status']='encoding'
+        try:self.encode_album(mbid,album,sides)
+        except Exception:
+            with self.lock:album['status']=before;self.save()         # back to where it was, so the dashboard offers the encode again instead of showing 'encoding' forever
+            raise
+    def encode_album(self,mbid,album,sides):
+        import mutagen.flac
+        sides=[{**s,'tracks':[t for t in s['tracks'] if t['end']>t['start']]} for s in sides]
         peak=max(float(self.side_env(s)[int(tr['start']*10):int(tr['end']*10)+1,:2].max()) for s in sides for tr in s['tracks'])
         gain_db=min(self.cfg['max_gain_db'],self.cfg['target_peak_dbfs']-20*np.log10(peak+1e-9));gain=10**(gain_db/20)
         folder=self.home/'library'/safe(album['artist'])/safe(f"{album['title']} ({album['date'][:4]}) [Vinyl]" if album['date'] else f"{album['title']} [Vinyl]");folder.mkdir(parents=True,exist_ok=True)
