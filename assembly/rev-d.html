@@ -40,6 +40,11 @@ a{color:var(--green)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@
 <figure><img src="sessions/2026-10-20/plated-holes.jpg" alt="Close-up of plated through-holes with HASL finish" loading="lazy"><figcaption>Every barrel plated and tinned; vias tented under the mask.</figcaption></figure>
 </div>
 
+<h2>Ordering and what arrived</h2>
+<p>These are the first professionally made boards I have ever had, so I was very excited to get my hands on them. The order went in through PCBWay's normal online flow on 25 September, from the Gerbers with the copper layer order in the remarks, and their engineers had no questions for me. That was shortly before China's National Day holiday, so things took a little longer, which is understandable and no problem at all. The boards were built up and running on my bench by 20 October.</p>
+<p>The package felt premium: the boards were vacuum-sealed in bubble wrap and cushioned by soft styrofoam, which made unpacking them a pleasure. I found no issues with their quality. Assembling them, every footprint matched its part exactly, the clear silkscreen made placing the components easy, and the pre-tinned HASL pads were very nice to hand-solder.</p>
+<p>I have built one board so far, since one is all the project needs, so the others are untested spares. On the one I built, no fault has traced back to the fab.</p>
+
 <h2>Why a fab board, for a converter</h2>
 <p><b>A real ground plane.</b> The modulator switches at 1.536 MHz next to integrators that resolve microvolts. On one milled layer, ground was whatever copper was left between tracks; on rev D a whole inner layer is ground, directly under every signal, and a large part of the improvement measured below is owed to it.</p>
 <p><b>Plated holes.</b> Every joint is soldered from one side and the barrel carries it through. The September fault that cost the most time, a −5 V rail that reached one board only through solder wicked up an unplated hole, cannot exist on this board.</p>
@@ -77,7 +82,7 @@ a{color:var(--green)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@
 <figure><img src="sessions/2026-10-20/assembled.jpg" alt="Rev D assembled on its Raspberry Pi 4, LEDs lit" loading="lazy"><figcaption>Assembled and running on its Raspberry Pi 4.</figcaption></figure>
 
 <h2>Bring-up</h2>
-<p>The milled stack took two days and two faults that hid each other before its right channel modulated. On rev D both channels were healthy, and matched, on the first capture. The order went in as a normal PCBWay order from the Gerbers, with the copper layer order in the remarks for their engineers.</p>
+<p>The milled stack took two days and two faults that hid each other before its right channel modulated. On rev D both channels were healthy, and matched, on the first capture.</p>
 <p>The one rev D fault found so far is mine, not the fab's: the clip-LED comparators' inputs are swapped in the schematic, so both CLIP LEDs light permanently. The board runs with that comparator out of its socket meanwhile, and the fix is two resistors on the underside. Details in the <a href="https://github.com/MadsRudolph/vinyl-adc/blob/main/docs/bringup-log-2026-10-rev-d.md">rev D bring-up log</a>.</p>
 
 <h2>On the bench, with its own crystal</h2>
