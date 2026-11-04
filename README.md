@@ -24,7 +24,7 @@
 <p align="center">
   <strong>A Discrete 3rd-Order Continuous-Time Delta-Sigma Stereo Audio ADC</strong><br>
   Engineered from standard analog op-amps &amp; 74HC CMOS logic — <em>zero dedicated ADC ICs anywhere in the signal chain</em>.<br>
-  All circuit boards isolation-milled on a <strong>Roland SRM-20</strong> CNC mill using <a href="https://github.com/MadsRudolph/srm-cam"><strong>SRM-CAM</strong></a>.
+  Now one four-layer Raspberry Pi HAT <strong>made by <a href="https://www.pcbway.com">PCBWay</a></strong>; first built on four boards isolation-milled on a Roland SRM-20 using <a href="https://github.com/MadsRudolph/srm-cam"><strong>SRM-CAM</strong></a>.
 </p>
 
 <p align="center">
@@ -156,7 +156,7 @@ The [Gerbers and production files](production/vinyl_adc_rev_d/), the [KiCad proj
 | Specification | Target / Measured Performance | Design Rationale & Implementation |
 |---|---|---|
 | **Modulator Topology** | Continuous-Time CIFB (Cascade of Integrators, Feedback) | 3rd-order active RC loop with local resonator feedback (`G = 0.03`) |
-| **Dynamic Range / SNR** | **68.3 dB measured in 20 kHz band** | Purposefully matched to the physical vinyl surface noise floor (~60–65 dB) |
+| **Dynamic Range / SNR** | **Rev D: 78.7 dB left, 72.2 dB right** (AES17, A-weighted). Milled stack: 67.9 dB, best channel | Purposefully matched to the physical vinyl surface noise floor (~60–65 dB) |
 | **Audio Output** | **24-bit / 48 kHz Linear PCM FLAC** | Decimated in software on Raspberry Pi CPU (CIC filter + compensation FIR) |
 | **Modulator Sampling Rate ($F_s$)** | **1.536 MHz** ($32\times$ OverSampling Ratio) | Matches bandwidth constraints of DTU-stocked op-amps (`TL072` 3 MHz GBW) |
 | **Master Clock ($F_{clk}$)** | **6.144 MHz crystal Pierce oscillator** (74HCU04 + HC-49 crystal) | Direct low-jitter clock ($<50\text{ ps}$ jitter vs. Pi PLL phase noise); also available as a plug-in module for the rev A board |
