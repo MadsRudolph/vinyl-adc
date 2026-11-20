@@ -43,6 +43,7 @@ DEFAULTS={'start_db':-55.,'start_seconds':2.,'stop_db':-54.,'stop_seconds':60.,'
           'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.,
           'identify':True,'identify_at_seconds':480.,'finalize_after_hours':3.,'min_free_gb':3.,
           'notify_url':'',          # a webhook that gets a JSON POST when a side starts, ends or lands in the library
+          'stream_dest':'',         # HOST:PORT for the live RTP stream (stream/vinyl-stream.c, about 15 ms to a DAW); empty: capture with arecord, no stream
           'discogs_user':''}        # the Discogs collection to read; empty: whoever owns the token in ~/vinyl/discogs.token
 ACOUSTID='https://api.acoustid.org/v2/lookup'
 
@@ -217,13 +218,17 @@ class Ripper:
                 if not self.fast:time.sleep(.5)
             return
         while True:
-            p=subprocess.Popen(['arecord','-q','-D','hw:CARD=vinyladc','-c','2','-r','48000','-f','S32_LE','-t','raw','--buffer-time=2000000','-'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            # vinyl-stream hands the ripper the same raw I2S words arecord did, and streams them decimated to a DAW on the side
+            streamer=Path(__file__).resolve().parent/'stream'/'vinyl-stream';dest=self.cfg.get('stream_dest','')
+            cmd=[str(streamer),'--dest',dest] if dest and streamer.exists() else ['arecord','-q','-D','hw:CARD=vinyladc','-c','2','-r','48000','-f','S32_LE','-t','raw','--buffer-time=2000000','-']
+            p=self.capture_proc=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE);self.capture_restart=False
             try:
                 while True:
                     raw=p.stdout.read(BLOCK_BYTES)
                     if len(raw)<BLOCK_BYTES:break
                     yield raw
             finally:p.kill()
+            if self.capture_restart:continue          # stopped on purpose to pick up a new stream_dest, not a lost clock
             err=p.stderr.read().decode(errors='replace').strip().splitlines()
             with self.lock:self.status='waiting';self.message='No clocks from the ADC. Is the stack powered? '+(err[-1] if err else '')
             if self.side:self.close_side('the ADC stopped clocking')
@@ -756,8 +761,11 @@ def make_handler(rip):
                 elif self.path=='/api/finalize':rip.jobs.put(('finalize',body['mbid']));self.reply({'ok':True})
                 elif self.path=='/api/config':
                     with rip.lock:
+                        old_dest=rip.cfg.get('stream_dest','')
                         for k,v in body.items():
                             if k in DEFAULTS:rip.cfg[k]=type(DEFAULTS[k])(v)
+                        p=getattr(rip,'capture_proc',None)
+                        if rip.cfg.get('stream_dest','')!=old_dest and p and not rip.side:rip.capture_restart=True;p.kill()   # mid-side it waits for the next restart
                         # the needle detector's windows are deques sized at startup, so a new
                         # start_seconds or stop_seconds means nothing until they are rebuilt
                         for name,key in (('loud','start_seconds'),('still','stop_seconds')):

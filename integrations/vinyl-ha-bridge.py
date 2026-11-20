@@ -62,6 +62,7 @@ def main():
         'track_elapsed_s': trk.get('elapsed'),
         'side': rec.get('id') or '', 'side_seconds': int(rec.get('seconds') or 0),
         'channel_gap_db': gap, 'bitstream_healthy': healthy,
+        'hold_s': int(d.get('hold') or 0),   # >0 while the Calibrate view or a bench test holds the recorder
     })
     for ent, name, val in (('sensor.vinyl_left_peak', 'Vinyl left peak',  peak[0] if len(peak) == 2 else None),
                            ('sensor.vinyl_right_peak', 'Vinyl right peak', peak[1] if len(peak) == 2 else None)):

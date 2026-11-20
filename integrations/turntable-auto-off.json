@@ -1,0 +1,16 @@
+{
+  "alias": "Turntable off after 5 min idle",
+  "description": "Switches the turntable plug off once the Vinyl ADC ripper has been idle for 5 minutes (the side ended, or the turntable was left on). Not while the Calibrate view or a bench test holds the recorder (hold_s > 0), and only after the plug itself has been on for 5 minutes. Source: vinyl-adc/integrations/turntable-auto-off.json",
+  "mode": "single",
+  "triggers": [
+    {"trigger": "state", "entity_id": "sensor.vinyl_ripper", "to": "idle", "for": {"minutes": 5}},
+    {"trigger": "time_pattern", "minutes": "/1"}
+  ],
+  "conditions": [
+    {"condition": "state", "entity_id": "switch.turntable", "state": "on"},
+    {"condition": "template", "value_template": "{{ is_state('sensor.vinyl_ripper','idle') and (state_attr('sensor.vinyl_ripper','hold_s') | int(0)) == 0 and now() - states.sensor.vinyl_ripper.last_changed > timedelta(minutes=5) and now() - states.switch.turntable.last_changed > timedelta(minutes=5) }}"}
+  ],
+  "actions": [
+    {"action": "switch.turn_off", "target": {"entity_id": "switch.turntable"}}
+  ]
+}

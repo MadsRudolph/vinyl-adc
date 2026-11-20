@@ -32,3 +32,13 @@ does not already exist.
 These entities come from the states API rather than an integration, so an HA restart drops
 them and the timer puts them back within 30 s. That is the trade for needing no YAML in
 `configuration.yaml`, which no HA API can write.
+
+## Turntable auto-off
+
+`turntable-auto-off.json` is the HA automation `vinyl_turntable_auto_off` (created through
+`/api/config/automation/config/vinyl_turntable_auto_off`, then `automation.reload`). It switches
+`switch.turntable` (a smart plug that powers the turntable only, not the Pi) off once
+`sensor.vinyl_ripper` has been `idle` for 5 minutes, i.e. about 6 minutes after the music ends.
+It never acts on `offline` or `waiting`, not while `hold_s` > 0 (Calibrate view or a bench test),
+and not within 5 minutes of the plug being switched on. First run 2026-11-20: idle at 14:43:43,
+plug off at 14:48:43.
