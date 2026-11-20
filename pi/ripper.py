@@ -43,6 +43,7 @@ DEFAULTS={'start_db':-55.,'start_seconds':2.,'stop_db':-54.,'stop_seconds':60.,'
           'gap_db':-63.,'gap_seconds':1.2,'snap_seconds':15.,'channel_mode':'auto','repair_stuck_runs':True,'target_peak_dbfs':-1.,'max_gain_db':24.,
           'identify':True,'identify_at_seconds':480.,'finalize_after_hours':3.,'min_free_gb':3.,
           'notify_url':'',          # a webhook that gets a JSON POST when a side starts, ends or lands in the library
+          'sampling':False,         # sampling mode: never start a side by itself (Record still works); the live stream carries on
           'stream_dest':'',         # HOST:PORT for the live RTP stream (stream/vinyl-stream.c, about 15 ms to a DAW); empty: capture with arecord, no stream
           'discogs_user':''}        # the Discogs collection to read; empty: whoever owns the token in ~/vinyl/discogs.token
 ACOUSTID='https://api.acoustid.org/v2/lookup'
@@ -252,7 +253,7 @@ class Ripper:
             t0=time.time();audio,info=self.dsp.process(raw);self.feed(audio,info);self.ring.append(audio.astype(np.float32))
             if time.time()-self.last_check>60:self.last_check=time.time();self.housekeeping()
             with self.lock:
-                self.seq+=1;self.status='recording' if self.side else 'idle';self.message='';self.meters={**{k:info[k] for k in ('mode','health','rms_db','peak_db')},'level_db':float(info['level'].max()),
+                self.seq+=1;self.status='recording' if self.side else ('sampling' if self.cfg['sampling'] and time.time()-getattr(self,'last_loud',0)<60 else 'idle');self.message='';self.meters={**{k:info[k] for k in ('mode','health','rms_db','peak_db')},'level_db':float(info['level'].max()),
                     'cpu_ms':round((time.time()-t0)*1000),'backlog':q.qsize(),'repaired':self.dsp.repaired}
                 for pk,lv in zip(info['peaks'],info['level']):self.recent.append((float(pk[0]),float(pk[1]),float(lv)))
     def playing(self):
@@ -281,7 +282,8 @@ class Ripper:
             self.pre.append(block)
             while len(self.pre)>max(1,round(cfg['preroll_seconds']*2)):self.pre.popleft()
             self.loud.extend(v>cfg['start_db'] for v in block[2])
-            if self.manual=='start' or (time.time()>self.hold_until and len(self.loud)==self.loud.maxlen and sum(self.loud)>=.7*len(self.loud)):self.open_side()
+            if any(v>cfg['start_db'] for v in block[2]):self.last_loud=time.time()
+            if self.manual=='start' or (not cfg['sampling'] and time.time()>self.hold_until and len(self.loud)==self.loud.maxlen and sum(self.loud)>=.7*len(self.loud)):self.open_side()
             self.manual=None;return
         self.write_block(block)
         cur=self.playing();idx=cur[0] if cur else None
