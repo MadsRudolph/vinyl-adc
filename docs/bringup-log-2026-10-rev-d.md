@@ -245,7 +245,48 @@ coupling into INT1_R from the QR line to the interleave mux. September's
 "identical at the bitstream level" compared shaping, not this in-band floor.
 The decisive test, swapping U20–U24 with U60–U64 (all socketed), is not done.
 
-## 11. Open items
+## 11. After the enclosure: trim, floor and the tonearm ground (20 November)
+
+Back on the bench after the first night in the enclosure, where a playing record
+reached the converter only about 35 dB below its usual level (peaks near −42 dBFS,
+the ripper never left idle). On the bench the same record peaked at −8.7 / −8.5 dBFS,
+so the fault was in the enclosure's input wiring or cabling, not the converter or the trimmers.
+
+**Trim.** `assembly/bench/trim.py` (new) plays 1 kHz at 0.5 Vpk from W1 and prints the
+ripper's 1 kHz level twice a second while RV20 is turned. The target is −19.8 dBFS
+(4.9 Vpk full scale, the §4 record setting with peaks near −6 dBFS).
+
+| | Left | Right |
+|---|---|---|
+| As found | −19.5 dBFS (4.73 Vpk), left alone | −17.7 dBFS (3.82 Vpk) |
+| After trim | −19.5 dBFS | **−19.3 dBFS (4.63 Vpk)** |
+| Harmonics / THD+N at that level | −75…−82 dBc / −50 dB | −71…−86 dBc / −48 dB |
+| Crosstalk | −70 dB | −72 dB |
+
+A disabled W1 still loaded into the input injects 50 Hz at about −31 dBFS: unplug
+it before any floor measurement.
+
+**Floor and the tonearm ground.** Ten seconds of the ripper's 48 kHz output, stylus up,
+platter stopped, Pi 5 V, crystal. dBFS re full-scale sine, 20 Hz–20 kHz:
+
+| Setup | 50 Hz line | 20–200 Hz (L / R) | Total (L / R) | A-weighted (L / R) |
+|---|---|---|---|---|
+| Inputs open, nothing connected | −78.6 | −73.6 / −72.7 | −71.3 / −68.0 | −77.0 / −73.0 |
+| Turntable + Phono Box, turntable ground at the Phono Box only | −63.4 | −61.6 / −61.4 | −61.3 / −60.7 | −74.6 / −71.9 |
+| **+ J3 wired to the Phono Box ground post, J4 fitted** | **< −100** | **−100.1 / −96.5** | **−78.7 / −70.5** | **−79.7 / −73.7** |
+| + J3 wired, J4 removed (lift network) | −80.6 | −77.8 / −77.5 | −73.9 / −69.3 | −77.6 / −73.1 |
+
+Bonding the converter's ground to the phono stage's at J3 removes the shared-ground
+50 Hz line (§5) completely when J4 is fitted: the source chain then adds nothing
+measurable, and the left total equals the converter-only floor (§10). The lift network
+leaves 17 dB of it back. **Kept: J3 to the Phono Box post, turntable ground wire also on
+that post, J4 fitted.** No sign of a loop through the Pi's supply in the fitted case.
+What remains on the right is its own 2–20 kHz floor (a line near 12.1 kHz, §10).
+
+Music on the bench, J3 not yet wired: p95 of 100 ms peaks −8.7 / −8.5 dBFS, max −7.4 /
+−7.3, no clipped samples; the ripper started the side on its own.
+
+## 12. Open items
 
 1. ~~The crystal oscillator~~ fixed (§8). Repeat §5 (turntable floor) on it.
 2. ~~Converter-only floor~~ done (§10): raw bitstream, inputs shorted, 20 Hz–20 kHz
@@ -253,7 +294,7 @@ The decisive test, swapping U20–U24 with U60–U64 (all socketed), is not done
    test-and-verification §3).
 3. ~~The AD3 audio plan~~ done (§9). Open: the 2 Hz modulation (scope VREF_P at
    J5.8 with and without CPU load) and the right channel's floor (§10: chip swap).
-4. **Hum:** the turntable ground on J3, J4 fitted and lifted.
+4. ~~**Hum:** the turntable ground on J3, J4 fitted and lifted.~~ Done 20 Nov (§11): J3 to the Phono Box post with J4 fitted removes the 50 Hz line.
 5. **`gap_db`** on a full side (§6).
 6. ~~GPCLK0 at boot~~ not needed while J1 is on the crystal (§8); `pi/gpclk.py`
    stays as the fallback.
