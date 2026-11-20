@@ -9,7 +9,7 @@
 
 Against `decimate.py` on a synthesised modulator bitstream it matches to 0.001 dB; the only difference is
 the high-pass's phase (≤ 0.1° at 1 kHz). Expected latency to a DAW: ~2.7 ms period + 1 ms packet +
-the receiver's 10 ms jitter buffer ≈ 15 ms.
+the receiver's 5 ms jitter buffer ≈ 10 ms before the DAW's own buffer.
 
 ## Pi
 
@@ -28,3 +28,21 @@ restarts the capture at once when no side is open; mid-side it waits until the n
 The input appears as **Vinyl ADC** (node `vinyl-adc`). DAWs reach it through PipeWire's JACK
 (`pw-jack <daw>` if a DAW insists on its own ALSA backend, which cannot see it).
 Check: `pw-record --target vinyl-adc --format s32 test.wav`.
+
+## Measured latency (2026-11-20)
+
+Needle in the run-out groove; the Pi's packet capture (tcpdump on eth0) against a JACK client on the PC
+(`pw-jack`, callback timestamps), clocks matched by a UDP exchange (0.12 ms round trip, Pi 7.7 ms ahead),
+the two signals aligned above 2 kHz in 100 ms windows (correlation > 0.8). From a packet leaving the Pi
+to the DAW's callback holding it:
+
+| DAW buffer | windows | median | max |
+|---|---|---|---|
+| 128 frames (2.7 ms) | 22 | 17.0 ms | 19.7 ms |
+| 256 frames (5.3 ms) | 37 | 12.5 ms | 15.7 ms |
+| 1024 frames (21 ms) | 111 | 21.4 ms | 32.3 ms |
+
+Add the Pi's own share, not measured: up to one 2.7 ms capture period plus 0.4 ms of FIR delay. So the
+needle reaches a DAW in roughly **15–25 ms**, most of it the PC's jitter buffer (10 ms during the test, now 5 ms)
+(`sess.latency.msec`) and the DAW's own buffer. The run-out signal is almost all below 200 Hz (motor
+rumble), which repeats and fools a plain correlation; only the faint broadband part aligns reliably.
