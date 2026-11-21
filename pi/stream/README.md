@@ -9,7 +9,7 @@
 
 Against `decimate.py` on a synthesised modulator bitstream it matches to 0.001 dB; the only difference is
 the high-pass's phase (≤ 0.1° at 1 kHz). Expected latency to a DAW: ~2.7 ms period + 1 ms packet +
-the receiver's 5 ms jitter buffer ≈ 10 ms before the DAW's own buffer.
+the receiver's jitter buffer (40 ms: it must exceed the PC's graph quantum, and a DAW at 1024 frames needs ~32 ms; at 5 ms the input went silent).
 
 ## Pi
 
@@ -43,7 +43,7 @@ to the DAW's callback holding it:
 | 1024 frames (21 ms) | 111 | 21.4 ms | 32.3 ms |
 
 Add the Pi's own share, not measured: up to one 2.7 ms capture period plus 0.4 ms of FIR delay. So the
-needle reaches a DAW in roughly **15–25 ms**, most of it the PC's jitter buffer (10 ms during the test, now 5 ms)
+needle reaches a DAW in roughly **15–25 ms**, most of it the PC's jitter buffer (10 ms during the test; now 40 ms so any DAW buffer size works, which adds ~30 ms)
 (`sess.latency.msec`) and the DAW's own buffer. The run-out signal is almost all below 200 Hz (motor
 rumble), which repeats and fools a plain correlation; only the faint broadband part aligns reliably.
 
