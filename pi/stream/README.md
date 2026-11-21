@@ -58,3 +58,10 @@ priority 300000 and turns off its idle suspend, so it always drives; the input a
 `node.always-process`. In `pw-top` the Scarlett should be the driver with `+ vinyl-adc` and `+ ardour` under it.
 Ardour also auto-connects every hardware input to new tracks: set Preferences → Signal Flow to connect
 track inputs manually and pick only Vinyl ADC.
+
+### And the buffer size
+
+With the DAW at 1024 frames the input overflowed its 40 ms buffer (`mod.rtp-source: receiver read overrun`)
+and sounded robotic. `pc/10-vinyl-quantum.conf` caps PipeWire at 256 frames. `pc/52-only-scarlett.conf`
+switches off every other sound card (webcam mic at 32 kHz, the dock, onboard and HDMI audio), because
+Ardour links every physical input it finds into its graph and those clocks made the same mess.
