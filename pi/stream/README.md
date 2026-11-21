@@ -46,3 +46,15 @@ Add the Pi's own share, not measured: up to one 2.7 ms capture period plus 0.4 m
 needle reaches a DAW in roughly **15–25 ms**, most of it the PC's jitter buffer (10 ms during the test, now 5 ms)
 (`sess.latency.msec`) and the DAW's own buffer. The run-out signal is almost all below 200 Hz (motor
 rumble), which repeats and fools a plain correlation; only the faint broadband part aligns reliably.
+
+## DAW gotcha: the clock (2026-11-21)
+
+The RTP input has no hardware clock, so PipeWire runs it on its Dummy-Driver, whose `priority.driver`
+is 200000. Once a DAW linked it into the same graph as the Scarlett (default 1100), the Dummy-Driver
+became the clock for everything, sat idle, and the Scarlett froze (`/proc/asound/card0/pcm0p/sub0/status`
+PREPARED or XRUN with `hw_ptr` stuck): Ardour's buttons did nothing and every app went silent.
+`pc/51-scarlett-no-suspend.conf` (to `~/.config/wireplumber/wireplumber.conf.d/`) gives the Scarlett
+priority 300000 and turns off its idle suspend, so it always drives; the input also no longer sets
+`node.always-process`. In `pw-top` the Scarlett should be the driver with `+ vinyl-adc` and `+ ardour` under it.
+Ardour also auto-connects every hardware input to new tracks: set Preferences → Signal Flow to connect
+track inputs manually and pick only Vinyl ADC.
