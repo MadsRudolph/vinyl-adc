@@ -65,3 +65,21 @@ With the DAW at 1024 frames the input overflowed its 40 ms buffer (`mod.rtp-sour
 and sounded robotic. `pc/10-vinyl-quantum.conf` caps PipeWire at 256 frames. `pc/52-only-scarlett.conf`
 switches off every other sound card (webcam mic at 32 kHz, the dock, onboard and HDMI audio), because
 Ardour links every physical input it finds into its graph and those clocks made the same mess.
+
+## Ableton Live (ableton-linux, PipeASIO)
+
+Live 12 runs under Wine via github.com/shibco/ableton-linux and reaches PipeWire through PipeASIO.
+PipeASIO feeds Live's inputs from one capture device and ignores extra links made into its ports,
+so the turntable is set as that device in `~/.config/pipeasio/config.ini`:
+
+    [pipeasio]
+    inputs = 2
+    outputs = 2
+    buffer_size = 256
+    fixed_buffer_size = true
+    auto_connect = true
+    input_device = vinyl-adc
+
+In Live: Settings → Audio, Driver Type ASIO, Audio Device PipeASIO Driver, 48000 Hz; on a track,
+Audio From → Ext. In → 1/2. The ableton-linux installer keeps an existing PipeASIO config on update.
+The Scarlett mic is not a Live input in this setup (swap `input_device` to use it instead).
